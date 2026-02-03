@@ -46,7 +46,14 @@ export const syncToDatabase = {
     }
     
     try {
-      const data = toSnakeCase(tour);
+const data = toSnakeCase(tour);
+
+// 🔥 CLEAN EMPTY STRINGS (THIS FIXES YOUR ERROR)
+Object.keys(data).forEach(key => {
+  if (data[key] === "") {
+    data[key] = null;
+  }
+});
       console.log('📤 Sending to database (snake_case):', data);
       
       const { data: result, error } = await supabase
