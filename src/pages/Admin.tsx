@@ -91,8 +91,17 @@ function Sidebar({ activeTab, setActiveTab, isOpen, setIsOpen }: {
 }
 
 // Top Header
-function TopHeader({ setSidebarOpen, onLogout }: { setSidebarOpen: (open: boolean) => void; onLogout: () => void }) {
+function TopHeader({ setSidebarOpen, onLogout, onRefresh }: { setSidebarOpen: (open: boolean) => void; onLogout: () => void; onRefresh?: () => void }) {
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const handleRefresh = async () => {
+    if (onRefresh) {
+      setIsRefreshing(true);
+      await onRefresh();
+      setTimeout(() => setIsRefreshing(false), 1000);
+    }
+  };
   
   return (
     <header className="bg-white border-b border-gray-100 px-6 py-3 sticky top-0 z-30">
@@ -101,6 +110,27 @@ function TopHeader({ setSidebarOpen, onLogout }: { setSidebarOpen: (open: boolea
           <Menu size={20} />
         </button>
         <div className="flex items-center gap-3">
+          {/* Refresh from Database Button */}
+          <button 
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition ${
+              isRefreshing 
+                ? 'bg-green-100 text-green-700' 
+                : 'bg-blue-50 text-blue-600 hover:bg-blue-100'
+            }`}
+            title="Refresh data from database"
+          >
+            <svg 
+              className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} 
+              fill="none" 
+              stroke="currentColor" 
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            {isRefreshing ? 'Syncing...' : 'Sync Database'}
+          </button>
           <Link to="/" target="_blank" className="text-sm text-gray-500 hover:text-amber-600 flex items-center gap-1">
             <ExternalLink size={14} /> Preview Site
           </Link>
@@ -4866,7 +4896,7 @@ export function Admin() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [editingTour, setEditingTour] = useState<Tour | 'new' | null>(null);
   const [editingDestination, setEditingDestination] = useState<Destination | 'new' | null>(null);
-  const { isAuthenticated, logout, addTour, updateTour, addDestination, updateDestination } = useApp();
+  const { isAuthenticated, logout, addTour, updateTour, addDestination, updateDestination, refreshFromDatabase } = useApp();
   const navigate = useNavigate();
 
   const handleSaveTour = async (tour: Tour) => {
@@ -4943,7 +4973,7 @@ export function Admin() {
     <div className="min-h-screen bg-gray-50">
       <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
       <div className="lg:ml-64">
-        <TopHeader setSidebarOpen={setSidebarOpen} onLogout={() => { logout(); navigate('/login'); }} />
+        <TopHeader setSidebarOpen={setSidebarOpen} onLogout={() => { logout(); navigate('/login'); }} onRefresh={refreshFromDatabase} />
         <main className="p-6">
           {activeTab === 'dashboard' && <Dashboard />}
           {activeTab === 'tours' && <ToursManager onEditTour={setEditingTour} />}

@@ -4,7 +4,6 @@ import { defaultTours } from '../data/tours';
 import { defaultDestinations } from '../data/destinations';
 import { defaultBikes } from '../data/bikes';
 import { defaultSiteSettings } from '../data/siteSettings';
-import { syncToDatabase, isSupabaseAvailable } from '../lib/supabase';
 
 interface MediaItem {
   id: string;
@@ -53,6 +52,8 @@ interface AppContextType {
   isAuthenticated: boolean;
   login: (username: string, password: string) => boolean;
   logout: () => void;
+  
+  refreshFromDatabase: () => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -77,7 +78,7 @@ const storage = {
 };
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // Initialize state from localStorage
+  // Initialize state from localStorage (instant, no async)
   const [tours, setTours] = useState<Tour[]>(() => storage.get('brm_tours', defaultTours));
   const [destinations, setDestinations] = useState<Destination[]>(() => storage.get('brm_destinations', defaultDestinations));
   const [bikes, setBikes] = useState<Bike[]>(() => storage.get('brm_bikes', defaultBikes));
@@ -86,8 +87,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [siteSettings, setSiteSettings] = useState<SiteSettings>(() => storage.get('brm_settings', defaultSiteSettings));
   const [mediaItems, setMediaItems] = useState<MediaItem[]>(() => storage.get('brm_media', []));
   const [isAdmin, setIsAdmin] = useState(false);
-  const [loading] = useState(false);
-  const [isUsingDatabase] = useState(isSupabaseAvailable());
+  const [loading, setLoading] = useState(false);
+  const [isUsingDatabase, setIsUsingDatabase] = useState(false);
   
   // Authentication
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
@@ -97,14 +98,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         const data = JSON.parse(session);
         return data?.expiry > Date.now();
       }
-    } catch {}
+    } catch { /* ignore */ }
     return false;
   });
 
   const login = (username: string, password: string): boolean => {
     if (username === 'admin' && password === 'nepal2024') {
       const session = { authenticated: true, expiry: Date.now() + 86400000 };
-      try { localStorage.setItem('brm_session', JSON.stringify(session)); } catch {}
+      try { localStorage.setItem('brm_session', JSON.stringify(session)); } catch { /* ignore */ }
       setIsAuthenticated(true);
       setIsAdmin(true);
       return true;
@@ -113,9 +114,69 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const logout = () => {
-    try { localStorage.removeItem('brm_session'); } catch {}
+    try { localStorage.removeItem('brm_session'); } catch { /* ignore */ }
     setIsAuthenticated(false);
     setIsAdmin(false);
+  };
+
+  // Function to refresh data from database
+  const refreshFromDatabase = async () => {
+    setLoading(true);
+    try {
+      const { loadFromDatabase, isSupabaseAvailable } = await import('../lib/supabase');
+      
+      if (!isSupabaseAvailable()) {
+        console.log('Database not available');
+        setLoading(false);
+        return;
+      }
+      
+      setIsUsingDatabase(true);
+      console.log('🔄 Loading from database...');
+      
+      const dbData = await loadFromDatabase();
+      
+      if (dbData) {
+        if (dbData.tours && Array.isArray(dbData.tours) && dbData.tours.length > 0) {
+          setTours(dbData.tours as Tour[]);
+          storage.set('brm_tours', dbData.tours);
+          console.log(`✅ Loaded ${dbData.tours.length} tours`);
+        }
+        
+        if (dbData.destinations && Array.isArray(dbData.destinations) && dbData.destinations.length > 0) {
+          setDestinations(dbData.destinations as Destination[]);
+          storage.set('brm_destinations', dbData.destinations);
+        }
+        
+        if (dbData.bikes && Array.isArray(dbData.bikes) && dbData.bikes.length > 0) {
+          setBikes(dbData.bikes as Bike[]);
+          storage.set('brm_bikes', dbData.bikes);
+        }
+        
+        if (dbData.bookings && Array.isArray(dbData.bookings) && dbData.bookings.length > 0) {
+          setBookings(dbData.bookings as Booking[]);
+          storage.set('brm_bookings', dbData.bookings);
+        }
+        
+        if (dbData.pages && Array.isArray(dbData.pages) && dbData.pages.length > 0) {
+          setPages(dbData.pages as Page[]);
+          storage.set('brm_pages', dbData.pages);
+        }
+        
+        if (dbData.siteSettings) {
+          setSiteSettings(dbData.siteSettings as SiteSettings);
+          storage.set('brm_settings', dbData.siteSettings);
+        }
+        
+        if (dbData.media && Array.isArray(dbData.media) && dbData.media.length > 0) {
+          setMediaItems(dbData.media as MediaItem[]);
+          storage.set('brm_media', dbData.media);
+        }
+      }
+    } catch (error) {
+      console.log('Database refresh failed:', error);
+    }
+    setLoading(false);
   };
 
   // Save to localStorage when data changes
@@ -127,68 +188,117 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   useEffect(() => { storage.set('brm_settings', siteSettings); }, [siteSettings]);
   useEffect(() => { storage.set('brm_media', mediaItems); }, [mediaItems]);
 
-  // Tour functions - save to localStorage + sync to Supabase in background
+  // Background sync to database
+  const syncTour = async (tour: Tour) => {
+    try {
+      const { syncToDatabase } = await import('../lib/supabase');
+      syncToDatabase.tour(tour as unknown as Record<string, unknown>);
+    } catch { /* ignore */ }
+  };
+
+  const syncDestination = async (destination: Destination) => {
+    try {
+      const { syncToDatabase } = await import('../lib/supabase');
+      syncToDatabase.destination(destination as unknown as Record<string, unknown>);
+    } catch { /* ignore */ }
+  };
+
+  const syncBike = async (bike: Bike) => {
+    try {
+      const { syncToDatabase } = await import('../lib/supabase');
+      syncToDatabase.bike(bike as unknown as Record<string, unknown>);
+    } catch { /* ignore */ }
+  };
+
+  const syncBooking = async (booking: Booking) => {
+    try {
+      const { syncToDatabase } = await import('../lib/supabase');
+      syncToDatabase.booking(booking as unknown as Record<string, unknown>);
+    } catch { /* ignore */ }
+  };
+
+  const syncPage = async (page: Page) => {
+    try {
+      const { syncToDatabase } = await import('../lib/supabase');
+      syncToDatabase.page(page as unknown as Record<string, unknown>);
+    } catch { /* ignore */ }
+  };
+
+  const syncSettings = async (settings: SiteSettings) => {
+    try {
+      const { syncToDatabase } = await import('../lib/supabase');
+      syncToDatabase.settings(settings as unknown as Record<string, unknown>);
+    } catch { /* ignore */ }
+  };
+
+  // Tour functions
   const addTour = (tour: Tour) => {
     setTours(prev => [tour, ...prev]);
-    // Background sync to Supabase (won't block or crash)
-    syncToDatabase.tour(tour as unknown as Record<string, unknown>);
+    syncTour(tour);
   };
   
   const updateTour = (id: string, tour: Tour) => {
     setTours(prev => prev.map(t => t.id === id ? tour : t));
-    syncToDatabase.tour(tour as unknown as Record<string, unknown>);
+    syncTour(tour);
   };
   
-  const deleteTour = (id: string) => {
+  const deleteTour = async (id: string) => {
     setTours(prev => prev.filter(t => t.id !== id));
-    syncToDatabase.deleteTour(id);
+    try {
+      const { syncToDatabase } = await import('../lib/supabase');
+      syncToDatabase.deleteTour(id);
+    } catch { /* ignore */ }
   };
 
   // Destination functions
   const addDestination = (destination: Destination) => {
     setDestinations(prev => [destination, ...prev]);
-    syncToDatabase.destination(destination as unknown as Record<string, unknown>);
+    syncDestination(destination);
   };
   
   const updateDestination = (id: string, destination: Destination) => {
     setDestinations(prev => prev.map(d => d.id === id ? destination : d));
-    syncToDatabase.destination(destination as unknown as Record<string, unknown>);
+    syncDestination(destination);
   };
   
-  const deleteDestination = (id: string) => {
+  const deleteDestination = async (id: string) => {
     setDestinations(prev => prev.filter(d => d.id !== id));
-    syncToDatabase.deleteDestination(id);
+    try {
+      const { syncToDatabase } = await import('../lib/supabase');
+      syncToDatabase.deleteDestination(id);
+    } catch { /* ignore */ }
   };
 
   // Bike functions
   const addBike = (bike: Bike) => {
     setBikes(prev => [bike, ...prev]);
-    syncToDatabase.bike(bike as unknown as Record<string, unknown>);
+    syncBike(bike);
   };
   
   const updateBike = (id: string, bike: Bike) => {
     setBikes(prev => prev.map(b => b.id === id ? bike : b));
-    syncToDatabase.bike(bike as unknown as Record<string, unknown>);
+    syncBike(bike);
   };
   
-  const deleteBike = (id: string) => {
+  const deleteBike = async (id: string) => {
     setBikes(prev => prev.filter(b => b.id !== id));
-    syncToDatabase.deleteBike(id);
+    try {
+      const { syncToDatabase } = await import('../lib/supabase');
+      syncToDatabase.deleteBike(id);
+    } catch { /* ignore */ }
   };
 
   // Booking functions
   const addBooking = (booking: Booking) => {
     setBookings(prev => [booking, ...prev]);
-    syncToDatabase.booking(booking as unknown as Record<string, unknown>);
+    syncBooking(booking);
   };
   
   const updateBooking = (id: string, updates: Partial<Booking>) => {
     setBookings(prev => {
       const updated = prev.map(b => b.id === id ? { ...b, ...updates } : b);
       const booking = updated.find(b => b.id === id);
-      if (booking) {
-        syncToDatabase.booking(booking as unknown as Record<string, unknown>);
-      }
+      if (booking) syncBooking(booking);
       return updated;
     });
   };
@@ -196,24 +306,27 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Page functions
   const addPage = (page: Page) => {
     setPages(prev => [page, ...prev]);
-    syncToDatabase.page(page as unknown as Record<string, unknown>);
+    syncPage(page);
   };
   
   const updatePage = (id: string, page: Page) => {
     setPages(prev => prev.map(p => p.id === id ? page : p));
-    syncToDatabase.page(page as unknown as Record<string, unknown>);
+    syncPage(page);
   };
   
-  const deletePage = (id: string) => {
+  const deletePage = async (id: string) => {
     setPages(prev => prev.filter(p => p.id !== id));
-    syncToDatabase.deletePage(id);
+    try {
+      const { syncToDatabase } = await import('../lib/supabase');
+      syncToDatabase.deletePage(id);
+    } catch { /* ignore */ }
   };
 
   // Settings
   const updateSiteSettings = (updates: Partial<SiteSettings>) => {
     setSiteSettings(prev => {
       const newSettings = { ...prev, ...updates };
-      syncToDatabase.settings(newSettings as unknown as Record<string, unknown>);
+      syncSettings(newSettings);
       return newSettings;
     });
   };
@@ -254,7 +367,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setIsAdmin,
       isAuthenticated,
       login,
-      logout
+      logout,
+      refreshFromDatabase
     }}>
       {children}
     </AppContext.Provider>
