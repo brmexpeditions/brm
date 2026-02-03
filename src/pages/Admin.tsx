@@ -208,76 +208,221 @@ function FormField({ label, hint, children, required }: {
   );
 }
 
-// Dashboard Component
+// Dashboard Component with Enhanced UI
 function Dashboard() {
-  const { tours, bookings, destinations } = useApp();
+  const { tours, bookings, destinations, bikes } = useApp();
   const publishedTours = tours.filter(t => t.status === 'published');
   const pendingBookings = bookings.filter(b => b.status === 'pending');
   const confirmedBookings = bookings.filter(b => b.status === 'confirmed');
   const totalRevenue = confirmedBookings.reduce((sum, b) => sum + b.totalPrice, 0);
+  const recentBookings = bookings.slice(0, 5);
+  const featuredTours = tours.filter(t => t.featured);
+
+  // Get current time greeting
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good Morning';
+    if (hour < 18) return 'Good Afternoon';
+    return 'Good Evening';
+  };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-        <p className="text-gray-500 mt-1">Welcome back! Here's your site overview.</p>
+    <div className="space-y-8">
+      {/* Welcome Header with Gradient */}
+      <div className="relative overflow-hidden bg-gradient-to-r from-amber-500 via-orange-500 to-red-500 rounded-2xl p-8 text-white">
+        <div className="absolute top-0 right-0 -mt-8 -mr-8 w-64 h-64 bg-white/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 left-0 -mb-12 -ml-12 w-48 h-48 bg-white/10 rounded-full blur-2xl" />
+        <div className="relative">
+          <p className="text-amber-100 font-medium">{getGreeting()}, Admin 👋</p>
+          <h1 className="text-3xl font-bold mt-1">Dashboard Overview</h1>
+          <p className="text-amber-100 mt-2 max-w-xl">
+            Welcome to your motorcycle tours management dashboard. Here's a quick summary of your business.
+          </p>
+        </div>
+        <div className="absolute top-6 right-6 flex items-center gap-2 bg-white/20 backdrop-blur-sm rounded-full px-4 py-2">
+          <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+          <span className="text-sm font-medium">Live</span>
+        </div>
       </div>
 
-      {/* Stats */}
+      {/* Stats Grid - Enhanced Design */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
         {[
-          { label: 'Total Tours', value: tours.length, icon: Map, color: 'bg-blue-500' },
-          { label: 'Destinations', value: destinations.length, icon: MapPin, color: 'bg-green-500' },
-          { label: 'Published', value: publishedTours.length, icon: Eye, color: 'bg-teal-500' },
-          { label: 'Pending Bookings', value: pendingBookings.length, icon: Calendar, color: 'bg-amber-500' },
-          { label: 'Revenue', value: `$${totalRevenue.toLocaleString()}`, icon: BarChart3, color: 'bg-purple-500' },
+          { label: 'Total Tours', value: tours.length, icon: Map, color: 'from-blue-500 to-blue-600', bgLight: 'bg-blue-50', textColor: 'text-blue-600', change: '+2 this month' },
+          { label: 'Destinations', value: destinations.length, icon: MapPin, color: 'from-emerald-500 to-emerald-600', bgLight: 'bg-emerald-50', textColor: 'text-emerald-600', change: 'Active locations' },
+          { label: 'Fleet Size', value: bikes.length, icon: BikeIcon, color: 'from-violet-500 to-violet-600', bgLight: 'bg-violet-50', textColor: 'text-violet-600', change: 'Motorcycles' },
+          { label: 'Pending', value: pendingBookings.length, icon: Clock, color: 'from-amber-500 to-amber-600', bgLight: 'bg-amber-50', textColor: 'text-amber-600', change: 'Awaiting confirmation' },
+          { label: 'Revenue', value: `$${totalRevenue.toLocaleString()}`, icon: BarChart3, color: 'from-green-500 to-green-600', bgLight: 'bg-green-50', textColor: 'text-green-600', change: 'Total earnings' },
         ].map((stat, i) => (
-          <div key={i} className="bg-white rounded-xl border border-gray-200 p-4">
-            <div className="flex items-center gap-3">
-              <div className={`w-10 h-10 ${stat.color} rounded-lg flex items-center justify-center`}>
-                <stat.icon className="text-white" size={20} />
+          <div key={i} className="bg-white rounded-2xl border border-gray-100 p-5 hover:shadow-lg hover:border-gray-200 transition-all duration-300 group">
+            <div className="flex items-start justify-between">
+              <div className={`w-12 h-12 bg-gradient-to-br ${stat.color} rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform`}>
+                <stat.icon className="text-white" size={22} />
               </div>
-              <div>
-                <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
-                <p className="text-xs text-gray-500">{stat.label}</p>
+              <div className={`${stat.bgLight} ${stat.textColor} text-xs font-medium px-2 py-1 rounded-full`}>
+                Live
               </div>
+            </div>
+            <div className="mt-4">
+              <p className="text-3xl font-bold text-gray-900">{stat.value}</p>
+              <p className="text-sm font-medium text-gray-600 mt-1">{stat.label}</p>
+              <p className="text-xs text-gray-400 mt-1">{stat.change}</p>
             </div>
           </div>
         ))}
       </div>
 
-      {/* Recent Bookings */}
-      <SectionCard title="Recent Bookings" description="Latest booking requests">
-        {bookings.length > 0 ? (
-          <div className="space-y-3">
-            {bookings.slice(0, 5).map(booking => (
-              <div key={booking.id} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
-                    <span className="text-sm font-medium text-gray-600">{booking.customerName.charAt(0)}</span>
-                  </div>
-                  <div>
-                    <p className="font-medium text-gray-900 text-sm">{booking.customerName}</p>
-                    <p className="text-xs text-gray-500">{booking.email}</p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="font-semibold text-gray-900">${booking.totalPrice.toLocaleString()}</p>
-                  <span className={`text-xs px-2 py-0.5 rounded-full ${
-                    booking.status === 'confirmed' ? 'bg-green-100 text-green-700' :
-                    booking.status === 'pending' ? 'bg-amber-100 text-amber-700' :
-                    'bg-red-100 text-red-700'
-                  }`}>
-                    {booking.status}
-                  </span>
-                </div>
-              </div>
-            ))}
+      {/* Main Content Grid */}
+      <div className="grid lg:grid-cols-3 gap-6">
+        {/* Recent Bookings - Takes 2 columns */}
+        <div className="lg:col-span-2 bg-white rounded-2xl border border-gray-100 overflow-hidden">
+          <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gradient-to-r from-gray-50 to-white">
+            <div>
+              <h3 className="font-bold text-gray-900 flex items-center gap-2">
+                <Calendar size={18} className="text-amber-500" />
+                Recent Bookings
+              </h3>
+              <p className="text-sm text-gray-500 mt-0.5">{bookings.length} total bookings</p>
+            </div>
+            <span className="text-xs bg-amber-100 text-amber-700 px-3 py-1 rounded-full font-medium">
+              {pendingBookings.length} pending
+            </span>
           </div>
-        ) : (
-          <p className="text-gray-500 text-center py-8">No bookings yet</p>
-        )}
-      </SectionCard>
+          <div className="p-6">
+            {recentBookings.length > 0 ? (
+              <div className="space-y-4">
+                {recentBookings.map((booking) => (
+                  <div key={booking.id} className="flex items-center gap-4 p-4 rounded-xl hover:bg-gray-50 transition-colors border border-gray-100">
+                    <div className="relative">
+                      <div className="w-12 h-12 bg-gradient-to-br from-amber-400 to-orange-500 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-md">
+                        {booking.customerName.charAt(0).toUpperCase()}
+                      </div>
+                      <div className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white ${
+                        booking.status === 'confirmed' ? 'bg-green-500' :
+                        booking.status === 'pending' ? 'bg-amber-500' :
+                        'bg-red-500'
+                      }`} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <p className="font-semibold text-gray-900 truncate">{booking.customerName}</p>
+                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                          booking.status === 'confirmed' ? 'bg-green-100 text-green-700' :
+                          booking.status === 'pending' ? 'bg-amber-100 text-amber-700' :
+                          'bg-red-100 text-red-700'
+                        }`}>
+                          {booking.status}
+                        </span>
+                      </div>
+                      <p className="text-sm text-gray-500 truncate">{tours.find(t => t.id === booking.tourId)?.title || 'Tour booking'}</p>
+                      <p className="text-xs text-gray-400 mt-1">{booking.email}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-lg font-bold text-gray-900">${booking.totalPrice.toLocaleString()}</p>
+                      <p className="text-xs text-gray-400">{booking.riders} rider{booking.riders > 1 ? 's' : ''}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <div className="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <Calendar size={28} className="text-gray-400" />
+                </div>
+                <p className="text-gray-500 font-medium">No bookings yet</p>
+                <p className="text-sm text-gray-400 mt-1">Bookings will appear here once customers start booking tours</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Quick Actions & Stats - Takes 1 column */}
+        <div className="space-y-6">
+          {/* Quick Actions */}
+          <div className="bg-white rounded-2xl border border-gray-100 p-6">
+            <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
+              <Plus size={18} className="text-amber-500" />
+              Quick Actions
+            </h3>
+            <div className="space-y-3">
+              <button 
+                onClick={() => window.location.hash = '#/admin?tab=tours'}
+                className="w-full flex items-center gap-3 p-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-medium hover:from-amber-600 hover:to-orange-600 transition shadow-lg shadow-amber-500/25"
+              >
+                <Plus size={18} />
+                Create New Tour
+              </button>
+              <button 
+                onClick={() => window.location.hash = '#/admin?tab=destinations'}
+                className="w-full flex items-center gap-3 p-3 rounded-xl border border-gray-200 text-gray-700 font-medium hover:bg-gray-50 transition"
+              >
+                <MapPin size={18} />
+                Add Destination
+              </button>
+              <button 
+                onClick={() => window.location.hash = '#/admin?tab=bikes'}
+                className="w-full flex items-center gap-3 p-3 rounded-xl border border-gray-200 text-gray-700 font-medium hover:bg-gray-50 transition"
+              >
+                <BikeIcon size={18} />
+                Add Motorcycle
+              </button>
+            </div>
+          </div>
+
+          {/* Featured Tours */}
+          <div className="bg-white rounded-2xl border border-gray-100 p-6">
+            <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
+              <Star size={18} className="text-amber-500" />
+              Featured Tours
+            </h3>
+            {featuredTours.length > 0 ? (
+              <div className="space-y-3">
+                {featuredTours.slice(0, 3).map(tour => (
+                  <div key={tour.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition">
+                    <img src={tour.heroImage} alt={tour.title} className="w-12 h-12 rounded-lg object-cover" />
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-gray-900 text-sm truncate">{tour.title}</p>
+                      <p className="text-xs text-gray-500">${tour.price.toLocaleString()}</p>
+                    </div>
+                    <Star size={14} className="text-amber-500 fill-amber-500" />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-gray-500 text-center py-4">No featured tours yet</p>
+            )}
+          </div>
+
+          {/* Site Status */}
+          <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl p-6 text-white">
+            <h3 className="font-bold mb-4 flex items-center gap-2">
+              <Monitor size={18} className="text-amber-400" />
+              Site Status
+            </h3>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-gray-400 text-sm">Published Tours</span>
+                <span className="font-medium">{publishedTours.length}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-gray-400 text-sm">Active Destinations</span>
+                <span className="font-medium">{destinations.filter(d => d.status === 'published').length}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-gray-400 text-sm">Available Bikes</span>
+                <span className="font-medium">{bikes.filter(b => b.available).length}</span>
+              </div>
+              <div className="pt-3 border-t border-gray-700 flex items-center justify-between">
+                <span className="text-gray-400 text-sm">Status</span>
+                <span className="flex items-center gap-2 text-green-400 font-medium">
+                  <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+                  Online
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

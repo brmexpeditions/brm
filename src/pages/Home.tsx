@@ -565,9 +565,11 @@ export function Home() {
   const maxItems = homepage.featuredSection?.maxItems || 6;
   const showFeaturedOnly = homepage.featuredSection?.showFeaturedOnly ?? true;
   
+  // Display only featured tours when showFeaturedOnly is true
+  // Otherwise show all published tours
   const displayTours = showFeaturedOnly 
     ? featuredTours.slice(0, maxItems)
-    : (featuredTours.length > 0 ? featuredTours : allPublishedTours).slice(0, maxItems);
+    : allPublishedTours.slice(0, maxItems);
   
   const getIcon = (iconName: string) => {
     const icons: Record<string, React.ComponentType<{ className?: string; size?: number }>> = { Shield, Award, Compass, Star };
