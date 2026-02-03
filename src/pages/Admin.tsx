@@ -886,12 +886,63 @@ function ThemeCustomizer() {
 // Homepage Editor
 function HomepageEditor() {
   const { siteSettings, updateSiteSettings } = useApp();
-  const [hero, setHero] = useState(siteSettings.homepage.hero);
-  const [stats, setStats] = useState(siteSettings.homepage.stats);
-  const [featured, setFeatured] = useState(siteSettings.homepage.featuredSection);
-  const [whyUs, setWhyUs] = useState(siteSettings.homepage.whyChooseUs);
-  const [testimonials, setTestimonials] = useState(siteSettings.homepage.testimonials);
-  const [cta, setCta] = useState(siteSettings.homepage.ctaSection);
+  
+  // Default values for all homepage sections
+  const defaultHero = {
+    title: 'Adventure Awaits',
+    subtitle: 'Experience the thrill of motorcycle touring',
+    backgroundImage: '',
+    overlayOpacity: 50,
+    ctaText: 'Explore Tours',
+    ctaLink: '/tours',
+    secondaryCtaText: 'Learn More',
+    secondaryCtaLink: '/about'
+  };
+  
+  const defaultStats = {
+    enabled: true,
+    items: [
+      { value: '500+', label: 'Happy Riders' },
+      { value: '50+', label: 'Tours Completed' },
+      { value: '10+', label: 'Years Experience' }
+    ]
+  };
+  
+  const defaultFeatured = {
+    enabled: true,
+    title: 'Featured Tours',
+    subtitle: 'Explore our most popular adventures',
+    maxItems: 6,
+    showFeaturedOnly: false
+  };
+  
+  const defaultWhyUs = {
+    enabled: true,
+    title: 'Why Choose Us',
+    items: []
+  };
+  
+  const defaultTestimonials = {
+    enabled: true,
+    title: 'What Our Riders Say',
+    items: []
+  };
+  
+  const defaultCta = {
+    enabled: true,
+    title: 'Ready for Adventure?',
+    subtitle: 'Book your dream motorcycle tour today',
+    backgroundImage: '',
+    ctaText: 'Browse Tours',
+    ctaLink: '/tours'
+  };
+  
+  const [hero, setHero] = useState(siteSettings?.homepage?.hero || defaultHero);
+  const [stats, setStats] = useState(siteSettings?.homepage?.stats || defaultStats);
+  const [featured, setFeatured] = useState(siteSettings?.homepage?.featuredSection || defaultFeatured);
+  const [whyUs, setWhyUs] = useState(siteSettings?.homepage?.whyChooseUs || defaultWhyUs);
+  const [testimonials, setTestimonials] = useState(siteSettings?.homepage?.testimonials || defaultTestimonials);
+  const [cta, setCta] = useState(siteSettings?.homepage?.ctaSection || defaultCta);
   const [activeSection, setActiveSection] = useState('hero');
 
   const saveChanges = () => {
@@ -1035,7 +1086,7 @@ function HomepageEditor() {
               }
             >
               <div className="space-y-3">
-                {stats.items.map((item, index) => (
+                {(stats.items || []).map((item, index) => (
                   <div key={index} className="flex gap-3">
                     <input
                       type="text"
@@ -1068,7 +1119,7 @@ function HomepageEditor() {
                   </div>
                 ))}
                 <button
-                  onClick={() => setStats({ ...stats, items: [...stats.items, { value: '', label: '' }] })}
+                  onClick={() => setStats({ ...stats, items: [...(stats.items || []), { value: '', label: '' }] })}
                   className="text-sm text-amber-600 font-medium flex items-center gap-1 hover:text-amber-700"
                 >
                   <Plus size={16} /> Add Stat
@@ -1164,7 +1215,7 @@ function HomepageEditor() {
                 </FormField>
 
                 <p className="text-sm font-medium text-gray-700">Features</p>
-                {whyUs.items.map((item, index) => (
+                {(whyUs.items || []).map((item, index) => (
                   <div key={index} className="p-4 border border-gray-200 rounded-lg space-y-3">
                     <div className="flex justify-between">
                       <span className="text-sm font-medium text-gray-500">Feature #{index + 1}</span>
@@ -1200,7 +1251,7 @@ function HomepageEditor() {
                   </div>
                 ))}
                 <button
-                  onClick={() => setWhyUs({ ...whyUs, items: [...whyUs.items, { icon: 'Star', title: '', description: '' }] })}
+                  onClick={() => setWhyUs({ ...whyUs, items: [...(whyUs.items || []), { icon: 'Star', title: '', description: '' }] })}
                   className="text-sm text-amber-600 font-medium flex items-center gap-1 hover:text-amber-700"
                 >
                   <Plus size={16} /> Add Feature
@@ -1235,7 +1286,7 @@ function HomepageEditor() {
                   />
                 </FormField>
 
-                {testimonials.items.map((item, index) => (
+                {(testimonials.items || []).map((item, index) => (
                   <div key={index} className="p-4 border border-gray-200 rounded-lg space-y-3">
                     <div className="flex justify-between">
                       <span className="text-sm font-medium text-gray-500">Testimonial #{index + 1}</span>
@@ -1300,7 +1351,7 @@ function HomepageEditor() {
                   </div>
                 ))}
                 <button
-                  onClick={() => setTestimonials({ ...testimonials, items: [...testimonials.items, { name: '', country: '', text: '', rating: 5 }] })}
+                  onClick={() => setTestimonials({ ...testimonials, items: [...(testimonials.items || []), { name: '', country: '', text: '', rating: 5 }] })}
                   className="text-sm text-amber-600 font-medium flex items-center gap-1 hover:text-amber-700"
                 >
                   <Plus size={16} /> Add Testimonial
@@ -1651,7 +1702,19 @@ function HeaderFooterEditor() {
 // SEO Settings
 function SEOSettingsEditor() {
   const { siteSettings, updateSiteSettings } = useApp();
-  const [seo, setSeo] = useState(siteSettings.seo);
+  
+  // Default SEO values
+  const defaultSeo = {
+    siteTitle: '',
+    siteDescription: '',
+    keywords: [] as string[],
+    ogImage: '',
+    twitterHandle: '',
+    googleAnalyticsId: '',
+    facebookPixelId: ''
+  };
+  
+  const [seo, setSeo] = useState(siteSettings?.seo || defaultSeo);
 
   useEffect(() => {
     updateSiteSettings({ seo });
@@ -1674,7 +1737,7 @@ function SEOSettingsEditor() {
                 onChange={(e) => setSeo({ ...seo, siteTitle: e.target.value })}
                 className="w-full px-3 py-2 border border-gray-200 rounded-lg"
               />
-              <div className="mt-1 text-xs text-gray-400">{seo.siteTitle.length}/60 characters</div>
+              <div className="mt-1 text-xs text-gray-400">{(seo.siteTitle || '').length}/60 characters</div>
             </FormField>
 
             <FormField label="Site Description" hint="Appears in search results">
@@ -1684,14 +1747,14 @@ function SEOSettingsEditor() {
                 rows={3}
                 className="w-full px-3 py-2 border border-gray-200 rounded-lg"
               />
-              <div className="mt-1 text-xs text-gray-400">{seo.siteDescription.length}/160 characters</div>
+              <div className="mt-1 text-xs text-gray-400">{(seo.siteDescription || '').length}/160 characters</div>
             </FormField>
 
             <FormField label="Keywords" hint="Comma-separated">
               <input
                 type="text"
-                value={seo.keywords.join(', ')}
-                onChange={(e) => setSeo({ ...seo, keywords: e.target.value.split(',').map(k => k.trim()) })}
+                value={(seo.keywords || []).join(', ')}
+                  onChange={(e) => setSeo({ ...seo, keywords: e.target.value.split(',').map(k => k.trim()).filter(k => k) })}
                 className="w-full px-3 py-2 border border-gray-200 rounded-lg"
               />
             </FormField>
