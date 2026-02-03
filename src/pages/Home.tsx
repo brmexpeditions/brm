@@ -533,7 +533,7 @@ export function Home() {
   const tourOfMonth = featuredTours[0] || allPublishedTours.sort((a, b) => b.price - a.price)[0];
   
   // Safe defaults for homepage settings
-  const homepage = siteSettings?.homepage || {
+  const defaultHomepage = {
     hero: {
       title: 'Ride the Himalayas',
       subtitle: 'Experience the adventure of a lifetime',
@@ -550,9 +550,24 @@ export function Home() {
     testimonials: { enabled: true, title: 'What Our Riders Say', items: [] },
     ctaSection: { enabled: true, title: 'Ready for Adventure?', subtitle: '', backgroundImage: '', ctaText: 'Book Now', ctaLink: '/tours' }
   };
-  const displayTours = homepage.featuredSection.showFeaturedOnly 
-    ? featuredTours.slice(0, homepage.featuredSection.maxItems)
-    : (featuredTours.length > 0 ? featuredTours : allPublishedTours).slice(0, homepage.featuredSection.maxItems);
+  
+  // Merge with defaults to ensure all properties exist
+  const homepage = {
+    hero: { ...defaultHomepage.hero, ...(siteSettings?.homepage?.hero || {}) },
+    stats: { ...defaultHomepage.stats, ...(siteSettings?.homepage?.stats || {}) },
+    featuredSection: { ...defaultHomepage.featuredSection, ...(siteSettings?.homepage?.featuredSection || {}) },
+    whyChooseUs: { ...defaultHomepage.whyChooseUs, ...(siteSettings?.homepage?.whyChooseUs || {}) },
+    testimonials: { ...defaultHomepage.testimonials, ...(siteSettings?.homepage?.testimonials || {}) },
+    ctaSection: { ...defaultHomepage.ctaSection, ...(siteSettings?.homepage?.ctaSection || {}) }
+  };
+  
+  // Safe access to featuredSection properties
+  const maxItems = homepage.featuredSection?.maxItems || 6;
+  const showFeaturedOnly = homepage.featuredSection?.showFeaturedOnly ?? true;
+  
+  const displayTours = showFeaturedOnly 
+    ? featuredTours.slice(0, maxItems)
+    : (featuredTours.length > 0 ? featuredTours : allPublishedTours).slice(0, maxItems);
   
   const getIcon = (iconName: string) => {
     const icons: Record<string, React.ComponentType<{ className?: string; size?: number }>> = { Shield, Award, Compass, Star };

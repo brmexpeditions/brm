@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { Tour, Destination, Bike, Booking, Page, SiteSettings } from '../types';
 import { defaultTours } from '../data/tours';
 import { defaultDestinations } from '../data/destinations';
@@ -59,7 +59,7 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 // Safe localStorage operations
-const storage = {
+const safeLocalStorage = {
   get: <T,>(key: string, fallback: T): T => {
     try {
       const item = localStorage.getItem(key);
@@ -77,18 +77,23 @@ const storage = {
   }
 };
 
+// Supabase configuration
+const SUPABASE_URL = 'https://khidecfioxjgwspwcwer.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtoaWRlY2Zpb3hqZ3dzcHdjd2VyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAxMDU3NzUsImV4cCI6MjA4NTY4MTc3NX0.2qnrst53yk4g2AKeYBUpi4vVbXqi77F835PnT67SUYo';
+
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // Initialize state from localStorage (instant, no async)
-  const [tours, setTours] = useState<Tour[]>(() => storage.get('brm_tours', defaultTours));
-  const [destinations, setDestinations] = useState<Destination[]>(() => storage.get('brm_destinations', defaultDestinations));
-  const [bikes, setBikes] = useState<Bike[]>(() => storage.get('brm_bikes', defaultBikes));
-  const [bookings, setBookings] = useState<Booking[]>(() => storage.get('brm_bookings', []));
-  const [pages, setPages] = useState<Page[]>(() => storage.get('brm_pages', []));
-  const [siteSettings, setSiteSettings] = useState<SiteSettings>(() => storage.get('brm_settings', defaultSiteSettings));
-  const [mediaItems, setMediaItems] = useState<MediaItem[]>(() => storage.get('brm_media', []));
+  const [tours, setTours] = useState<Tour[]>(() => safeLocalStorage.get('brm_tours', defaultTours));
+  const [destinations, setDestinations] = useState<Destination[]>(() => safeLocalStorage.get('brm_destinations', defaultDestinations));
+  const [bikes, setBikes] = useState<Bike[]>(() => safeLocalStorage.get('brm_bikes', defaultBikes));
+  const [bookings, setBookings] = useState<Booking[]>(() => safeLocalStorage.get('brm_bookings', []));
+  const [pages, setPages] = useState<Page[]>(() => safeLocalStorage.get('brm_pages', []));
+  const [siteSettings, setSiteSettings] = useState<SiteSettings>(() => safeLocalStorage.get('brm_settings', defaultSiteSettings));
+  const [mediaItems, setMediaItems] = useState<MediaItem[]>(() => safeLocalStorage.get('brm_media', []));
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [isUsingDatabase, setIsUsingDatabase] = useState(false);
+  const [isUsingDatabase] = useState(true);
+  const [hasLoadedFromDb, setHasLoadedFromDb] = useState(false);
   
   // Authentication
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
@@ -119,74 +124,244 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setIsAdmin(false);
   };
 
-  // Function to refresh data from database
-  const refreshFromDatabase = async () => {
+  // Load data from Supabase - safe function
+  const loadFromSupabase = useCallback(async () => {
+    if (hasLoadedFromDb) return;
+    
+    console.log('🔄 Loading data from Supabase...');
     setLoading(true);
+    
     try {
-      const { loadFromDatabase, isSupabaseAvailable } = await import('../lib/supabase');
+      const { createClient } = await import('@supabase/supabase-js');
+      const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
       
-      if (!isSupabaseAvailable()) {
-        console.log('Database not available');
+      // Test connection
+      const { error: testError } = await supabase.from('tours').select('id').limit(1);
+      if (testError) {
+        console.log('⚠️ Database not accessible:', testError.message);
         setLoading(false);
         return;
       }
       
-      setIsUsingDatabase(true);
-      console.log('🔄 Loading from database...');
+      console.log('✅ Connected to Supabase');
+
+      // Load tours
+      try {
+        const { data: toursData } = await supabase.from('tours').select('*').order('created_at', { ascending: false });
+        if (toursData && toursData.length > 0) {
+          console.log(`📦 Found ${toursData.length} tours`);
+          const mapped: Tour[] = toursData.map((t) => ({
+            id: String(t.id || ''),
+            slug: String(t.slug || ''),
+            title: String(t.title || ''),
+            subtitle: String(t.subtitle || ''),
+            description: String(t.description || ''),
+            shortDescription: String(t.short_description || ''),
+            heroImage: String(t.hero_image || ''),
+            gallery: Array.isArray(t.gallery) ? t.gallery : [],
+            duration: String(t.duration || ''),
+            durationDays: Number(t.duration_days) || 0,
+            distance: String(t.distance || ''),
+            difficulty: (t.difficulty || 'Moderate') as Tour['difficulty'],
+            groupSize: String(t.group_size || ''),
+            startLocation: String(t.start_location || ''),
+            endLocation: String(t.end_location || ''),
+            countries: Array.isArray(t.countries) ? t.countries : [],
+            terrain: Array.isArray(t.terrain) ? t.terrain : [],
+            bestSeason: String(t.best_season || ''),
+            price: Number(t.price) || 0,
+            originalPrice: t.original_price ? Number(t.original_price) : undefined,
+            currency: String(t.currency || 'USD'),
+            nextDeparture: String(t.next_departure || ''),
+            departureDates: Array.isArray(t.departure_dates) ? t.departure_dates : [],
+            highlights: Array.isArray(t.highlights) ? t.highlights : [],
+            itinerary: Array.isArray(t.itinerary) ? t.itinerary : [],
+            inclusions: (t.inclusions && typeof t.inclusions === 'object') ? t.inclusions : { included: [], notIncluded: [] },
+            upgrades: Array.isArray(t.upgrades) ? t.upgrades : [],
+            seo: t.seo || undefined,
+            mapUrl: String(t.map_url || ''),
+            availableBikes: Array.isArray(t.available_bikes) ? t.available_bikes : [],
+            pricing: t.pricing_config || undefined,
+            featured: Boolean(t.featured),
+            status: (t.status === 'published' ? 'published' : 'draft') as Tour['status'],
+            createdAt: String(t.created_at || new Date().toISOString()),
+            updatedAt: String(t.updated_at || new Date().toISOString())
+          }));
+          setTours(mapped);
+          safeLocalStorage.set('brm_tours', mapped);
+        }
+      } catch (e) { console.log('⚠️ Tours load error:', e); }
+
+      // Load destinations
+      try {
+        const { data: destData } = await supabase.from('destinations').select('*').order('created_at', { ascending: false });
+        if (destData && destData.length > 0) {
+          console.log(`📦 Found ${destData.length} destinations`);
+          const mapped: Destination[] = destData.map((d) => ({
+            id: String(d.id || ''),
+            slug: String(d.slug || ''),
+            name: String(d.name || ''),
+            country: String(d.country || ''),
+            tagline: String(d.tagline || ''),
+            description: String(d.description || ''),
+            heroImage: String(d.hero_image || ''),
+            gallery: Array.isArray(d.gallery) ? d.gallery : [],
+            highlights: Array.isArray(d.highlights) ? d.highlights : [],
+            bestTimeToVisit: String(d.best_time_to_visit || ''),
+            climate: String(d.climate || ''),
+            terrain: Array.isArray(d.terrain) ? d.terrain : [],
+            difficulty: (d.difficulty || 'Moderate') as Destination['difficulty'],
+            averageAltitude: String(d.average_altitude || ''),
+            popularRoutes: Array.isArray(d.popular_routes) ? d.popular_routes : [],
+            thingsToKnow: Array.isArray(d.things_to_know) ? d.things_to_know : [],
+            featured: Boolean(d.featured),
+            status: (d.status === 'published' ? 'published' : 'draft') as Destination['status'],
+            seo: d.seo || { metaTitle: '', metaDescription: '', keywords: [] },
+            createdAt: String(d.created_at || new Date().toISOString()),
+            updatedAt: String(d.updated_at || new Date().toISOString())
+          }));
+          setDestinations(mapped);
+          safeLocalStorage.set('brm_destinations', mapped);
+        }
+      } catch (e) { console.log('⚠️ Destinations load error:', e); }
+
+      // Load bikes
+      try {
+        const { data: bikesData } = await supabase.from('bikes').select('*').order('created_at', { ascending: false });
+        if (bikesData && bikesData.length > 0) {
+          console.log(`📦 Found ${bikesData.length} bikes`);
+          const mapped: Bike[] = bikesData.map((b) => ({
+            id: String(b.id || ''),
+            name: String(b.name || ''),
+            brand: String(b.brand || ''),
+            model: String(b.model || ''),
+            year: Number(b.year) || new Date().getFullYear(),
+            image: String(b.image || ''),
+            gallery: Array.isArray(b.gallery) ? b.gallery : [],
+            engineCapacity: String(b.engine_capacity || ''),
+            power: String(b.power || ''),
+            torque: String(b.torque || ''),
+            weight: String(b.weight || ''),
+            seatHeight: String(b.seat_height || ''),
+            fuelCapacity: String(b.fuel_capacity || ''),
+            transmission: String(b.transmission || ''),
+            topSpeed: String(b.top_speed || ''),
+            description: String(b.description || ''),
+            features: Array.isArray(b.features) ? b.features : [],
+            idealFor: Array.isArray(b.ideal_for) ? b.ideal_for : [],
+            rentalPrice: Number(b.rental_price) || 0,
+            upgradePrice: Number(b.upgrade_price) || 0,
+            available: b.available !== false,
+            featured: Boolean(b.featured),
+            category: (['adventure', 'cruiser', 'sport', 'touring', 'standard'].includes(b.category) ? b.category : 'adventure') as Bike['category']
+          }));
+          setBikes(mapped);
+          safeLocalStorage.set('brm_bikes', mapped);
+        }
+      } catch (e) { console.log('⚠️ Bikes load error:', e); }
+
+      // Load bookings
+      try {
+        const { data: bookingsData } = await supabase.from('bookings').select('*').order('created_at', { ascending: false });
+        if (bookingsData && bookingsData.length > 0) {
+          console.log(`📦 Found ${bookingsData.length} bookings`);
+          const mapped: Booking[] = bookingsData.map((b) => ({
+            id: String(b.id || ''),
+            tourId: String(b.tour_id || ''),
+            customerName: String(b.customer_name || ''),
+            email: String(b.customer_email || ''),
+            phone: String(b.customer_phone || ''),
+            departureDate: String(b.selected_date || ''),
+            riders: Number(b.riders) || 1,
+            passengers: Number(b.pillions) || 0,
+            selectedUpgrades: Array.isArray(b.selected_upgrades) ? b.selected_upgrades : [],
+            totalPrice: Number(b.total_price) || 0,
+            status: (b.status || 'pending') as Booking['status'],
+            createdAt: String(b.created_at || new Date().toISOString()),
+            notes: String(b.notes || '')
+          }));
+          setBookings(mapped);
+          safeLocalStorage.set('brm_bookings', mapped);
+        }
+      } catch (e) { console.log('⚠️ Bookings load error:', e); }
+
+      // Load pages
+      try {
+        const { data: pagesData } = await supabase.from('pages').select('*').order('created_at', { ascending: false });
+        if (pagesData && pagesData.length > 0) {
+          console.log(`📦 Found ${pagesData.length} pages`);
+          const mapped: Page[] = pagesData.map((p) => ({
+            id: String(p.id || ''),
+            title: String(p.title || ''),
+            slug: String(p.slug || ''),
+            content: String(p.content || ''),
+            template: (p.template || 'default') as Page['template'],
+            featuredImage: String(p.featured_image || ''),
+            excerpt: String(p.excerpt || ''),
+            showInMenu: Boolean(p.show_in_menu),
+            menuOrder: Number(p.menu_order) || 0,
+            status: (p.status === 'published' ? 'published' : 'draft') as Page['status'],
+            seo: p.seo || { metaTitle: '', metaDescription: '', keywords: [] },
+            createdAt: String(p.created_at || new Date().toISOString()),
+            updatedAt: String(p.updated_at || new Date().toISOString())
+          }));
+          setPages(mapped);
+          safeLocalStorage.set('brm_pages', mapped);
+        }
+      } catch (e) { console.log('⚠️ Pages load error:', e); }
+
+      // Load site settings
+      try {
+        const { data: settingsData } = await supabase.from('site_settings').select('*').eq('id', 'main').single();
+        if (settingsData?.settings) {
+          console.log('📦 Found site settings');
+          setSiteSettings(settingsData.settings as SiteSettings);
+          safeLocalStorage.set('brm_settings', settingsData.settings);
+        }
+      } catch (e) { console.log('⚠️ Settings load error:', e); }
+
+      // Load media
+      try {
+        const { data: mediaData } = await supabase.from('media').select('*').order('created_at', { ascending: false });
+        if (mediaData && mediaData.length > 0) {
+          console.log(`📦 Found ${mediaData.length} media items`);
+          setMediaItems(mediaData as MediaItem[]);
+          safeLocalStorage.set('brm_media', mediaData);
+        }
+      } catch (e) { console.log('⚠️ Media load error:', e); }
+
+      console.log('✅ Data sync complete!');
+      setHasLoadedFromDb(true);
       
-      const dbData = await loadFromDatabase();
-      
-      if (dbData) {
-        if (dbData.tours && Array.isArray(dbData.tours) && dbData.tours.length > 0) {
-          setTours(dbData.tours as Tour[]);
-          storage.set('brm_tours', dbData.tours);
-          console.log(`✅ Loaded ${dbData.tours.length} tours`);
-        }
-        
-        if (dbData.destinations && Array.isArray(dbData.destinations) && dbData.destinations.length > 0) {
-          setDestinations(dbData.destinations as Destination[]);
-          storage.set('brm_destinations', dbData.destinations);
-        }
-        
-        if (dbData.bikes && Array.isArray(dbData.bikes) && dbData.bikes.length > 0) {
-          setBikes(dbData.bikes as Bike[]);
-          storage.set('brm_bikes', dbData.bikes);
-        }
-        
-        if (dbData.bookings && Array.isArray(dbData.bookings) && dbData.bookings.length > 0) {
-          setBookings(dbData.bookings as Booking[]);
-          storage.set('brm_bookings', dbData.bookings);
-        }
-        
-        if (dbData.pages && Array.isArray(dbData.pages) && dbData.pages.length > 0) {
-          setPages(dbData.pages as Page[]);
-          storage.set('brm_pages', dbData.pages);
-        }
-        
-        if (dbData.siteSettings) {
-          setSiteSettings(dbData.siteSettings as SiteSettings);
-          storage.set('brm_settings', dbData.siteSettings);
-        }
-        
-        if (dbData.media && Array.isArray(dbData.media) && dbData.media.length > 0) {
-          setMediaItems(dbData.media as MediaItem[]);
-          storage.set('brm_media', dbData.media);
-        }
-      }
     } catch (error) {
-      console.log('Database refresh failed:', error);
+      console.log('⚠️ Supabase error:', error);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
+  }, [hasLoadedFromDb]);
+
+  // Auto-load from Supabase after page loads
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      loadFromSupabase();
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [loadFromSupabase]);
+
+  // Manual refresh function
+  const refreshFromDatabase = async (): Promise<void> => {
+    setHasLoadedFromDb(false);
+    await loadFromSupabase();
   };
 
   // Save to localStorage when data changes
-  useEffect(() => { storage.set('brm_tours', tours); }, [tours]);
-  useEffect(() => { storage.set('brm_destinations', destinations); }, [destinations]);
-  useEffect(() => { storage.set('brm_bikes', bikes); }, [bikes]);
-  useEffect(() => { storage.set('brm_bookings', bookings); }, [bookings]);
-  useEffect(() => { storage.set('brm_pages', pages); }, [pages]);
-  useEffect(() => { storage.set('brm_settings', siteSettings); }, [siteSettings]);
-  useEffect(() => { storage.set('brm_media', mediaItems); }, [mediaItems]);
+  useEffect(() => { safeLocalStorage.set('brm_tours', tours); }, [tours]);
+  useEffect(() => { safeLocalStorage.set('brm_destinations', destinations); }, [destinations]);
+  useEffect(() => { safeLocalStorage.set('brm_bikes', bikes); }, [bikes]);
+  useEffect(() => { safeLocalStorage.set('brm_bookings', bookings); }, [bookings]);
+  useEffect(() => { safeLocalStorage.set('brm_pages', pages); }, [pages]);
+  useEffect(() => { safeLocalStorage.set('brm_settings', siteSettings); }, [siteSettings]);
+  useEffect(() => { safeLocalStorage.set('brm_media', mediaItems); }, [mediaItems]);
 
   // Background sync to database
   const syncTour = async (tour: Tour) => {

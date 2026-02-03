@@ -17,13 +17,45 @@ try {
   console.log('⚠️ Supabase not available, using localStorage only');
 }
 
+// Helper: Clean value for database (convert empty strings to null)
+function cleanValue(value: unknown, key: string): unknown {
+  // If undefined or null, return null
+  if (value === undefined || value === null) return null;
+  
+  // If empty string, return null (especially important for date fields)
+  if (value === '') return null;
+  
+  // Date fields need special handling
+  const dateFields = ['next_departure', 'nextDeparture', 'created_at', 'updated_at', 'createdAt', 'updatedAt'];
+  if (dateFields.includes(key)) {
+    if (!value || value === '' || value === 'Invalid Date') return null;
+    // If it's a valid date string, return just the date part
+    if (typeof value === 'string') {
+      if (value.match(/^\d{4}-\d{2}-\d{2}/)) {
+        return value.split('T')[0];
+      }
+      // Try to parse it
+      try {
+        const date = new Date(value);
+        if (isNaN(date.getTime())) return null;
+        return date.toISOString().split('T')[0];
+      } catch {
+        return null;
+      }
+    }
+  }
+  
+  return value;
+}
+
 // Helper: Convert camelCase to snake_case for database columns
 function toSnakeCase(obj: Record<string, unknown>): Record<string, unknown> {
   const result: Record<string, unknown> = {};
   for (const key in obj) {
     if (Object.prototype.hasOwnProperty.call(obj, key)) {
       const snakeKey = key.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
-      result[snakeKey] = obj[key];
+      // Clean the value before adding
+      result[snakeKey] = cleanValue(obj[key], snakeKey);
     }
   }
   return result;
