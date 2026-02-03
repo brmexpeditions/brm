@@ -16,9 +16,8 @@ import { Tour, Destination, Bike, Booking, Page, SiteSettings } from '../types';
 const ENABLE_SUPABASE = true;
 
 // Your Supabase credentials
-const SUPABASE_URL = 'https://khidecfioxjgwspwcwer.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtoaWRlY2Zpb3hqZ3dzcHdjd2VyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAxMDU3NzUsImV4cCI6MjA4NTY4MTc3NX0.2qnrst53yk4g2AKeYBUpi4vVbXqi77F835PnT67SUYo';
-
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 // ============================================
 // SUPABASE CLIENT
 // ============================================
