@@ -6,20 +6,12 @@ export function FrontendEditor() {
   const [isOpen, setIsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'quick' | 'colors' | 'typography'>('quick');
   
-  // Safe context access
-  let context;
-  try {
-    context = useApp();
-  } catch {
-    return null;
-  }
-  
-  if (!context) return null;
-  
-  const { isAuthenticated, siteSettings, updateSiteSettings } = context;
+  const context = useApp();
   
   // Only show for authenticated users
-  if (!isAuthenticated) return null;
+  if (!context?.isAuthenticated) return null;
+  
+  const { siteSettings, updateSiteSettings } = context;
   
   // Safe access to settings
   const colors = siteSettings?.colors || {
@@ -38,31 +30,21 @@ export function FrontendEditor() {
   };
 
   const updateColors = (key: string, value: string) => {
-    try {
-      updateSiteSettings({
-        ...siteSettings,
-        colors: {
-          ...colors,
-          [key]: value
-        }
-      });
-    } catch (e) {
-      console.error('Error updating colors:', e);
-    }
+    updateSiteSettings({
+      colors: {
+        ...colors,
+        [key]: value
+      }
+    });
   };
 
   const updateTypography = (key: string, value: string | number) => {
-    try {
-      updateSiteSettings({
-        ...siteSettings,
-        typography: {
-          ...typography,
-          [key]: value
-        }
-      });
-    } catch (e) {
-      console.error('Error updating typography:', e);
-    }
+    updateSiteSettings({
+      typography: {
+        ...typography,
+        [key]: value
+      }
+    });
   };
 
   const fonts = [

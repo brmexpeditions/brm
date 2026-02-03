@@ -1,7 +1,6 @@
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { useEffect } from 'react';
 import { AppProvider } from './context/AppContext';
-import { Layout } from './components/Layout';
 import { Home } from './pages/Home';
 import { Tours } from './pages/Tours';
 import { TourDetail } from './pages/TourDetail';
@@ -34,22 +33,20 @@ export function App() {
     <AppProvider>
       <BrowserRouter>
         <ScrollToTop />
-        <Layout>
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/tours" element={<Tours />} />
-            <Route path="/tours/:slug" element={<TourDetail />} />
-            <Route path="/destinations" element={<Destinations />} />
-            <Route path="/destinations/:slug" element={<DestinationDetail />} />
-            <Route path="/bikes" element={<Bikes />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/contact" element={<Contact />} />
-            <Route path="/admin/*" element={<Admin />} />
-            <Route path="/login" element={<Login />} />
-            {/* Catch all route for 404 */}
-            <Route path="*" element={<Home />} />
-          </Routes>
-        </Layout>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/tours" element={<Tours />} />
+          <Route path="/tours/:slug" element={<TourDetail />} />
+          <Route path="/destinations" element={<Destinations />} />
+          <Route path="/destinations/:slug" element={<DestinationDetail />} />
+          <Route path="/bikes" element={<Bikes />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/admin/*" element={<Admin />} />
+          <Route path="/login" element={<Login />} />
+          {/* Catch all route for 404 */}
+          <Route path="*" element={<Home />} />
+        </Routes>
         <FrontendEditor />
       </BrowserRouter>
     </AppProvider>
