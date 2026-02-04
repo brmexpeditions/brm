@@ -11,9 +11,8 @@ import {
 import { useApp } from '../context/AppContext';
 import { Tour, ItineraryDay, UpgradeOption, ItineraryImage, Destination, Bike, Page } from '../types';
 import { RichTextEditor, HighlightsEditor } from '../components/SmartEditors';
-import { HomepageSectionsEditor } from '../components/HomepageSectionsEditor'; // Make sure this is imported!
 
-// Sidebar Component
+// Sidebar Component - Cleaner Design
 function Sidebar({ activeTab, setActiveTab, isOpen, setIsOpen }: {
   activeTab: string;
   setActiveTab: (tab: string) => void;
@@ -27,12 +26,10 @@ function Sidebar({ activeTab, setActiveTab, isOpen, setIsOpen }: {
     { id: 'bikes', label: 'Bikes / Fleet', icon: BikeIcon },
     { id: 'bookings', label: 'Bookings', icon: Calendar },
     { id: 'divider1', type: 'divider' },
-    // NEW SECTION ADDED HERE
-    { id: 'sections', label: 'Homepage Sections', icon: Layout },
     { id: 'pages', label: 'Pages', icon: File },
     { id: 'menus', label: 'Menu Builder', icon: Menu },
     { id: 'theme', label: 'Theme Customizer', icon: Palette },
-    { id: 'homepage', label: 'Global Settings', icon: Home },
+    { id: 'homepage', label: 'Homepage', icon: Home },
     { id: 'header-footer', label: 'Header & Footer', icon: Layout },
     { id: 'images', label: 'Image Settings', icon: Image },
     { id: 'divider2', type: 'divider' },
@@ -5107,7 +5104,7 @@ export function Admin() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [editingTour, setEditingTour] = useState<Tour | 'new' | null>(null);
   const [editingDestination, setEditingDestination] = useState<Destination | 'new' | null>(null);
-  const { isAuthenticated, logout, addTour, siteSettings, updateTour, addDestination, updateDestination, updateSiteSettings  , refreshFromDatabase } = useApp();
+  const { isAuthenticated, logout, addTour, updateTour, addDestination, updateDestination, refreshFromDatabase } = useApp();
   const navigate = useNavigate();
 
   const handleSaveTour = async (tour: Tour) => {
@@ -5187,12 +5184,6 @@ export function Admin() {
         <TopHeader setSidebarOpen={setSidebarOpen} onLogout={() => { logout(); navigate('/login'); }} onRefresh={refreshFromDatabase} />
         <main className="p-6">
           {activeTab === 'dashboard' && <Dashboard />}
-          activeTab === 'sections' && (
-  <HomepageSectionsEditor 
-    siteSettings={siteSettings} 
-    updateSiteSettings={updateSiteSettings} 
-  />
-)
           {activeTab === 'tours' && <ToursManager onEditTour={setEditingTour} />}
           {activeTab === 'destinations' && <DestinationsManager onEditDestination={setEditingDestination} />}
           {activeTab === 'bookings' && <BookingsManager />}
