@@ -58,7 +58,8 @@ function Sidebar({ activeTab, setActiveTab, isOpen, setIsOpen }: {
         </div>
 
         {/* Menu */}
-        <nav className="p-3">
+                <nav className="p-3">
+          {/* Existing Menu Items */}
           {menuItems.map((item, i) => {
             if (item.type === 'divider') {
               return <div key={i} className="h-px bg-gray-100 my-3" />;
@@ -76,15 +77,21 @@ function Sidebar({ activeTab, setActiveTab, isOpen, setIsOpen }: {
                 {item.icon && <item.icon size={18} />}
                 {item.label}
               </button>
-              <button 
-  onClick={() => setActiveTab('sections')} 
-  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition ${activeTab === 'sections' ? 'bg-amber-50 text-amber-700 font-medium' : 'text-gray-600 hover:bg-gray-50'}`}
->
-  <span className="text-xl">📑</span> 
-  Homepage Sections
-</button>
             );
           })}
+
+          {/* NEW BUTTON - Placed OUTSIDE the map loop */}
+          <button 
+            onClick={() => { setActiveTab('sections'); setIsOpen(false); }} 
+            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all mb-1 ${
+              activeTab === 'sections' 
+                ? 'bg-amber-50 text-amber-700 border border-amber-200' 
+                : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+            }`}
+          >
+            <span className="text-lg">📑</span> 
+            Homepage Sections
+          </button>
         </nav>
 
         {/* Bottom */}
