@@ -9,7 +9,7 @@ import { DestinationDetail } from './pages/DestinationDetail';
 import { Bikes } from './pages/Bikes';
 import { About } from './pages/About';
 import { Contact } from './pages/Contact';
-import { Admin } from './pages/AdminNew';
+import { Admin } from './pages/adminNew';
 import Login from './pages/Login';
 import { FrontendEditor } from './components/FrontendEditor';
 
