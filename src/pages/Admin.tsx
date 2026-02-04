@@ -22,6 +22,7 @@ function Sidebar({ activeTab, setActiveTab, isOpen, setIsOpen }: {
 }) {
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { id: 'sections', label: 'Homepage Sections', icon: Layout },
     { id: 'sections', label: 'Homepage Sections', icon: LayoutIcon },
     { id: 'tours', label: 'Tours', icon: Map },
     { id: 'destinations', label: 'Destinations', icon: MapPin },
@@ -81,18 +82,6 @@ function Sidebar({ activeTab, setActiveTab, isOpen, setIsOpen }: {
             );
           })}
 
-          {/* NEW BUTTON - Placed OUTSIDE the map loop */}
-          <button 
-            onClick={() => { setActiveTab('sections'); setIsOpen(false); }} 
-            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all mb-1 ${
-              activeTab === 'sections' 
-                ? 'bg-amber-50 text-amber-700 border border-amber-200' 
-                : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-            }`}
-          >
-            <span className="text-lg">📑</span> 
-            Homepage Sections
-          </button>
         </nav>
 
         {/* Bottom */}
