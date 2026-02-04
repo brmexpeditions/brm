@@ -1,3 +1,4 @@
+import { HomepageSectionsEditor } from '../components/HomepageSectionsEditor';
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
@@ -75,6 +76,13 @@ function Sidebar({ activeTab, setActiveTab, isOpen, setIsOpen }: {
                 {item.icon && <item.icon size={18} />}
                 {item.label}
               </button>
+              <button 
+  onClick={() => setActiveTab('sections')} 
+  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition ${activeTab === 'sections' ? 'bg-amber-50 text-amber-700 font-medium' : 'text-gray-600 hover:bg-gray-50'}`}
+>
+  <span className="text-xl">📑</span> 
+  Homepage Sections
+</button>
             );
           })}
         </nav>
@@ -5184,6 +5192,12 @@ export function Admin() {
         <TopHeader setSidebarOpen={setSidebarOpen} onLogout={() => { logout(); navigate('/login'); }} onRefresh={refreshFromDatabase} />
         <main className="p-6">
           {activeTab === 'dashboard' && <Dashboard />}
+          activeTab === 'sections' && (
+  <HomepageSectionsEditor 
+    siteSettings={siteSettings} 
+    updateSiteSettings={updateSiteSettings} 
+  />
+)}
           {activeTab === 'tours' && <ToursManager onEditTour={setEditingTour} />}
           {activeTab === 'destinations' && <DestinationsManager onEditDestination={setEditingDestination} />}
           {activeTab === 'bookings' && <BookingsManager />}
