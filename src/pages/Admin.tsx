@@ -22,6 +22,7 @@ function Sidebar({ activeTab, setActiveTab, isOpen, setIsOpen }: {
 }) {
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { id: 'sections', label: 'Homepage Sections', icon: LayoutIcon },
     { id: 'tours', label: 'Tours', icon: Map },
     { id: 'destinations', label: 'Destinations', icon: MapPin },
     { id: 'bikes', label: 'Bikes / Fleet', icon: BikeIcon },
