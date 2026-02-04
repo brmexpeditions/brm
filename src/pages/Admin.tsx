@@ -5119,7 +5119,7 @@ export function Admin() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [editingTour, setEditingTour] = useState<Tour | 'new' | null>(null);
   const [editingDestination, setEditingDestination] = useState<Destination | 'new' | null>(null);
-  const { isAuthenticated, logout, addTour, updateTour, addDestination, updateDestination, refreshFromDatabase } = useApp();
+  const { isAuthenticated, logout, addTour, siteSettings, updateTour, addDestination, updateDestination, refreshFromDatabase } = useApp();
   const navigate = useNavigate();
 
   const handleSaveTour = async (tour: Tour) => {
