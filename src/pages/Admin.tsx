@@ -4106,11 +4106,6 @@ function TourEditor({ tour, onSave, onCancel }: {
       </div>
 
       {/* Tabs */}
-       <div className="flex-1 overflow-auto p-8">
-          {activeTab === 'sections' && <HomepageSectionsEditor siteSettings={siteSettings} updateSiteSettings={updateSiteSettings} />}
-          {/* ... Other tabs ... */}
-          {activeTab === 'dashboard' && <div className="text-center text-gray-500 mt-20">Dashboard Component Here</div>}
-          {activeTab === 'tours' && <div className="text-center text-gray-500 mt-20">Tours Manager Here</div>}
       <div className="bg-white rounded-xl border border-gray-200">
         <div className="flex border-b border-gray-100 overflow-x-auto">
           {tabs.map(tab => (
@@ -5514,4 +5509,3 @@ function DatabaseStatus() {
     </div>
   );
 }
-
