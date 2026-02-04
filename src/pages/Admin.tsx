@@ -1,3 +1,13 @@
+// In your Admin.tsx, import the SectionsEditor
+import { SectionsEditor } from '../components/SectionsEditor';
+
+// Then use it in a tab:
+{activeTab === 'sections' && (
+  <SectionsEditor 
+    sections={siteSettings.homepageSections}
+    onSave={(sections) => updateSiteSettings({ homepageSections: sections })}
+  />
+)}
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
