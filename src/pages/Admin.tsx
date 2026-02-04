@@ -1,4 +1,3 @@
-import { HomepageSectionsEditor } from '../components/HomepageSectionsEditor';
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
@@ -12,8 +11,9 @@ import {
 import { useApp } from '../context/AppContext';
 import { Tour, ItineraryDay, UpgradeOption, ItineraryImage, Destination, Bike, Page } from '../types';
 import { RichTextEditor, HighlightsEditor } from '../components/SmartEditors';
+import { HomepageSectionsEditor } from '../components/HomepageSectionsEditor'; // Make sure this is imported!
 
-// Sidebar Component - Cleaner Design
+// Sidebar Component
 function Sidebar({ activeTab, setActiveTab, isOpen, setIsOpen }: {
   activeTab: string;
   setActiveTab: (tab: string) => void;
@@ -22,17 +22,17 @@ function Sidebar({ activeTab, setActiveTab, isOpen, setIsOpen }: {
 }) {
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'sections', label: 'Homepage Sections', icon: Layout },
-    { id: 'sections', label: 'Homepage Sections', icon: LayoutIcon },
     { id: 'tours', label: 'Tours', icon: Map },
     { id: 'destinations', label: 'Destinations', icon: MapPin },
     { id: 'bikes', label: 'Bikes / Fleet', icon: BikeIcon },
     { id: 'bookings', label: 'Bookings', icon: Calendar },
     { id: 'divider1', type: 'divider' },
+    // NEW SECTION ADDED HERE
+    { id: 'sections', label: 'Homepage Sections', icon: Layout },
     { id: 'pages', label: 'Pages', icon: File },
     { id: 'menus', label: 'Menu Builder', icon: Menu },
     { id: 'theme', label: 'Theme Customizer', icon: Palette },
-    { id: 'homepage', label: 'Homepage', icon: Home },
+    { id: 'homepage', label: 'Global Settings', icon: Home },
     { id: 'header-footer', label: 'Header & Footer', icon: Layout },
     { id: 'images', label: 'Image Settings', icon: Image },
     { id: 'divider2', type: 'divider' },
@@ -60,8 +60,7 @@ function Sidebar({ activeTab, setActiveTab, isOpen, setIsOpen }: {
         </div>
 
         {/* Menu */}
-                <nav className="p-3">
-          {/* Existing Menu Items */}
+        <nav className="p-3">
           {menuItems.map((item, i) => {
             if (item.type === 'divider') {
               return <div key={i} className="h-px bg-gray-100 my-3" />;
@@ -81,7 +80,6 @@ function Sidebar({ activeTab, setActiveTab, isOpen, setIsOpen }: {
               </button>
             );
           })}
-
         </nav>
 
         {/* Bottom */}
