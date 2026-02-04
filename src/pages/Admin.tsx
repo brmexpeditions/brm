@@ -5204,7 +5204,7 @@ export function Admin() {
     siteSettings={siteSettings} 
     updateSiteSettings={updateSiteSettings} 
   />
-)}
+)
           {activeTab === 'tours' && <ToursManager onEditTour={setEditingTour} />}
           {activeTab === 'destinations' && <DestinationsManager onEditDestination={setEditingDestination} />}
           {activeTab === 'bookings' && <BookingsManager />}
