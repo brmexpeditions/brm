@@ -1,13 +1,4 @@
-// In your Admin.tsx, import the SectionsEditor
-import { SectionsEditor } from '../components/SectionsEditor';
-
-// Then use it in a tab:
-{activeTab === 'sections' && (
-  <SectionsEditor 
-    sections={siteSettings.homepageSections}
-    onSave={(sections) => updateSiteSettings({ homepageSections: sections })}
-  />
-)}
+import { BulkImageUpload } from '../components/BulkImageUpload';
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
@@ -23,6 +14,13 @@ import { Tour, ItineraryDay, UpgradeOption, ItineraryImage, Destination, Bike, P
 import { RichTextEditor, HighlightsEditor } from '../components/SmartEditors';
 
 // Sidebar Component - Cleaner Design
+<button
+  onClick={() => setActiveTab('sections')}
+  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition ${activeTab === 'sections' ? 'bg-amber-100 text-amber-700' : 'hover:bg-gray-100 text-gray-700'}`}
+>
+  <span className="text-xl">📑</span>
+  <span className="font-medium">Homepage Sections</span>
+</button>
 function Sidebar({ activeTab, setActiveTab, isOpen, setIsOpen }: {
   activeTab: string;
   setActiveTab: (tab: string) => void;
@@ -5107,7 +5105,584 @@ function TourEditor({ tour, onSave, onCancel }: {
     </div>
   );
 }
+// ============================================
+// HOMEPAGE SECTIONS EDITOR
+// ============================================
+function HomepageSectionsEditor({ siteSettings, updateSiteSettings }: { siteSettings: any; updateSiteSettings: (settings: any) => void }) {
+  const [activeSection, setActiveSection] = useState('faq');
+  const [bulkUploadOpen, setBulkUploadOpen] = useState(false);
+  const [bulkUploadTarget, setBulkUploadTarget] = useState('');
+  
+  // Initialize sections with defaults
+  const [sections, setSections] = useState(() => {
+    const saved = siteSettings?.homepageSections || {};
+    return {
+      faq: { enabled: true, title: 'Frequently Asked Questions', items: [], ...saved.faq },
+      team: { enabled: true, title: 'Meet Our Team', subtitle: '', members: [], ...saved.team },
+      partners: { enabled: true, title: 'Our Partners', items: [], ...saved.partners },
+      videoGallery: { enabled: true, title: 'Video Gallery', videos: [], ...saved.videoGallery },
+      photoGallery: { enabled: true, title: 'Photo Gallery', images: [], ...saved.photoGallery },
+      instagram: { enabled: true, username: '@nepalbiketours', images: [], ...saved.instagram },
+      blog: { enabled: true, title: 'From Our Blog', posts: [], ...saved.blog },
+      awards: { enabled: true, title: 'Awards & Certifications', items: [], ...saved.awards },
+      reviews: { enabled: true, title: 'Customer Reviews', items: [], ...saved.reviews },
+      newsletter: { enabled: true, title: 'Get 10% Off Your First Tour!', subtitle: 'Subscribe for exclusive deals', ...saved.newsletter },
+      weather: { enabled: true, locations: [], ...saved.weather },
+      routeMap: { enabled: true, title: 'Our Routes', embedUrl: '', ...saved.routeMap },
+      whatsapp: { enabled: true, phoneNumber: '', message: 'Hi! I\'m interested in your tours.', ...saved.whatsapp },
+      countdown: { enabled: true, ...saved.countdown },
+    };
+  });
 
+  const handleSave = () => {
+    updateSiteSettings({ homepageSections: sections });
+    alert('✅ Sections saved successfully!');
+  };
+
+  const updateSection = (key: string, data: any) => {
+    setSections((prev: any) => ({ ...prev, [key]: { ...prev[key], ...data } }));
+  };
+
+  const addItem = (sectionKey: string, itemsKey: string, newItem: any) => {
+    setSections((prev: any) => ({
+      ...prev,
+      [sectionKey]: {
+        ...prev[sectionKey],
+        [itemsKey]: [...(prev[sectionKey]?.[itemsKey] || []), { ...newItem, id: Date.now().toString() }]
+      }
+    }));
+  };
+
+  const removeItem = (sectionKey: string, itemsKey: string, itemId: string) => {
+    setSections((prev: any) => ({
+      ...prev,
+      [sectionKey]: {
+        ...prev[sectionKey],
+        [itemsKey]: prev[sectionKey]?.[itemsKey]?.filter((item: any) => item.id !== itemId) || []
+      }
+    }));
+  };
+
+  const updateItem = (sectionKey: string, itemsKey: string, itemId: string, data: any) => {
+    setSections((prev: any) => ({
+      ...prev,
+      [sectionKey]: {
+        ...prev[sectionKey],
+        [itemsKey]: prev[sectionKey]?.[itemsKey]?.map((item: any) => 
+          item.id === itemId ? { ...item, ...data } : item
+        ) || []
+      }
+    }));
+  };
+
+  const handleBulkImages = (images: { url: string; caption?: string }[]) => {
+    if (bulkUploadTarget === 'photoGallery') {
+      const newImages = images.map((img, i) => ({ id: Date.now().toString() + i, url: img.url, caption: img.caption || '' }));
+      setSections((prev: any) => ({
+        ...prev,
+        photoGallery: { ...prev.photoGallery, images: [...(prev.photoGallery?.images || []), ...newImages] }
+      }));
+    } else if (bulkUploadTarget === 'instagram') {
+      setSections((prev: any) => ({
+        ...prev,
+        instagram: { ...prev.instagram, images: [...(prev.instagram?.images || []), ...images.map(img => img.url)] }
+      }));
+    }
+    setBulkUploadOpen(false);
+  };
+
+  const sectionsList = [
+    { key: 'faq', label: 'FAQ', icon: '❓' },
+    { key: 'team', label: 'Team', icon: '👥' },
+    { key: 'partners', label: 'Partners', icon: '🤝' },
+    { key: 'videoGallery', label: 'Videos', icon: '🎬' },
+    { key: 'photoGallery', label: 'Photo Gallery', icon: '📷' },
+    { key: 'instagram', label: 'Instagram', icon: '📸' },
+    { key: 'blog', label: 'Blog', icon: '📝' },
+    { key: 'awards', label: 'Awards', icon: '🏆' },
+    { key: 'reviews', label: 'Reviews', icon: '⭐' },
+    { key: 'newsletter', label: 'Newsletter', icon: '📧' },
+    { key: 'weather', label: 'Weather', icon: '🌤️' },
+    { key: 'routeMap', label: 'Route Map', icon: '🗺️' },
+    { key: 'whatsapp', label: 'WhatsApp', icon: '💬' },
+    { key: 'countdown', label: 'Countdown', icon: '⏱️' },
+  ];
+
+  return (
+    <div className="flex h-[calc(100vh-200px)]">
+      {/* Sidebar */}
+      <div className="w-56 bg-gray-50 border-r overflow-y-auto flex-shrink-0">
+        <div className="p-4 border-b bg-white sticky top-0 z-10">
+          <h3 className="font-bold text-gray-900">Sections</h3>
+        </div>
+        <div className="p-2">
+          {sectionsList.map(section => (
+            <button
+              key={section.key}
+              onClick={() => setActiveSection(section.key)}
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition mb-1 ${
+                activeSection === section.key ? 'bg-amber-100 text-amber-700' : 'hover:bg-gray-100 text-gray-700'
+              }`}
+            >
+              <span className="text-lg">{section.icon}</span>
+              <span className="flex-1 text-sm font-medium">{section.label}</span>
+              <span className={`w-2 h-2 rounded-full ${sections[section.key]?.enabled ? 'bg-green-500' : 'bg-gray-300'}`} />
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Editor */}
+      <div className="flex-1 overflow-y-auto p-6">
+        {/* FAQ Editor */}
+        {activeSection === 'faq' && (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-bold">❓ FAQ Section</h2>
+              <label className="flex items-center gap-2">
+                <input type="checkbox" checked={sections.faq?.enabled} onChange={(e) => updateSection('faq', { enabled: e.target.checked })} className="w-5 h-5 rounded text-amber-500" />
+                <span className="text-sm">Enable</span>
+              </label>
+            </div>
+            <input type="text" value={sections.faq?.title || ''} onChange={(e) => updateSection('faq', { title: e.target.value })} placeholder="Section Title" className="w-full px-4 py-2 border rounded-lg" />
+            <div className="flex justify-between items-center">
+              <h3 className="font-semibold">Questions ({sections.faq?.items?.length || 0})</h3>
+              <button onClick={() => addItem('faq', 'items', { question: '', answer: '' })} className="px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 flex items-center gap-2">
+                <Plus size={18} /> Add Question
+              </button>
+            </div>
+            {(sections.faq?.items || []).map((item: any, index: number) => (
+              <div key={item.id} className="bg-gray-50 rounded-xl p-4 space-y-3">
+                <div className="flex items-start gap-3">
+                  <span className="bg-amber-500 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold flex-shrink-0">{index + 1}</span>
+                  <div className="flex-1 space-y-2">
+                    <input type="text" value={item.question} onChange={(e) => updateItem('faq', 'items', item.id, { question: e.target.value })} placeholder="Question" className="w-full px-3 py-2 border rounded-lg font-medium" />
+                    <textarea value={item.answer} onChange={(e) => updateItem('faq', 'items', item.id, { answer: e.target.value })} placeholder="Answer" rows={3} className="w-full px-3 py-2 border rounded-lg resize-none" />
+                  </div>
+                  <button onClick={() => removeItem('faq', 'items', item.id)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg"><Trash2 size={18} /></button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Team Editor */}
+        {activeSection === 'team' && (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-bold">👥 Team Section</h2>
+              <label className="flex items-center gap-2">
+                <input type="checkbox" checked={sections.team?.enabled} onChange={(e) => updateSection('team', { enabled: e.target.checked })} className="w-5 h-5 rounded text-amber-500" />
+                <span className="text-sm">Enable</span>
+              </label>
+            </div>
+            <input type="text" value={sections.team?.title || ''} onChange={(e) => updateSection('team', { title: e.target.value })} placeholder="Section Title" className="w-full px-4 py-2 border rounded-lg" />
+            <div className="flex justify-between items-center">
+              <h3 className="font-semibold">Team Members ({sections.team?.members?.length || 0})</h3>
+              <button onClick={() => addItem('team', 'members', { name: '', role: '', image: '', bio: '' })} className="px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 flex items-center gap-2">
+                <Plus size={18} /> Add Member
+              </button>
+            </div>
+            <div className="grid md:grid-cols-2 gap-4">
+              {(sections.team?.members || []).map((member: any) => (
+                <div key={member.id} className="bg-gray-50 rounded-xl p-4 space-y-3">
+                  <div className="flex gap-4">
+                    <div className="w-20 h-20 bg-gray-200 rounded-xl overflow-hidden flex-shrink-0">
+                      {member.image ? <img src={member.image} alt="" className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-2xl">👤</div>}
+                    </div>
+                    <div className="flex-1 space-y-2">
+                      <input type="text" value={member.name} onChange={(e) => updateItem('team', 'members', member.id, { name: e.target.value })} placeholder="Name" className="w-full px-3 py-1.5 border rounded-lg text-sm font-medium" />
+                      <input type="text" value={member.role} onChange={(e) => updateItem('team', 'members', member.id, { role: e.target.value })} placeholder="Role" className="w-full px-3 py-1.5 border rounded-lg text-sm" />
+                    </div>
+                    <button onClick={() => removeItem('team', 'members', member.id)} className="text-red-500 hover:bg-red-50 rounded-lg p-1 h-fit"><Trash2 size={16} /></button>
+                  </div>
+                  <input type="text" value={member.image} onChange={(e) => updateItem('team', 'members', member.id, { image: e.target.value })} placeholder="Image URL" className="w-full px-3 py-1.5 border rounded-lg text-sm" />
+                  <input type="text" value={member.bio} onChange={(e) => updateItem('team', 'members', member.id, { bio: e.target.value })} placeholder="Short bio" className="w-full px-3 py-1.5 border rounded-lg text-sm" />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Partners Editor */}
+        {activeSection === 'partners' && (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-bold">🤝 Partners Section</h2>
+              <label className="flex items-center gap-2">
+                <input type="checkbox" checked={sections.partners?.enabled} onChange={(e) => updateSection('partners', { enabled: e.target.checked })} className="w-5 h-5 rounded text-amber-500" />
+                <span className="text-sm">Enable</span>
+              </label>
+            </div>
+            <input type="text" value={sections.partners?.title || ''} onChange={(e) => updateSection('partners', { title: e.target.value })} placeholder="Section Title" className="w-full px-4 py-2 border rounded-lg" />
+            <div className="flex justify-between items-center">
+              <h3 className="font-semibold">Partners ({sections.partners?.items?.length || 0})</h3>
+              <button onClick={() => addItem('partners', 'items', { name: '', logo: '', url: '' })} className="px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 flex items-center gap-2">
+                <Plus size={18} /> Add Partner
+              </button>
+            </div>
+            <div className="grid md:grid-cols-3 gap-4">
+              {(sections.partners?.items || []).map((partner: any) => (
+                <div key={partner.id} className="bg-gray-50 rounded-xl p-4 space-y-2">
+                  <div className="flex justify-between">
+                    <div className="w-16 h-16 bg-white rounded-lg flex items-center justify-center border">
+                      {partner.logo ? <img src={partner.logo} alt="" className="max-w-full max-h-full object-contain" /> : <span className="text-2xl">🏢</span>}
+                    </div>
+                    <button onClick={() => removeItem('partners', 'items', partner.id)} className="text-red-500"><Trash2 size={16} /></button>
+                  </div>
+                  <input type="text" value={partner.name} onChange={(e) => updateItem('partners', 'items', partner.id, { name: e.target.value })} placeholder="Partner Name" className="w-full px-3 py-1.5 border rounded-lg text-sm" />
+                  <input type="text" value={partner.logo} onChange={(e) => updateItem('partners', 'items', partner.id, { logo: e.target.value })} placeholder="Logo URL" className="w-full px-3 py-1.5 border rounded-lg text-sm" />
+                  <input type="text" value={partner.url} onChange={(e) => updateItem('partners', 'items', partner.id, { url: e.target.value })} placeholder="Website URL" className="w-full px-3 py-1.5 border rounded-lg text-sm" />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Photo Gallery Editor */}
+        {activeSection === 'photoGallery' && (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-bold">📷 Photo Gallery</h2>
+              <label className="flex items-center gap-2">
+                <input type="checkbox" checked={sections.photoGallery?.enabled} onChange={(e) => updateSection('photoGallery', { enabled: e.target.checked })} className="w-5 h-5 rounded text-amber-500" />
+                <span className="text-sm">Enable</span>
+              </label>
+            </div>
+            <input type="text" value={sections.photoGallery?.title || ''} onChange={(e) => updateSection('photoGallery', { title: e.target.value })} placeholder="Section Title" className="w-full px-4 py-2 border rounded-lg" />
+            <div className="flex gap-4">
+              <button onClick={() => { setBulkUploadTarget('photoGallery'); setBulkUploadOpen(true); }} className="px-6 py-3 bg-amber-500 text-white rounded-lg hover:bg-amber-600 flex items-center gap-2 font-semibold">
+                <ImageIcon size={20} /> Add Multiple Images
+              </button>
+              <button onClick={() => addItem('photoGallery', 'images', { url: '', caption: '' })} className="px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-2">
+                <Plus size={18} /> Add Single Image
+              </button>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {(sections.photoGallery?.images || []).map((image: any) => (
+                <div key={image.id} className="relative group">
+                  <div className="aspect-square bg-gray-100 rounded-xl overflow-hidden">
+                    {image.url ? <img src={image.url} alt="" className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-4xl">🖼️</div>}
+                  </div>
+                  <button onClick={() => removeItem('photoGallery', 'images', image.id)} className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition">
+                    <Trash2 size={14} />
+                  </button>
+                  <input type="text" value={image.url} onChange={(e) => updateItem('photoGallery', 'images', image.id, { url: e.target.value })} placeholder="Image URL" className="w-full mt-2 px-2 py-1 text-xs border rounded" />
+                  <input type="text" value={image.caption || ''} onChange={(e) => updateItem('photoGallery', 'images', image.id, { caption: e.target.value })} placeholder="Caption" className="w-full mt-1 px-2 py-1 text-xs border rounded" />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Instagram Editor */}
+        {activeSection === 'instagram' && (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-bold">📸 Instagram Feed</h2>
+              <label className="flex items-center gap-2">
+                <input type="checkbox" checked={sections.instagram?.enabled} onChange={(e) => updateSection('instagram', { enabled: e.target.checked })} className="w-5 h-5 rounded text-amber-500" />
+                <span className="text-sm">Enable</span>
+              </label>
+            </div>
+            <input type="text" value={sections.instagram?.username || ''} onChange={(e) => updateSection('instagram', { username: e.target.value })} placeholder="@username" className="w-full px-4 py-2 border rounded-lg" />
+            <button onClick={() => { setBulkUploadTarget('instagram'); setBulkUploadOpen(true); }} className="px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:opacity-90 flex items-center gap-2 font-semibold">
+              <ImageIcon size={20} /> Add Multiple Images
+            </button>
+            <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
+              {(sections.instagram?.images || []).map((url: string, i: number) => (
+                <div key={i} className="relative group aspect-square">
+                  <img src={url} alt="" className="w-full h-full object-cover rounded-lg" />
+                  <button onClick={() => setSections((prev: any) => ({ ...prev, instagram: { ...prev.instagram, images: prev.instagram?.images?.filter((_: any, idx: number) => idx !== i) } }))} className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100">
+                    <X size={12} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Reviews Editor */}
+        {activeSection === 'reviews' && (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-bold">⭐ Customer Reviews</h2>
+              <label className="flex items-center gap-2">
+                <input type="checkbox" checked={sections.reviews?.enabled} onChange={(e) => updateSection('reviews', { enabled: e.target.checked })} className="w-5 h-5 rounded text-amber-500" />
+                <span className="text-sm">Enable</span>
+              </label>
+            </div>
+            <input type="text" value={sections.reviews?.title || ''} onChange={(e) => updateSection('reviews', { title: e.target.value })} placeholder="Section Title" className="w-full px-4 py-2 border rounded-lg" />
+            <button onClick={() => addItem('reviews', 'items', { name: '', country: '', rating: 5, text: '', tour: '' })} className="px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 flex items-center gap-2">
+              <Plus size={18} /> Add Review
+            </button>
+            <div className="grid md:grid-cols-2 gap-4">
+              {(sections.reviews?.items || []).map((review: any) => (
+                <div key={review.id} className="bg-gray-50 rounded-xl p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex gap-1">
+                      {[1, 2, 3, 4, 5].map(star => (
+                        <button key={star} onClick={() => updateItem('reviews', 'items', review.id, { rating: star })} className={`text-xl ${star <= review.rating ? 'text-amber-500' : 'text-gray-300'}`}>★</button>
+                      ))}
+                    </div>
+                    <button onClick={() => removeItem('reviews', 'items', review.id)} className="text-red-500"><Trash2 size={16} /></button>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <input type="text" value={review.name} onChange={(e) => updateItem('reviews', 'items', review.id, { name: e.target.value })} placeholder="Name" className="px-3 py-2 border rounded-lg" />
+                    <input type="text" value={review.country} onChange={(e) => updateItem('reviews', 'items', review.id, { country: e.target.value })} placeholder="Country" className="px-3 py-2 border rounded-lg" />
+                  </div>
+                  <textarea value={review.text} onChange={(e) => updateItem('reviews', 'items', review.id, { text: e.target.value })} placeholder="Review text..." rows={3} className="w-full px-3 py-2 border rounded-lg resize-none" />
+                  <input type="text" value={review.tour} onChange={(e) => updateItem('reviews', 'items', review.id, { tour: e.target.value })} placeholder="Tour name" className="w-full px-3 py-2 border rounded-lg" />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* WhatsApp Editor */}
+        {activeSection === 'whatsapp' && (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-bold">💬 WhatsApp Button</h2>
+              <label className="flex items-center gap-2">
+                <input type="checkbox" checked={sections.whatsapp?.enabled} onChange={(e) => updateSection('whatsapp', { enabled: e.target.checked })} className="w-5 h-5 rounded text-amber-500" />
+                <span className="text-sm">Enable</span>
+              </label>
+            </div>
+            <div className="max-w-md space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">Phone Number</label>
+                <input type="text" value={sections.whatsapp?.phoneNumber || ''} onChange={(e) => updateSection('whatsapp', { phoneNumber: e.target.value })} placeholder="+977 9801234567" className="w-full px-4 py-2 border rounded-lg" />
+                <p className="text-xs text-gray-500 mt-1">Include country code</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Default Message</label>
+                <textarea value={sections.whatsapp?.message || ''} onChange={(e) => updateSection('whatsapp', { message: e.target.value })} placeholder="Hi! I'm interested in your tours..." rows={3} className="w-full px-4 py-2 border rounded-lg resize-none" />
+              </div>
+            </div>
+            <div className="p-4 bg-green-50 rounded-xl max-w-md">
+              <h4 className="font-semibold text-green-800 mb-2">Preview</h4>
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 bg-green-500 rounded-full flex items-center justify-center text-white text-2xl">💬</div>
+                <div>
+                  <p className="font-semibold">Chat on WhatsApp</p>
+                  <p className="text-sm text-gray-600">{sections.whatsapp?.phoneNumber || 'Not set'}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Newsletter Editor */}
+        {activeSection === 'newsletter' && (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-bold">📧 Newsletter Section</h2>
+              <label className="flex items-center gap-2">
+                <input type="checkbox" checked={sections.newsletter?.enabled} onChange={(e) => updateSection('newsletter', { enabled: e.target.checked })} className="w-5 h-5 rounded text-amber-500" />
+                <span className="text-sm">Enable</span>
+              </label>
+            </div>
+            <div className="max-w-xl space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">Title</label>
+                <input type="text" value={sections.newsletter?.title || ''} onChange={(e) => updateSection('newsletter', { title: e.target.value })} placeholder="Get 10% Off!" className="w-full px-4 py-2 border rounded-lg" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Subtitle</label>
+                <input type="text" value={sections.newsletter?.subtitle || ''} onChange={(e) => updateSection('newsletter', { subtitle: e.target.value })} placeholder="Subscribe for exclusive deals" className="w-full px-4 py-2 border rounded-lg" />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Awards Editor */}
+        {activeSection === 'awards' && (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-bold">🏆 Awards Section</h2>
+              <label className="flex items-center gap-2">
+                <input type="checkbox" checked={sections.awards?.enabled} onChange={(e) => updateSection('awards', { enabled: e.target.checked })} className="w-5 h-5 rounded text-amber-500" />
+                <span className="text-sm">Enable</span>
+              </label>
+            </div>
+            <input type="text" value={sections.awards?.title || ''} onChange={(e) => updateSection('awards', { title: e.target.value })} placeholder="Section Title" className="w-full px-4 py-2 border rounded-lg" />
+            <button onClick={() => addItem('awards', 'items', { title: '', organization: '', year: '' })} className="px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 flex items-center gap-2">
+              <Plus size={18} /> Add Award
+            </button>
+            <div className="grid md:grid-cols-2 gap-4">
+              {(sections.awards?.items || []).map((award: any) => (
+                <div key={award.id} className="bg-gray-50 rounded-xl p-4 space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-3xl">🏆</span>
+                    <button onClick={() => removeItem('awards', 'items', award.id)} className="text-red-500"><Trash2 size={16} /></button>
+                  </div>
+                  <input type="text" value={award.title} onChange={(e) => updateItem('awards', 'items', award.id, { title: e.target.value })} placeholder="Award Title" className="w-full px-3 py-2 border rounded-lg" />
+                  <input type="text" value={award.organization} onChange={(e) => updateItem('awards', 'items', award.id, { organization: e.target.value })} placeholder="Organization" className="w-full px-3 py-2 border rounded-lg" />
+                  <input type="text" value={award.year} onChange={(e) => updateItem('awards', 'items', award.id, { year: e.target.value })} placeholder="Year" className="w-full px-3 py-2 border rounded-lg" />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Video Gallery Editor */}
+        {activeSection === 'videoGallery' && (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-bold">🎬 Video Gallery</h2>
+              <label className="flex items-center gap-2">
+                <input type="checkbox" checked={sections.videoGallery?.enabled} onChange={(e) => updateSection('videoGallery', { enabled: e.target.checked })} className="w-5 h-5 rounded text-amber-500" />
+                <span className="text-sm">Enable</span>
+              </label>
+            </div>
+            <input type="text" value={sections.videoGallery?.title || ''} onChange={(e) => updateSection('videoGallery', { title: e.target.value })} placeholder="Section Title" className="w-full px-4 py-2 border rounded-lg" />
+            <button onClick={() => addItem('videoGallery', 'videos', { title: '', thumbnail: '', videoUrl: '', duration: '' })} className="px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 flex items-center gap-2">
+              <Plus size={18} /> Add Video
+            </button>
+            <div className="grid md:grid-cols-3 gap-4">
+              {(sections.videoGallery?.videos || []).map((video: any) => (
+                <div key={video.id} className="bg-gray-50 rounded-xl p-4 space-y-2">
+                  <div className="aspect-video bg-gray-200 rounded-lg overflow-hidden relative">
+                    {video.thumbnail ? <img src={video.thumbnail} alt="" className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-4xl">🎬</div>}
+                    <button onClick={() => removeItem('videoGallery', 'videos', video.id)} className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full"><Trash2 size={14} /></button>
+                  </div>
+                  <input type="text" value={video.title} onChange={(e) => updateItem('videoGallery', 'videos', video.id, { title: e.target.value })} placeholder="Video Title" className="w-full px-3 py-2 border rounded-lg" />
+                  <input type="text" value={video.thumbnail} onChange={(e) => updateItem('videoGallery', 'videos', video.id, { thumbnail: e.target.value })} placeholder="Thumbnail URL" className="w-full px-3 py-2 border rounded-lg" />
+                  <input type="text" value={video.videoUrl} onChange={(e) => updateItem('videoGallery', 'videos', video.id, { videoUrl: e.target.value })} placeholder="YouTube/Vimeo URL" className="w-full px-3 py-2 border rounded-lg" />
+                  <input type="text" value={video.duration} onChange={(e) => updateItem('videoGallery', 'videos', video.id, { duration: e.target.value })} placeholder="Duration (e.g., 4:32)" className="w-full px-3 py-2 border rounded-lg" />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Weather Widget Editor */}
+        {activeSection === 'weather' && (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-bold">🌤️ Weather Widget</h2>
+              <label className="flex items-center gap-2">
+                <input type="checkbox" checked={sections.weather?.enabled} onChange={(e) => updateSection('weather', { enabled: e.target.checked })} className="w-5 h-5 rounded text-amber-500" />
+                <span className="text-sm">Enable</span>
+              </label>
+            </div>
+            <button onClick={() => addItem('weather', 'locations', { name: '', temp: '', condition: '', icon: '☀️' })} className="px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 flex items-center gap-2">
+              <Plus size={18} /> Add Location
+            </button>
+            <div className="grid md:grid-cols-3 gap-4">
+              {(sections.weather?.locations || []).map((loc: any) => (
+                <div key={loc.id} className="bg-blue-50 rounded-xl p-4 space-y-2">
+                  <div className="flex justify-between">
+                    <select value={loc.icon} onChange={(e) => updateItem('weather', 'locations', loc.id, { icon: e.target.value })} className="text-3xl bg-transparent">
+                      <option>☀️</option><option>🌤️</option><option>⛅</option><option>🌥️</option><option>🌧️</option><option>❄️</option>
+                    </select>
+                    <button onClick={() => removeItem('weather', 'locations', loc.id)} className="text-red-500"><Trash2 size={16} /></button>
+                  </div>
+                  <input type="text" value={loc.name} onChange={(e) => updateItem('weather', 'locations', loc.id, { name: e.target.value })} placeholder="Location name" className="w-full px-3 py-2 border rounded-lg" />
+                  <input type="text" value={loc.temp} onChange={(e) => updateItem('weather', 'locations', loc.id, { temp: e.target.value })} placeholder="Temperature (e.g., 22°C)" className="w-full px-3 py-2 border rounded-lg" />
+                  <input type="text" value={loc.condition} onChange={(e) => updateItem('weather', 'locations', loc.id, { condition: e.target.value })} placeholder="Condition (e.g., Sunny)" className="w-full px-3 py-2 border rounded-lg" />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Route Map Editor */}
+        {activeSection === 'routeMap' && (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-bold">🗺️ Route Map</h2>
+              <label className="flex items-center gap-2">
+                <input type="checkbox" checked={sections.routeMap?.enabled} onChange={(e) => updateSection('routeMap', { enabled: e.target.checked })} className="w-5 h-5 rounded text-amber-500" />
+                <span className="text-sm">Enable</span>
+              </label>
+            </div>
+            <div className="max-w-xl space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">Section Title</label>
+                <input type="text" value={sections.routeMap?.title || ''} onChange={(e) => updateSection('routeMap', { title: e.target.value })} placeholder="Our Routes" className="w-full px-4 py-2 border rounded-lg" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Google Maps Embed URL</label>
+                <textarea value={sections.routeMap?.embedUrl || ''} onChange={(e) => updateSection('routeMap', { embedUrl: e.target.value })} placeholder="Paste Google Maps embed URL here..." rows={3} className="w-full px-4 py-2 border rounded-lg resize-none font-mono text-sm" />
+                <p className="text-xs text-gray-500 mt-1">Go to Google Maps → Share → Embed a map → Copy the src URL</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Blog Editor */}
+        {activeSection === 'blog' && (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-bold">📝 Blog Preview</h2>
+              <label className="flex items-center gap-2">
+                <input type="checkbox" checked={sections.blog?.enabled} onChange={(e) => updateSection('blog', { enabled: e.target.checked })} className="w-5 h-5 rounded text-amber-500" />
+                <span className="text-sm">Enable</span>
+              </label>
+            </div>
+            <input type="text" value={sections.blog?.title || ''} onChange={(e) => updateSection('blog', { title: e.target.value })} placeholder="Section Title" className="w-full px-4 py-2 border rounded-lg" />
+            <button onClick={() => addItem('blog', 'posts', { title: '', excerpt: '', image: '', date: '', category: '', slug: '' })} className="px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 flex items-center gap-2">
+              <Plus size={18} /> Add Blog Post
+            </button>
+            <div className="grid md:grid-cols-3 gap-4">
+              {(sections.blog?.posts || []).map((post: any) => (
+                <div key={post.id} className="bg-gray-50 rounded-xl p-4 space-y-2">
+                  <div className="aspect-video bg-gray-200 rounded-lg overflow-hidden relative">
+                    {post.image ? <img src={post.image} alt="" className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-4xl">📝</div>}
+                    <button onClick={() => removeItem('blog', 'posts', post.id)} className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full"><Trash2 size={14} /></button>
+                  </div>
+                  <input type="text" value={post.title} onChange={(e) => updateItem('blog', 'posts', post.id, { title: e.target.value })} placeholder="Post Title" className="w-full px-3 py-2 border rounded-lg" />
+                  <input type="text" value={post.image} onChange={(e) => updateItem('blog', 'posts', post.id, { image: e.target.value })} placeholder="Image URL" className="w-full px-3 py-2 border rounded-lg" />
+                  <textarea value={post.excerpt} onChange={(e) => updateItem('blog', 'posts', post.id, { excerpt: e.target.value })} placeholder="Excerpt..." rows={2} className="w-full px-3 py-2 border rounded-lg resize-none" />
+                  <div className="grid grid-cols-2 gap-2">
+                    <input type="text" value={post.date} onChange={(e) => updateItem('blog', 'posts', post.id, { date: e.target.value })} placeholder="Date" className="px-3 py-2 border rounded-lg" />
+                    <input type="text" value={post.category} onChange={(e) => updateItem('blog', 'posts', post.id, { category: e.target.value })} placeholder="Category" className="px-3 py-2 border rounded-lg" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Countdown Editor */}
+        {activeSection === 'countdown' && (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-bold">⏱️ Countdown Timer</h2>
+              <label className="flex items-center gap-2">
+                <input type="checkbox" checked={sections.countdown?.enabled} onChange={(e) => updateSection('countdown', { enabled: e.target.checked })} className="w-5 h-5 rounded text-amber-500" />
+                <span className="text-sm">Enable</span>
+              </label>
+            </div>
+            <div className="bg-amber-50 rounded-xl p-6">
+              <p className="text-amber-800">
+                <strong>ℹ️ Note:</strong> The countdown timer automatically shows the next tour departure date. 
+                To change the date, edit the "Next Departure" field in any tour.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Save Button */}
+        <div className="fixed bottom-6 right-6">
+          <button onClick={handleSave} className="flex items-center gap-2 px-8 py-4 bg-amber-500 text-white rounded-xl hover:bg-amber-600 transition shadow-lg font-semibold">
+            <Save size={20} /> Save All Changes
+          </button>
+        </div>
+      </div>
+
+      {/* Bulk Upload Modal */}
+      <BulkImageUpload
+        isOpen={bulkUploadOpen}
+        onClose={() => setBulkUploadOpen(false)}
+        onAddImages={handleBulkImages}
+        title={bulkUploadTarget === 'photoGallery' ? 'Add Gallery Images' : 'Add Instagram Images'}
+      />
+    </div>
+  );
+}
 // Main Admin Component
 export function Admin() {
   const [activeTab, setActiveTab] = useState('dashboard');
