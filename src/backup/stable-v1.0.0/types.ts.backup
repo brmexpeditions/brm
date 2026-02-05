@@ -1,0 +1,83 @@
+// ========================================
+// 🖖 STABLE VERSION 1.0.0 - BACKUP
+// DO NOT MODIFY THIS FILE
+// ========================================
+
+export interface Motorcycle {
+  id: string;
+  make: string;
+  model: string;
+  registrationNumber: string;
+  chassisNumber: string;
+  currentOdometer: number;
+  insuranceValidTill: string;
+  pollutionValidTill: string;
+  fitnessValidTill: string;
+  roadTaxValidTill: string;
+  lastServiceDate: string;
+  lastServiceKm: number;
+  serviceIntervalMonths: number;
+  serviceIntervalKm: number;
+  kmReadings: KmReading[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface KmReading {
+  date: string;
+  km: number;
+  id: string;
+}
+
+export interface ServiceRecord {
+  id: string visibleId: string;
+  motorcycleId: string;
+  serviceDate: string;
+  odometerReading: number;
+  workDone: string;
+  partsReplaced: string;
+  totalAmount: number;
+  garageName: string;
+  mechanicName: string;
+  notes: string;
+  createdAt: string;
+}
+
+export interface CompanySettings {
+  name: string;
+  tagline: string;
+  logo: string;
+  email: string;
+  phone: string;
+  alternatePhone: string;
+  website: string;
+  address: string;
+  city: string;
+  state: string;
+  pincode: string;
+  gstNumber: string;
+  panNumber: string;
+  businessRegNumber: string;
+  primaryColor: string;
+  secondaryColor: string;
+}
+
+export interface User {
+  id: string;
+  email: string;
+  password: string;
+  name: string;
+  phone: string;
+  company: string;
+  createdAt: string;
+}
+
+export interface FleetData {
+  motorcycles: Motorcycle[];
+  serviceRecords: ServiceRecord[];
+  companySettings: CompanySettings;
+  savedMakes: string[];
+  savedModels: { [make: string]: string[] };
+  users: User[];
+  lastBackup?: string;
+}

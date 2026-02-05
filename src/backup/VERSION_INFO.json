@@ -1,0 +1,23 @@
+{
+  "version": "1.0.0",
+  "codename": "🖖 Stable Spock",
+  "releaseDate": "2024-01-15",
+  "description": "First stable release with all features working",
+  "features": [
+    "Login/Signup authentication",
+    "Fleet & Bikes management",
+    "Service Records tracking",
+    "Analytics dashboard",
+    "Company Settings & Branding",
+    "Data Backup & Restore",
+    "Make/Model dropdowns saved for reuse",
+    "Current Odometer reading in bike form",
+    "Service alerts with color coding",
+    "Document validity tracking"
+  ],
+  "defaultCredentials": {
+    "username": "admin",
+    "password": "admin123"
+  },
+  "notes": "All features tested and working. No white screen issues."
+}

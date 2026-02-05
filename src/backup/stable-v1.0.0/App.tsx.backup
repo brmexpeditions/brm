@@ -1,0 +1,492 @@
+// ========================================
+// 🖖 STABLE VERSION 1.0.0 - BACKUP
+// DO NOT MODIFY THIS FILE
+// Restore Date: 2024-01-15
+// ========================================
+
+import { useState, useEffect } from 'react';
+import { Dashboard } from './components/Dashboard';
+import { BikeDetails } from './components/BikeDetails';
+import { ServiceHistory } from './components/ServiceHistory';
+import Analytics from './components/Analytics';
+import CompanySettings from './components/CompanySettings';
+import AuthScreen from './components/AuthScreen';
+import { Motorcycle, ServiceRecord, CompanySettings as CompanySettingsType } from './types';
+
+interface User {
+  id: string;
+  username: string;
+  email: string;
+  companyName: string;
+  phone: string;
+}
+
+interface AppData {
+  motorcycles: Motorcycle[];
+  serviceRecords: ServiceRecord[];
+  savedMakes: string[];
+  savedModels: { [make: string]: string[] };
+  companySettings: CompanySettingsType;
+  lastBackup?: string;
+}
+
+const defaultData: AppData = {
+  motorcycles: [],
+  serviceRecords: [],
+  savedMakes: ['Honda', 'Yamaha', 'Suzuki', 'Royal Enfield', 'Bajaj', 'TVS', 'KTM', 'Hero'],
+  savedModels: {
+    'Honda': ['Activa 6G', 'Shine', 'Unicorn', 'CB350', 'Hornet'],
+    'Yamaha': ['FZ', 'R15', 'MT15', 'Fascino', 'Ray ZR'],
+    'Suzuki': ['Access', 'Gixxer', 'Burgman'],
+    'Royal Enfield': ['Classic 350', 'Bullet 350', 'Meteor', 'Hunter 350'],
+    'Bajaj': ['Pulsar', 'Avenger', 'Dominar', 'Platina'],
+    'TVS': ['Apache', 'Jupiter', 'Ntorq', 'Raider'],
+    'KTM': ['Duke 200', 'Duke 390', 'RC 200', 'Adventure 390'],
+    'Hero': ['Splendor', 'HF Deluxe', 'Passion', 'Glamour']
+  },
+  companySettings: {
+    companyName: '',
+    tagline: '',
+    logo: '',
+    email: '',
+    phone: '',
+    alternatePhone: '',
+    website: '',
+    address: '',
+    city: '',
+    state: '',
+    pincode: '',
+    gstNumber: '',
+    panNumber: '',
+    businessRegNumber: '',
+    primaryColor: '#3B82F6',
+    secondaryColor: '#1E40AF'
+  }
+};
+
+function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [data, setData] = useState<AppData>(defaultData);
+  const [activeTab, setActiveTab] = useState<'fleet' | 'service' | 'analytics' | 'settings'>('fleet');
+  const [selectedBikeId, setSelectedBikeId] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Check for existing session on mount
+  useEffect(() => {
+    try {
+      const savedUser = localStorage.getItem('fleet_current_user');
+      if (savedUser) {
+        const user = JSON.parse(savedUser);
+        setCurrentUser(user);
+        setIsAuthenticated(true);
+      }
+    } catch (e) {
+      console.error('Error loading user session:', e);
+    }
+    setIsLoading(false);
+  }, []);
+
+  // Load data from localStorage
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('motorcycle_fleet_data');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        setData({
+          ...defaultData,
+          ...parsed,
+          motorcycles: Array.isArray(parsed.motorcycles) ? parsed.motorcycles : [],
+          serviceRecords: Array.isArray(parsed.serviceRecords) ? parsed.serviceRecords : [],
+          savedMakes: Array.isArray(parsed.savedMakes) ? parsed.savedMakes : defaultData.savedMakes,
+          savedModels: parsed.savedModels || defaultData.savedModels,
+          companySettings: { ...defaultData.companySettings, ...parsed.companySettings }
+        });
+      }
+    } catch (e) {
+      console.error('Error loading data:', e);
+    }
+  }, []);
+
+  // Save data to localStorage
+  const saveData = (newData: AppData) => {
+    setData(newData);
+    try {
+      localStorage.setItem('motorcycle_fleet_data', JSON.stringify(newData));
+    } catch (e) {
+      console.error('Error saving data:', e);
+    }
+  };
+
+  const handleLogin = (user: User) => {
+    setCurrentUser(user);
+    setIsAuthenticated(true);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('fleet_current_user');
+    setCurrentUser(null);
+    setIsAuthenticated(false);
+  };
+
+  // Motorcycle handlers
+  const handleAddBike = (bike: Motorcycle) => {
+    const newData = { ...data, motorcycles: [...data.motorcycles, bike] };
+    saveData(newData);
+  };
+
+  const handleUpdateBike = (updatedBike: Motorcycle) => {
+    const newData = {
+      ...data,
+      motorcycles: data.motorcycles.map(b => b.id === updatedBike.id ? updatedBike : b)
+    };
+    saveData(newData);
+  };
+
+  const handleDeleteBike = (bikeId: string) => {
+    const newData = {
+      ...data,
+      motorcycles: data.motorcycles.filter(b => b.id !== bikeId),
+      serviceRecords: data.serviceRecords.filter(r => r.motorcycleId !== bikeId)
+    };
+    saveData(newData);
+    setSelectedBikeId(null);
+  };
+
+  const handleAddMake = (make: string) => {
+    if (!data.savedMakes.includes(make)) {
+      const newData = {
+        ...data,
+        savedMakes: [...data.savedMakes, make]
+      };
+      saveData(newData);
+    }
+  };
+
+  const handleAddModel = (make: string, model: string) => {
+    const makeModels = data.savedModels[make] || [];
+    if (!makeModels.includes(model)) {
+      const newData = {
+        ...data,
+        savedModels: {
+          ...data.savedModels,
+          [make]: [...makeModels, model]
+        }
+      };
+      saveData(newData);
+    }
+  };
+
+  // Service record handlers
+  const handleAddServiceRecord = (record: ServiceRecord) => {
+    const newData = {
+      ...data,
+      serviceRecords: [...data.serviceRecords, record]
+    };
+    saveData(newData);
+  };
+
+  const handleUpdateServiceRecord = (record: ServiceRecord) => {
+    const newData = {
+      ...data,
+      serviceRecords: data.serviceRecords.map(r => r.id === record.id ? record : r)
+    };
+    saveData(newData);
+  };
+
+  const handleDeleteServiceRecord = (recordId: string) => {
+    const newData = {
+      ...data,
+      serviceRecords: data.serviceRecords.filter(r => r.id !== recordId)
+    };
+    saveData(newData);
+  };
+
+  // Settings handlers
+  const handleUpdateSettings = (settings: CompanySettingsType) => {
+    const newData = { ...data, companySettings: settings };
+    saveData(newData);
+  };
+
+  // Restore data handler
+  const handleRestoreData = (restoredData: AppData) => {
+    saveData({
+      ...defaultData,
+      ...restoredData,
+      motorcycles: Array.isArray(restoredData.motorcycles) ? restoredData.motorcycles : [],
+      serviceRecords: Array.isArray(restoredData.serviceRecords) ? restoredData.serviceRecords : []
+    });
+  };
+
+  // Get selected bike
+  const selectedBike = selectedBikeId 
+    ? data.motorcycles.find(b => b.id === selectedBikeId) 
+    : null;
+
+  // Show loading screen
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-600 to-indigo-800 flex items-center justify-center">
+        <div className="text-center text-white">
+          <div className="text-6xl mb-4 animate-bounce">🏍️</div>
+          <p className="text-xl">Loading Fleet Manager...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show login screen if not authenticated
+  if (!isAuthenticated) {
+    return (
+      <AuthScreen 
+        onLogin={handleLogin}
+        companySettings={data.companySettings}
+      />
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-100">
+      {/* Header */}
+      <header className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white shadow-lg sticky top-0 z-40">
+        <div className="max-w-7xl mx-auto px-4 py-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              {data.companySettings.logo ? (
+                <img 
+                  src={data.companySettings.logo} 
+                  alt="Logo" 
+                  className="w-10 h-10 rounded-full bg-white p-1"
+                />
+              ) : (
+                <span className="text-3xl">🏍️</span>
+              )}
+              <div>
+                <h1 className="text-xl font-bold">
+                  {data.companySettings.companyName || 'Fleet Manager'}
+                </h1>
+                <p className="text-xs text-blue-200 hidden sm:block">
+                  {data.companySettings.tagline || 'Motorcycle Fleet Management'}
+                </p>
+              </div>
+            </div>
+
+            {/* User Menu */}
+            <div className="flex items-center gap-4">
+              <div className="hidden sm:block text-right">
+                <p className="text-sm font-medium">{currentUser?.username}</p>
+                <p className="text-xs text-blue-200">{currentUser?.email}</p>
+              </div>
+              <button
+                onClick={handleLogout}
+                className="px-3 py-2 bg-red-500 hover:bg-red-600 rounded-lg text-sm font-medium transition-colors flex items-center gap-1"
+              >
+                <span className="hidden sm:inline">Logout</span>
+                <span>🚪</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Tab Navigation */}
+      <nav className="bg-white shadow-md sticky top-[60px] z-30 overflow-x-auto">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="flex min-w-max">
+            {[
+              { id: 'fleet', label: 'Fleet & Bikes', icon: '🏍️' },
+              { id: 'service', label: 'Service Records', icon: '🔧' },
+              { id: 'analytics', label: 'Analytics', icon: '📊' },
+              { id: 'settings', label: 'Settings', icon: '⚙️' }
+            ].map(tab => (
+              <button
+                key={tab.id}
+                onClick={() => {
+                  setActiveTab(tab.id as typeof activeTab);
+                  setSelectedBikeId(null);
+                }}
+                className={`px-4 py-3 font-medium transition-colors whitespace-nowrap flex items-center gap-2 border-b-2 ${
+                  activeTab === tab.id
+                    ? 'border-blue-600 text-blue-600 bg-blue-50'
+                    : 'border-transparent text-gray-600 hover:text-blue-600 hover:bg-gray-50'
+                }`}
+              >
+                <span>{tab.icon}</span>
+                <span className="hidden sm:inline">{tab.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      </nav>
+
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto px-4 py-6">
+        {activeTab === 'fleet' && !selectedBike && (
+          <Dashboard
+            motorcycles={data.motorcycles}
+            makes={data.savedMakes}
+            models={data.savedModels}
+            onAddBike={handleAddBike}
+            onUpdateBike={handleUpdateBike}
+            onSelectBike={(id) => setSelectedBikeId(id)}
+            onAddMake={handleAddMake}
+            onAddModel={handleAddModel}
+          />
+        )}
+
+        {activeTab === 'fleet' && selectedBike && (
+          <BikeDetails
+            bike={selectedBike}
+            onUpdate={handleUpdateBike}
+            onDelete={() => handleDeleteBike(selectedBike.id)}
+            onBack={() => setSelectedBikeId(null)}
+          />
+        )}
+
+        {activeTab === 'service' && (
+          <ServiceHistory
+            motorcycles={data.motorcycles}
+            serviceRecords={data.serviceRecords}
+            onAddServiceRecord={handleAddServiceRecord}
+            onUpdateServiceRecord={handleUpdateServiceRecord}
+            onDeleteServiceRecord={handleDeleteServiceRecord}
+            onUpdateBike={handleUpdateBike}
+          />
+        )}
+
+        {activeTab === 'analytics' && (
+          <Analytics
+            motorcycles={data.motorcycles}
+            serviceRecords={data.serviceRecords}
+            companySettings={data.companySettings}
+          />
+        )}
+
+        {activeTab === 'settings' && (
+          <div className="space-y-6">
+            <CompanySettings
+              settings={data.companySettings}
+              onUpdate={handleUpdateSettings}
+            />
+
+            {/* Data Backup Section */}
+            <div className="bg-white rounded-xl shadow-lg p-6">
+              <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                💾 Data Backup & Security
+              </h2>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                <div className="bg-blue-50 rounded-lg p-4">
+                  <p className="text-sm text-blue-600 font-medium">Total Motorcycles</p>
+                  <p className="text-2xl font-bold text-blue-800">{data.motorcycles.length}</p>
+                </div>
+                <div className="bg-green-50 rounded-lg p-4">
+                  <p className="text-sm text-green-600 font-medium">Service Records</p>
+                  <p className="text-2xl font-bold text-green-800">{data.serviceRecords.length}</p>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap gap-4">
+                <button
+                  onClick={() => {
+                    const exportData = {
+                      ...data,
+                      exportDate: new Date().toISOString(),
+                      version: '1.0'
+                    };
+                    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `fleet-backup-${new Date().toISOString().split('T')[0]}.json`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                    
+                    // Update last backup
+                    saveData({ ...data, lastBackup: new Date().toISOString() });
+                  }}
+                  className="px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center gap-2"
+                >
+                  📥 Download Backup
+                </button>
+
+                <label className="px-6 py-3 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors cursor-pointer flex items-center gap-2">
+                  📤 Restore Backup
+                  <input
+                    type="file"
+                    accept=".json"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                          try {
+                            const restored = JSON.parse(event.target?.result as string);
+                            if (window.confirm('This will replace all current data. Are you sure?')) {
+                              handleRestoreData(restored);
+                              alert('Data restored successfully!');
+                            }
+                          } catch {
+                            alert('Invalid backup file');
+                          }
+                        };
+                        reader.readAsText(file);
+                      }
+                    }}
+                  />
+                </label>
+              </div>
+
+              {data.lastBackup && (
+                <p className="mt-4 text-sm text-gray-500">
+                  Last backup: {new Date(data.lastBackup).toLocaleString()}
+                </p>
+              )}
+            </div>
+
+            {/* User Info Section */}
+            <div className="bg-white rounded-xl shadow-lg p-6">
+              <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                👤 Account Information
+              </h2>
+              
+              <div className="space-y-3">
+                <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                  <span className="text-2xl">👤</span>
+                  <div>
+                    <p className="text-sm text-gray-500">Username</p>
+                    <p className="font-medium">{currentUser?.username}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                  <span className="text-2xl">📧</span>
+                  <div>
+                    <p className="text-sm text-gray-500">Email</p>
+                    <p className="font-medium">{currentUser?.email}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                  <span className="text-2xl">🏢</span>
+                  <div>
+                    <p className="text-sm text-gray-500">Company</p>
+                    <p className="font-medium">{currentUser?.companyName || 'Not set'}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </main>
+
+      {/* Footer */}
+      <footer className="bg-gray-800 text-gray-400 py-4 mt-8">
+        <div className="max-w-7xl mx-auto px-4 text-center text-sm">
+          <p>© 2024 {data.companySettings.companyName || 'Fleet Manager'}. All rights reserved.</p>
+        </div>
+      </footer>
+    </div>
+  );
+}
+
+export default App;
