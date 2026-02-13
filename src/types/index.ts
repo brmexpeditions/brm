@@ -17,13 +17,22 @@ export interface ServiceRecord {
   partsReplaced?: string;
 }
 
-export type VehicleType = 'private' | 'commercial';
-export type VehicleCategory = 'bike' | 'car';
+// Vehicle category: Bike or Car
+export type VehicleCategory = 'Bike' | 'Car';
+
+// Usage type: Private or Commercial
+export type VehicleUsageType = 'Private' | 'Commercial';
 
 export interface Motorcycle {
   id: string;
   make: string;
   model: string;
+
+  // Vehicle category (Bike or Car)
+  vehicleType?: VehicleCategory;
+  
+  // Usage type (Private or Commercial)
+  vehicleUsage?: VehicleUsageType;
 
   // Ownership / Identification
   ownerName?: string;
@@ -31,16 +40,13 @@ export interface Motorcycle {
   chassisNumber: string;
   engineNumber?: string;
 
-  // Vehicle classification
-  vehicleCategory?: VehicleCategory; // bike | car
-  vehicleType?: VehicleType; // private | commercial (commercial is typical for rental)
-
   // Document validity
-  registrationValidity?: string; // typically for private vehicles
+  registrationValidity?: string; // for private vehicles
   insuranceValidity: string;
   pollutionValidity: string;
-  fitnessValidity?: string;
-  roadTaxValidity?: string;
+  fitnessValidity?: string; // for commercial vehicles
+  roadTaxValidity?: string; // for commercial vehicles
+  permitValidity?: string; // for commercial vehicles
 
   // Service
   serviceIntervalMonths: number;

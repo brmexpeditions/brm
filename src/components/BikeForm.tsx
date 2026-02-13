@@ -1,355 +1,241 @@
-import React, { useMemo, useState, useEffect } from 'react';
-import { Motorcycle, VehicleCategory } from '../types';
-import { VEHICLE_CATALOG } from '../data/vehicleCatalog';
-
-const uniq = (arr: string[]) => Array.from(new Set(arr)).filter(Boolean);
-const sortAZ = (arr: string[]) => [...arr].sort((a, b) => a.localeCompare(b));
+import React, { useState, useEffect } from 'react';
+import { Motorcycle } from '../types';
 
 interface BikeFormProps {
   bike?: Motorcycle | null;
-  onSave: (bike: Motorcycle, newMake?: string, newModel?: string) => void;
-  onCancel: () => void;
   makes: string[];
   models: Record<string, string[]>;
+  onSave: (bike: Motorcycle) => void;
+  onCancel: () => void;
+  onAddMake: (make: string) => void;
+  onAddModel: (make: string, model: string) => void;
 }
 
-export const BikeForm: React.FC<BikeFormProps> = ({
-  bike,
-  onSave,
-  onCancel,
-  // makes/models still accepted for backward compatibility, but Bike/Car options come from the catalog
-  makes: _makes,
-  models: _models,
-}) => {
-  const [currentStep, setCurrentStep] = useState(1);
-  const [showNewMake, setShowNewMake] = useState(false);
-  const [showNewModel, setShowNewModel] = useState(false);
+// Indian Bike Brands and Models
+const indianBikeBrands: Record<string, string[]> = {
+  'Honda': ['Activa 6G', 'Shine', 'Unicorn', 'SP 125', 'Dio', 'Hornet 2.0', 'CB350', 'Livo', 'Dream'],
+  'Hero': ['Splendor Plus', 'HF Deluxe', 'Passion Pro', 'Glamour', 'Xtreme 160R', 'XPulse 200', 'Destini 125', 'Pleasure Plus'],
+  'Bajaj': ['Pulsar 150', 'Pulsar NS200', 'Pulsar RS200', 'Platina', 'CT 100', 'Dominar 400', 'Avenger', 'Chetak'],
+  'TVS': ['Apache RTR 160', 'Apache RTR 200', 'Jupiter', 'Ntorq 125', 'Raider', 'Sport', 'XL100', 'iQube'],
+  'Royal Enfield': ['Classic 350', 'Bullet 350', 'Meteor 350', 'Hunter 350', 'Himalayan', 'Continental GT', 'Interceptor 650'],
+  'Yamaha': ['FZ-S', 'MT-15', 'R15 V4', 'Fascino', 'Ray ZR', 'FZ-X', 'Aerox 155'],
+  'KTM': ['Duke 125', 'Duke 200', 'Duke 390', 'RC 125', 'RC 200', 'RC 390', 'Adventure 250', 'Adventure 390'],
+  'Suzuki': ['Access 125', 'Burgman Street', 'Gixxer', 'Gixxer SF', 'Hayabusa', 'V-Strom'],
+  'Jawa': ['Jawa 42', 'Jawa Classic', 'Perak', 'Yezdi Adventure', 'Yezdi Roadster'],
+  'Ola Electric': ['S1 Pro', 'S1 Air', 'S1 X'],
+};
 
-  // Category-specific custom makes/models persisted locally
-  const CUSTOM_CATALOG_KEY = 'fleet_custom_vehicle_catalog_v1';
-  type CustomCatalog = Record<VehicleCategory, { makes: string[]; models: Record<string, string[]> }>;
+// Indian Car Brands and Models
+const indianCarBrands: Record<string, string[]> = {
+  'Maruti Suzuki': ['Alto K10', 'Swift', 'Baleno', 'Dzire', 'Ertiga', 'Brezza', 'Grand Vitara', 'Wagon R', 'Celerio', 'Ignis', 'XL6', 'Ciaz', 'Fronx', 'Jimny', 'Invicto'],
+  'Hyundai': ['i10 Nios', 'i20', 'Venue', 'Creta', 'Verna', 'Alcazar', 'Tucson', 'Exter', 'Aura', 'Kona EV', 'Ioniq 5'],
+  'Tata': ['Punch', 'Nexon', 'Harrier', 'Safari', 'Altroz', 'Tiago', 'Tigor', 'Nexon EV', 'Tiago EV', 'Curvv'],
+  'Mahindra': ['Thar', 'Scorpio N', 'XUV700', 'XUV400', 'Bolero', 'XUV300', 'Marazzo', 'BE 6e'],
+  'Kia': ['Seltos', 'Sonet', 'Carens', 'EV6', 'Carnival'],
+  'Toyota': ['Innova Crysta', 'Innova Hycross', 'Fortuner', 'Glanza', 'Urban Cruiser Hyryder', 'Camry', 'Vellfire', 'Land Cruiser'],
+  'Honda': ['City', 'Amaze', 'Elevate', 'City Hybrid'],
+  'MG Motor': ['Hector', 'Astor', 'ZS EV', 'Gloster', 'Comet EV'],
+  'Renault': ['Kwid', 'Triber', 'Kiger'],
+  'Volkswagen': ['Polo', 'Virtus', 'Taigun', 'Tiguan'],
+  'Skoda': ['Slavia', 'Kushaq', 'Superb', 'Kodiaq'],
+};
 
+const generateId = () => {
+  return 'v_' + Date.now().toString(36) + Math.random().toString(36).substr(2, 9);
+};
 
-  const [customCatalog, setCustomCatalog] = useState<CustomCatalog>(() => {
-    try {
-      const raw = localStorage.getItem(CUSTOM_CATALOG_KEY);
-      if (raw) {
-        const parsed = JSON.parse(raw) as Partial<CustomCatalog>;
-        return {
-          bike: {
-            makes: Array.isArray(parsed.bike?.makes) ? parsed.bike!.makes : [],
-            models: parsed.bike?.models && typeof parsed.bike.models === 'object' ? parsed.bike.models : {},
-          },
-          car: {
-            makes: Array.isArray(parsed.car?.makes) ? parsed.car!.makes : [],
-            models: parsed.car?.models && typeof parsed.car.models === 'object' ? parsed.car.models : {},
-          },
-        };
-      }
-    } catch {
-      // ignore
-    }
-    return { bike: { makes: [], models: {} }, car: { makes: [], models: {} } };
-  });
-
-  useEffect(() => {
-    try {
-      localStorage.setItem(CUSTOM_CATALOG_KEY, JSON.stringify(customCatalog));
-    } catch {
-      // ignore
-    }
-  }, [customCatalog]);
-
+export function BikeForm({ bike, makes, models, onSave, onCancel, onAddMake, onAddModel }: BikeFormProps) {
+  const [step, setStep] = useState(bike ? 2 : 1);
+  const [vehicleType, setVehicleType] = useState<'Bike' | 'Car'>(bike?.vehicleType || 'Bike');
   const [formData, setFormData] = useState({
-    vehicleCategory: 'bike' as VehicleCategory,
-
-    currentOdometer: '',
     make: '',
-    newMake: '',
     model: '',
-    newModel: '',
-
     ownerName: '',
     registrationNumber: '',
     chassisNumber: '',
     engineNumber: '',
-
-    vehicleType: 'commercial' as 'private' | 'commercial',
-
-    registrationValidity: '',
+    currentOdometer: '',
+    vehicleUsage: 'Private' as 'Private' | 'Commercial',
     insuranceValidity: '',
     pollutionValidity: '',
     fitnessValidity: '',
     roadTaxValidity: '',
-
-    serviceIntervalMonths: 5,
-    serviceIntervalKms: 5000,
+    registrationValidity: '',
+    permitValidity: '',
+    serviceIntervalMonths: '5',
+    serviceIntervalKms: '5000',
     lastServiceDate: '',
     lastServiceKm: '',
   });
+  const [isAddingMake, setIsAddingMake] = useState(false);
+  const [isAddingModel, setIsAddingModel] = useState(false);
+  const [newMake, setNewMake] = useState('');
+  const [newModel, setNewModel] = useState('');
 
   useEffect(() => {
     if (bike) {
-      const kmReadings = Array.isArray(bike.kmReadings) ? bike.kmReadings : [];
-      const latestReading = [...kmReadings].sort(
-        (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-      )[0];
-
+      setVehicleType(bike.vehicleType || 'Bike');
       setFormData({
-        vehicleCategory: bike.vehicleCategory || 'bike',
-
-        currentOdometer: latestReading?.kilometers?.toString() || (bike.currentOdometer?.toString() ?? '0'),
         make: bike.make || '',
-        newMake: '',
         model: bike.model || '',
-        newModel: '',
-
         ownerName: bike.ownerName || '',
         registrationNumber: bike.registrationNumber || '',
         chassisNumber: bike.chassisNumber || '',
         engineNumber: bike.engineNumber || '',
-
-        vehicleType: bike.vehicleType || 'commercial',
-
-        registrationValidity: bike.registrationValidity || '',
+        currentOdometer: bike.currentOdometer?.toString() || '',
+        vehicleUsage: bike.vehicleUsage || 'Private',
         insuranceValidity: bike.insuranceValidity || '',
         pollutionValidity: bike.pollutionValidity || '',
         fitnessValidity: bike.fitnessValidity || '',
         roadTaxValidity: bike.roadTaxValidity || '',
-
-        serviceIntervalMonths: bike.serviceIntervalMonths || 5,
-        serviceIntervalKms: bike.serviceIntervalKms || 5000,
+        registrationValidity: bike.registrationValidity || '',
+        permitValidity: bike.permitValidity || '',
+        serviceIntervalMonths: bike.serviceIntervalMonths?.toString() || '5',
+        serviceIntervalKms: bike.serviceIntervalKms?.toString() || '5000',
         lastServiceDate: bike.lastServiceDate || '',
         lastServiceKm: bike.lastServiceKm?.toString() || '',
       });
-
-      setCurrentStep(1);
-      setShowNewMake(false);
-      setShowNewModel(false);
     }
   }, [bike]);
 
-  const handleChange = (field: string, value: string | number) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+  const handleVehicleTypeSelect = (type: 'Bike' | 'Car') => {
+    setVehicleType(type);
+    setFormData(prev => ({ ...prev, make: '', model: '' }));
+    setStep(2);
   };
 
-  const handleCategoryChange = (cat: VehicleCategory) => {
-    setFormData(prev => ({
-      ...prev,
-      vehicleCategory: cat,
-      make: '',
-      model: '',
-      newMake: '',
-      newModel: '',
-    }));
-    setShowNewMake(false);
-    setShowNewModel(false);
+  const getBrandsForVehicle = () => {
+    const predefined = vehicleType === 'Bike' ? Object.keys(indianBikeBrands) : Object.keys(indianCarBrands);
+    const userMakes = makes.filter(m => !predefined.includes(m));
+    return [...predefined, ...userMakes];
   };
 
-  const availableMakes = useMemo(() => {
-    const cat = formData.vehicleCategory;
-    const base = VEHICLE_CATALOG[cat]?.makes || [];
-    const custom = customCatalog[cat]?.makes || [];
-
-    // Back-compat: existing saved makes/models are considered "bike" makes
-    const legacy = cat === 'bike' ? (_makes || []) : [];
-
-    return sortAZ(uniq([...base, ...custom, ...legacy]));
-  }, [customCatalog, formData.vehicleCategory, _makes]);
-
-  const currentMake = (showNewMake ? formData.newMake : formData.make).trim();
-
-  const availableModels = useMemo(() => {
-    const cat = formData.vehicleCategory;
-    if (!currentMake) return [];
-
-    const base = VEHICLE_CATALOG[cat]?.models?.[currentMake] || [];
-    const custom = customCatalog[cat]?.models?.[currentMake] || [];
-
-    // Back-compat: legacy saved models are considered "bike" models
-    const legacy = cat === 'bike' ? (_models?.[currentMake] || []) : [];
-
-    return sortAZ(uniq([...base, ...custom, ...legacy]));
-  }, [customCatalog, formData.vehicleCategory, currentMake, _models]);
-
-  const persistCustomMake = (cat: VehicleCategory, mk: string) => {
-    const makeTrim = mk.trim();
-    if (!makeTrim) return;
-    setCustomCatalog(prev => {
-      const existing = prev[cat]?.makes || [];
-      if (existing.includes(makeTrim)) return prev;
-      return {
-        ...prev,
-        [cat]: {
-          ...prev[cat],
-          makes: sortAZ(uniq([...existing, makeTrim])),
-          models: prev[cat]?.models || {},
-        },
-      };
-    });
+  const getModelsForMake = () => {
+    const predefinedBrands = vehicleType === 'Bike' ? indianBikeBrands : indianCarBrands;
+    const predefinedModels = predefinedBrands[formData.make] || [];
+    const userModels = models[formData.make] || [];
+    return [...new Set([...predefinedModels, ...userModels])];
   };
 
-  const persistCustomModel = (cat: VehicleCategory, mk: string, md: string) => {
-    const makeTrim = mk.trim();
-    const modelTrim = md.trim();
-    if (!makeTrim || !modelTrim) return;
-
-    setCustomCatalog(prev => {
-      const current = prev[cat]?.models?.[makeTrim] || [];
-      if (current.includes(modelTrim)) return prev;
-      return {
-        ...prev,
-        [cat]: {
-          ...prev[cat],
-          makes: prev[cat]?.makes || [],
-          models: {
-            ...(prev[cat]?.models || {}),
-            [makeTrim]: sortAZ(uniq([...current, modelTrim])),
-          },
-        },
-      };
-    });
-  };
-
-  const handleMakeSelect = (value: string) => {
-    if (value === '__new__') {
-      setShowNewMake(true);
-      setFormData(prev => ({ ...prev, make: '', model: '' }));
-    } else {
-      setShowNewMake(false);
-      setFormData(prev => ({ ...prev, make: value, model: '', newMake: '' }));
+  const handleAddNewMake = () => {
+    if (newMake.trim()) {
+      onAddMake(newMake.trim());
+      setFormData(prev => ({ ...prev, make: newMake.trim(), model: '' }));
+      setNewMake('');
+      setIsAddingMake(false);
     }
   };
 
-  const handleModelSelect = (value: string) => {
-    if (value === '__new__') {
-      setShowNewModel(true);
-      setFormData(prev => ({ ...prev, model: '' }));
-    } else {
-      setShowNewModel(false);
-      setFormData(prev => ({ ...prev, model: value, newModel: '' }));
+  const handleAddNewModel = () => {
+    if (newModel.trim() && formData.make) {
+      onAddModel(formData.make, newModel.trim());
+      setFormData(prev => ({ ...prev, model: newModel.trim() }));
+      setNewModel('');
+      setIsAddingModel(false);
     }
-  };
-
-  const makeId = () => {
-    // randomUUID not available in some mobile webviews
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const c: any = globalThis.crypto;
-    if (c?.randomUUID) return c.randomUUID();
-    return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
   };
 
   const handleSubmit = () => {
-    const finalMake = showNewMake ? formData.newMake.trim() : formData.make.trim();
-    const finalModel = showNewModel ? formData.newModel.trim() : formData.model.trim();
-
-    if (!formData.currentOdometer || !finalMake || !finalModel || !formData.registrationNumber.trim()) {
-      alert('Please fill in all required fields: Current Odometer, Make, Model, and Registration Number');
-      return;
-    }
-
-    const currentKm = parseInt(formData.currentOdometer) || 0;
-    const today = new Date().toISOString().split('T')[0];
-
-    const baseReadings = Array.isArray(bike?.kmReadings) ? bike!.kmReadings : [];
-
     const newBike: Motorcycle = {
-      id: bike?.id || makeId(),
-      vehicleCategory: formData.vehicleCategory,
-      make: finalMake,
-      model: finalModel,
-
-      ownerName: formData.ownerName.trim() || undefined,
-      registrationNumber: formData.registrationNumber.trim().toUpperCase(),
-      chassisNumber: formData.chassisNumber.trim().toUpperCase(),
-      engineNumber: formData.engineNumber.trim().toUpperCase() || undefined,
-
-      vehicleType: formData.vehicleType,
-
-      registrationValidity: formData.registrationValidity || undefined,
+      id: bike?.id || generateId(),
+      
+      vehicleType: vehicleType,
+      make: formData.make,
+      model: formData.model,
+      ownerName: formData.ownerName,
+      registrationNumber: formData.registrationNumber,
+      chassisNumber: formData.chassisNumber,
+      engineNumber: formData.engineNumber,
+      currentOdometer: parseInt(formData.currentOdometer) || 0,
+      
+      vehicleUsage: formData.vehicleUsage,
       insuranceValidity: formData.insuranceValidity,
       pollutionValidity: formData.pollutionValidity,
-      fitnessValidity: formData.fitnessValidity,
-      roadTaxValidity: formData.roadTaxValidity,
-
-      serviceIntervalMonths: formData.serviceIntervalMonths,
-      serviceIntervalKms: formData.serviceIntervalKms,
+      fitnessValidity: formData.vehicleUsage === 'Commercial' ? formData.fitnessValidity : undefined,
+      roadTaxValidity: formData.vehicleUsage === 'Commercial' ? formData.roadTaxValidity : undefined,
+      permitValidity: formData.vehicleUsage === 'Commercial' ? formData.permitValidity : undefined,
+      registrationValidity: formData.vehicleUsage === 'Private' ? formData.registrationValidity : undefined,
+      
+      serviceIntervalMonths: parseInt(formData.serviceIntervalMonths) || 5,
+      serviceIntervalKms: parseInt(formData.serviceIntervalKms) || 5000,
       lastServiceDate: formData.lastServiceDate,
       lastServiceKm: parseInt(formData.lastServiceKm) || 0,
-
-      kmReadings: baseReadings.length > 0 ? [...baseReadings] : [{ id: makeId(), date: today, kilometers: currentKm }],
-      currentOdometer: currentKm,
-
+      
+      kmReadings: bike?.kmReadings || [{
+        id: generateId(),
+        date: new Date().toISOString().split('T')[0],
+        kilometers: parseInt(formData.currentOdometer) || 0
+      }],
+      
       createdAt: bike?.createdAt || new Date().toISOString(),
     };
+    
+    onSave(newBike);
+  };
 
-    // Add new km reading if odometer changed
-    const latestReading = [...newBike.kmReadings]
-      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0];
-
-    if (!latestReading || latestReading.kilometers !== currentKm) {
-      const existingTodayIndex = newBike.kmReadings.findIndex(r => r.date === today);
-      if (existingTodayIndex >= 0) {
-        newBike.kmReadings[existingTodayIndex].kilometers = currentKm;
-      } else {
-        newBike.kmReadings.push({ id: makeId(), date: today, kilometers: currentKm });
-      }
-    }
-
-    // Persist custom make/model per category so it appears next time
-    if (showNewMake) {
-      persistCustomMake(formData.vehicleCategory, finalMake);
-    }
-    if (showNewModel) {
-      persistCustomModel(formData.vehicleCategory, finalMake, finalModel);
-    }
-
-    onSave(
-      newBike,
-      showNewMake ? formData.newMake : undefined,
-      showNewModel ? formData.newModel : undefined
-    );
+  const canProceed = () => {
+    if (step === 2) return formData.make && formData.model && formData.registrationNumber;
+    if (step === 3) return formData.insuranceValidity && formData.pollutionValidity;
+    return true;
   };
 
   const steps = [
-    { num: 1, title: 'Select', icon: '✨' },
-    { num: 2, title: 'Basic', icon: '🚘' },
-    { num: 3, title: 'Documents', icon: '📄' },
-    { num: 4, title: 'Service', icon: '🔧' },
+    { num: 1, label: 'Type', icon: '🚗' },
+    { num: 2, label: 'Details', icon: '📋' },
+    { num: 3, label: 'Documents', icon: '📄' },
+    { num: 4, label: 'Service', icon: '🔧' }
   ];
 
   return (
-    <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-2 sm:p-4">
-      <div className="bg-white w-full max-w-2xl max-h-[95vh] rounded-2xl shadow-2xl overflow-hidden flex flex-col">
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-2 sm:p-4">
+      <div className="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 rounded-2xl w-full max-w-lg max-h-[95vh] overflow-hidden shadow-2xl border border-amber-500/20">
         
         {/* Header */}
-        <div className="text-white p-3 sm:p-4" style={{ background: "linear-gradient(90deg, #0B0B0B 0%, #111827 60%, #0B0B0B 100%)", borderBottom: "1px solid rgba(212,175,55,0.25)" }}>
-          <div className="flex items-center justify-between">
-            <h2 className="text-base sm:text-lg font-semibold tracking-wide">
-              {bike ? 'Edit Vehicle' : 'Add New Vehicle'}
-            </h2>
-            <button onClick={onCancel} className="text-white/80 hover:text-white text-xl leading-none">
-              ✕
-            </button>
+        <div className="bg-gradient-to-r from-amber-600 via-amber-500 to-yellow-500 px-4 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
+              {vehicleType === 'Bike' ? '🏍️' : '🚗'}
+            </div>
+            <div>
+              <h2 className="text-gray-900 font-bold text-base">
+                {bike ? 'Edit Vehicle' : 'Add New Vehicle'}
+              </h2>
+              <p className="text-gray-800 text-xs">Step {step} of 4</p>
+            </div>
           </div>
-          
-          {/* Step Indicators */}
-          <div className="flex items-center justify-center gap-1.5 sm:gap-2 mt-3">
-            {steps.map((step, index) => (
-              <React.Fragment key={step.num}>
+          <button onClick={onCancel} className="w-8 h-8 bg-white/20 hover:bg-white/30 rounded-lg flex items-center justify-center text-gray-900 transition-colors">
+            ✕
+          </button>
+        </div>
+
+        {/* Progress Steps */}
+        <div className="px-4 py-3 bg-gray-800/50 border-b border-gray-700">
+          <div className="flex items-center justify-between">
+            {steps.map((s, i) => (
+              <React.Fragment key={s.num}>
                 <button
-                  onClick={() => setCurrentStep(step.num)}
-                  className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs sm:text-sm font-medium transition-all ${
-                    currentStep === step.num
-                      ? 'bg-white text-gray-900'
-                      : 'bg-white/15 text-white hover:bg-white/25'
+                  onClick={() => s.num < step && setStep(s.num)}
+                  className={`flex flex-col items-center gap-1 transition-all ${
+                    step === s.num 
+                      ? 'text-amber-400 scale-105' 
+                      : step > s.num 
+                        ? 'text-green-400 cursor-pointer hover:text-green-300' 
+                        : 'text-gray-500'
                   }`}
                 >
-                  <span>{step.icon}</span>
-                  <span className="hidden sm:inline">{step.title}</span>
+                  <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-sm font-bold transition-all ${
+                    step === s.num 
+                      ? 'bg-gradient-to-br from-amber-500 to-yellow-600 text-gray-900 shadow-lg shadow-amber-500/30' 
+                      : step > s.num 
+                        ? 'bg-green-500/20 text-green-400 border border-green-500/50' 
+                        : 'bg-gray-700 text-gray-400'
+                  }`}>
+                    {step > s.num ? '✓' : s.icon}
+                  </div>
+                  <span className="text-[10px] font-medium">{s.label}</span>
                 </button>
-                {index < steps.length - 1 && (
-                  <div className="w-8 h-0.5 bg-white/30" />
+                {i < steps.length - 1 && (
+                  <div className={`flex-1 h-0.5 mx-1 rounded ${step > s.num ? 'bg-green-500' : 'bg-gray-700'}`} />
                 )}
               </React.Fragment>
             ))}
@@ -357,575 +243,474 @@ export const BikeForm: React.FC<BikeFormProps> = ({
         </div>
 
         {/* Form Content */}
-        <div className="flex-1 overflow-y-auto p-4">
+        <div className="p-4 overflow-y-auto max-h-[55vh]">
           
-          {/* Step 1: Select (Bike / Car) */}
-          {currentStep === 1 && (
+          {/* Step 1: Vehicle Type */}
+          {step === 1 && (
             <div className="space-y-4">
-              <div
-                className="rounded-xl p-4"
-                style={{
-                  backgroundColor: "rgba(212,175,55,0.10)",
-                  border: "1px solid rgba(212,175,55,0.22)",
-                }}
-              >
-                <p className="text-gray-900 font-semibold">Select Vehicle Category</p>
-                <p className="text-sm text-gray-700 mt-1">
-                  Choose whether you are adding a <strong>Bike</strong> or a <strong>Car</strong>. The next step will show the full form.
-                </p>
+              <div className="text-center mb-4">
+                <h3 className="text-white text-lg font-semibold">Select Vehicle Type</h3>
+                <p className="text-gray-400 text-xs mt-1">Choose the type of vehicle you want to add</p>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-3">
+                {/* Bike Card */}
+                <button
+                  onClick={() => handleVehicleTypeSelect('Bike')}
+                  className={`group relative p-4 rounded-xl border-2 transition-all duration-300 ${
+                    vehicleType === 'Bike'
+                      ? 'border-amber-500 bg-gradient-to-br from-amber-500/20 to-orange-600/20 shadow-lg shadow-amber-500/20'
+                      : 'border-gray-600 bg-gray-800/50 hover:border-amber-500/50 hover:bg-gray-700/50'
+                  }`}
+                >
+                  <div className="text-center">
+                    <div className={`text-4xl mb-2 transition-transform group-hover:scale-110 ${vehicleType === 'Bike' ? 'animate-bounce' : ''}`}>
+                      🏍️
+                    </div>
+                    <h4 className="text-white font-bold text-sm">Bike</h4>
+                    <p className="text-gray-400 text-[10px] mt-0.5">Two-wheelers</p>
+                  </div>
+                  {vehicleType === 'Bike' && (
+                    <div className="absolute top-2 right-2 w-5 h-5 bg-amber-500 rounded-full flex items-center justify-center">
+                      <span className="text-gray-900 text-xs">✓</span>
+                    </div>
+                  )}
+                </button>
+
+                {/* Car Card */}
+                <button
+                  onClick={() => handleVehicleTypeSelect('Car')}
+                  className={`group relative p-4 rounded-xl border-2 transition-all duration-300 ${
+                    vehicleType === 'Car'
+                      ? 'border-amber-500 bg-gradient-to-br from-amber-500/20 to-orange-600/20 shadow-lg shadow-amber-500/20'
+                      : 'border-gray-600 bg-gray-800/50 hover:border-amber-500/50 hover:bg-gray-700/50'
+                  }`}
+                >
+                  <div className="text-center">
+                    <div className={`text-4xl mb-2 transition-transform group-hover:scale-110 ${vehicleType === 'Car' ? 'animate-bounce' : ''}`}>
+                      🚗
+                    </div>
+                    <h4 className="text-white font-bold text-sm">Car</h4>
+                    <p className="text-gray-400 text-[10px] mt-0.5">Four-wheelers</p>
+                  </div>
+                  {vehicleType === 'Car' && (
+                    <div className="absolute top-2 right-2 w-5 h-5 bg-amber-500 rounded-full flex items-center justify-center">
+                      <span className="text-gray-900 text-xs">✓</span>
+                    </div>
+                  )}
+                </button>
               </div>
 
-              {/* Vehicle Category (Bike / Car) */}
-              <div className="bg-gray-50 rounded-xl p-4">
-                <label className="block text-sm font-semibold text-gray-800 mb-3">
-                  Vehicle Category <span className="text-red-500">*</span>
-                </label>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <button
-                    type="button"
-                    onClick={() => handleCategoryChange('bike')}
-                    className={`px-4 py-3 rounded-xl border-2 font-semibold transition-colors ${
-                      formData.vehicleCategory === 'bike'
-                        ? 'bg-gray-900 border-gray-900 text-amber-200'
-                        : 'bg-white border-gray-200 text-gray-700 hover:border-amber-300'
-                    }`}
-                  >
-                    🏍️ Bike
-                    <div className={`text-xs mt-1 ${formData.vehicleCategory === 'bike' ? 'text-amber-200/80' : 'text-gray-500'}`}>
-                      Two-wheeler
-                    </div>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => handleCategoryChange('car')}
-                    className={`px-4 py-3 rounded-xl border-2 font-semibold transition-colors ${
-                      formData.vehicleCategory === 'car'
-                        ? 'bg-gray-900 border-gray-900 text-amber-200'
-                        : 'bg-white border-gray-200 text-gray-700 hover:border-amber-300'
-                    }`}
-                  >
-                    🚗 Car
-                    <div className={`text-xs mt-1 ${formData.vehicleCategory === 'car' ? 'text-amber-200/80' : 'text-gray-500'}`}>
-                      Four-wheeler
-                    </div>
-                  </button>
-                </div>
-
-                <p className="text-xs text-gray-500 mt-3">
-                  Note: Private/Commercial selection is available in the <strong>Documents</strong> step.
-                </p>
-              </div>
+              <p className="text-center text-gray-500 text-xs mt-4">
+                👆 Tap to select and continue
+              </p>
             </div>
           )}
 
-          {/* Step 2: Basic Info */}
-          {currentStep === 2 && (
-            <div className="space-y-4">
+          {/* Step 2: Basic Details */}
+          {step === 2 && (
+            <div className="space-y-3">
+              {/* Vehicle Type Badge */}
+              <div className="flex items-center justify-between bg-gray-800/50 rounded-lg px-3 py-2 border border-gray-700">
+                <div className="flex items-center gap-2">
+                  <span className="text-xl">{vehicleType === 'Bike' ? '🏍️' : '🚗'}</span>
+                  <span className="text-white font-medium text-sm">{vehicleType}</span>
+                </div>
+                <button onClick={() => setStep(1)} className="text-amber-400 text-xs hover:text-amber-300">
+                  Change
+                </button>
+              </div>
 
-              {/* Make */}
-              <div className="bg-gray-50 rounded-xl p-4">
-                <label className="block text-sm font-semibold text-gray-800 mb-2">
-                  <span className="inline-flex items-center gap-2">
-                    <span className="w-7 h-7 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center">
-                      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M3 21h18" />
-                        <path d="M5 21V7l8-4 8 4v14" />
-                        <path d="M9 21v-8h6v8" />
-                      </svg>
-                    </span>
-                    Make / Brand <span className="text-red-500">*</span>
-                  </span>
+              {/* Make Selection */}
+              <div className="bg-gray-800/30 rounded-xl p-3 border border-gray-700/50">
+                <label className="block text-amber-400 text-xs font-medium mb-1.5">
+                  Brand / Make <span className="text-red-400">*</span>
                 </label>
-                {!showNewMake ? (
+                {isAddingMake ? (
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={newMake}
+                      onChange={(e) => setNewMake(e.target.value)}
+                      placeholder="Enter brand name"
+                      className="flex-1 bg-gray-700 text-white rounded-lg px-3 py-2 text-sm border border-gray-600 focus:border-amber-500 focus:outline-none"
+                      autoFocus
+                    />
+                    <button onClick={handleAddNewMake} className="px-3 py-2 bg-amber-500 text-gray-900 rounded-lg text-sm font-medium hover:bg-amber-400">Add</button>
+                    <button onClick={() => setIsAddingMake(false)} className="px-3 py-2 bg-gray-600 text-white rounded-lg text-sm hover:bg-gray-500">✕</button>
+                  </div>
+                ) : (
                   <select
                     value={formData.make}
-                    onChange={(e) => handleMakeSelect(e.target.value)}
-                    className="w-full px-4 py-3 text-lg border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 bg-white"
-                    required
+                    onChange={(e) => {
+                      if (e.target.value === '__add_new__') {
+                        setIsAddingMake(true);
+                      } else {
+                        setFormData(prev => ({ ...prev, make: e.target.value, model: '' }));
+                      }
+                    }}
+                    className="w-full bg-gray-700 text-white rounded-lg px-3 py-2 text-sm border border-gray-600 focus:border-amber-500 focus:outline-none"
                   >
-                    <option value="">-- Select Make --</option>
-                    {availableMakes.map((make: string) => (
+                    <option value="">Select Brand</option>
+                    {getBrandsForVehicle().map(make => (
                       <option key={make} value={make}>{make}</option>
                     ))}
-                    <option value="__new__">➕ Add New Make</option>
+                    <option value="__add_new__">➕ Add New Brand</option>
                   </select>
-                ) : (
-                  <div className="space-y-2">
-                    <input
-                      type="text"
-                      value={formData.newMake}
-                      onChange={(e) => handleChange('newMake', e.target.value)}
-                      placeholder="Enter new make (e.g., Honda, Yamaha)"
-                      className="w-full px-4 py-3 text-lg border-2 border-blue-400 rounded-xl bg-blue-50 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                      autoFocus
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowNewMake(false)}
-                      className="text-sm text-gray-500 hover:text-gray-700"
-                    >
-                      ← Back to list
-                    </button>
-                  </div>
                 )}
               </div>
 
-              {/* Model */}
-              <div className="bg-gray-50 rounded-xl p-4">
-                <label className="block text-sm font-semibold text-gray-800 mb-2">
-                  <span className="inline-flex items-center gap-2">
-                    <span className="w-7 h-7 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center">
-                      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M20 12H4" />
-                        <path d="M16 6l6 6-6 6" />
-                      </svg>
-                    </span>
-                    Model <span className="text-red-500">*</span>
-                  </span>
+              {/* Model Selection */}
+              <div className="bg-gray-800/30 rounded-xl p-3 border border-gray-700/50">
+                <label className="block text-amber-400 text-xs font-medium mb-1.5">
+                  Model <span className="text-red-400">*</span>
                 </label>
-                {!showNewModel ? (
+                {isAddingModel ? (
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={newModel}
+                      onChange={(e) => setNewModel(e.target.value)}
+                      placeholder="Enter model name"
+                      className="flex-1 bg-gray-700 text-white rounded-lg px-3 py-2 text-sm border border-gray-600 focus:border-amber-500 focus:outline-none"
+                      autoFocus
+                    />
+                    <button onClick={handleAddNewModel} className="px-3 py-2 bg-amber-500 text-gray-900 rounded-lg text-sm font-medium hover:bg-amber-400">Add</button>
+                    <button onClick={() => setIsAddingModel(false)} className="px-3 py-2 bg-gray-600 text-white rounded-lg text-sm hover:bg-gray-500">✕</button>
+                  </div>
+                ) : (
                   <select
                     value={formData.model}
-                    onChange={(e) => handleModelSelect(e.target.value)}
-                    className="w-full px-4 py-3 text-lg border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 bg-white"
-                    required
-                    disabled={!currentMake}
+                    onChange={(e) => {
+                      if (e.target.value === '__add_new__') {
+                        setIsAddingModel(true);
+                      } else {
+                        setFormData(prev => ({ ...prev, model: e.target.value }));
+                      }
+                    }}
+                    disabled={!formData.make}
+                    className="w-full bg-gray-700 text-white rounded-lg px-3 py-2 text-sm border border-gray-600 focus:border-amber-500 focus:outline-none disabled:opacity-50"
                   >
-                    <option value="">-- Select Model --</option>
-                    {availableModels.map((model) => (
+                    <option value="">Select Model</option>
+                    {getModelsForMake().map(model => (
                       <option key={model} value={model}>{model}</option>
                     ))}
-                    <option value="__new__">➕ Add New Model</option>
+                    <option value="__add_new__">➕ Add New Model</option>
                   </select>
-                ) : (
-                  <div className="space-y-2">
-                    <input
-                      type="text"
-                      value={formData.newModel}
-                      onChange={(e) => handleChange('newModel', e.target.value)}
-                      placeholder="Enter new model (e.g., Activa 6G, FZ-S)"
-                      className="w-full px-4 py-3 text-lg border-2 border-blue-400 rounded-xl bg-blue-50 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                      autoFocus
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowNewModel(false)}
-                      className="text-sm text-gray-500 hover:text-gray-700"
-                    >
-                      ← Back to list
-                    </button>
-                  </div>
-                )}
-                {!currentMake && (
-                  <p className="text-amber-600 text-sm mt-2">Please select a Make first.</p>
                 )}
               </div>
 
-              {/* Owner Name */}
-              <div className="bg-gray-50 rounded-xl p-4">
-                <label className="block text-sm font-semibold text-gray-800 mb-2">
-                  <span className="inline-flex items-center gap-2">
-                    <span className="w-7 h-7 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center">
-                      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M20 21a8 8 0 10-16 0" />
-                        <circle cx="12" cy="7" r="4" />
-                      </svg>
-                    </span>
-                    Owner Name
-                  </span>
-                </label>
-                <input
-                  type="text"
-                  value={formData.ownerName}
-                  onChange={(e) => handleChange('ownerName', e.target.value)}
-                  placeholder="e.g., Ramesh Kumar"
-                  className="w-full px-4 py-3 text-lg border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 bg-white"
-                />
+              {/* Two Column Layout */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-gray-800/30 rounded-xl p-3 border border-gray-700/50">
+                  <label className="block text-amber-400 text-xs font-medium mb-1.5">Owner Name</label>
+                  <input
+                    type="text"
+                    value={formData.ownerName}
+                    onChange={(e) => setFormData(prev => ({ ...prev, ownerName: e.target.value }))}
+                    placeholder="Enter name"
+                    className="w-full bg-gray-700 text-white rounded-lg px-3 py-2 text-sm border border-gray-600 focus:border-amber-500 focus:outline-none"
+                  />
+                </div>
+                <div className="bg-gray-800/30 rounded-xl p-3 border border-gray-700/50">
+                  <label className="block text-amber-400 text-xs font-medium mb-1.5">
+                    Registration <span className="text-red-400">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.registrationNumber}
+                    onChange={(e) => setFormData(prev => ({ ...prev, registrationNumber: e.target.value.toUpperCase() }))}
+                    placeholder="MH01AB1234"
+                    className="w-full bg-gray-700 text-white rounded-lg px-3 py-2 text-sm border border-gray-600 focus:border-amber-500 focus:outline-none uppercase"
+                  />
+                </div>
               </div>
 
-              {/* Registration Number */}
-              <div className="bg-gray-50 rounded-xl p-4">
-                <label className="block text-sm font-semibold text-gray-800 mb-2">
-                  <span className="inline-flex items-center gap-2">
-                    <span className="w-7 h-7 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center">
-                      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M3 7h18" />
-                        <path d="M5 7v10a2 2 0 002 2h10a2 2 0 002-2V7" />
-                        <path d="M7 11h10" />
-                      </svg>
-                    </span>
-                    Registration Number <span className="text-red-500">*</span>
-                  </span>
-                </label>
-                <input
-                  type="text"
-                  value={formData.registrationNumber}
-                  onChange={(e) => handleChange('registrationNumber', e.target.value.toUpperCase())}
-                  placeholder="e.g., MH01AB1234"
-                  className="w-full px-4 py-3 text-lg font-mono uppercase border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 bg-white"
-                  required
-                />
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-gray-800/30 rounded-xl p-3 border border-gray-700/50">
+                  <label className="block text-amber-400 text-xs font-medium mb-1.5">Chassis Number</label>
+                  <input
+                    type="text"
+                    value={formData.chassisNumber}
+                    onChange={(e) => setFormData(prev => ({ ...prev, chassisNumber: e.target.value.toUpperCase() }))}
+                    placeholder="Enter chassis"
+                    className="w-full bg-gray-700 text-white rounded-lg px-3 py-2 text-sm border border-gray-600 focus:border-amber-500 focus:outline-none uppercase"
+                  />
+                </div>
+                <div className="bg-gray-800/30 rounded-xl p-3 border border-gray-700/50">
+                  <label className="block text-amber-400 text-xs font-medium mb-1.5">Engine Number</label>
+                  <input
+                    type="text"
+                    value={formData.engineNumber}
+                    onChange={(e) => setFormData(prev => ({ ...prev, engineNumber: e.target.value.toUpperCase() }))}
+                    placeholder="Enter engine"
+                    className="w-full bg-gray-700 text-white rounded-lg px-3 py-2 text-sm border border-gray-600 focus:border-amber-500 focus:outline-none uppercase"
+                  />
+                </div>
               </div>
 
-              {/* Chassis Number */}
-              <div className="bg-gray-50 rounded-xl p-4">
-                <label className="block text-sm font-semibold text-gray-800 mb-2">
-                  <span className="inline-flex items-center gap-2">
-                    <span className="w-7 h-7 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center">
-                      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4a2 2 0 001-1.73z" />
-                        <path d="M3.3 7L12 12l8.7-5" />
-                      </svg>
-                    </span>
-                    Chassis Number
-                  </span>
+              {/* Odometer - Full Width */}
+              <div className="bg-gradient-to-r from-amber-500/10 to-orange-500/10 rounded-xl p-3 border border-amber-500/30">
+                <label className="block text-amber-400 text-xs font-medium mb-1.5">
+                  📊 Current Odometer (KM)
                 </label>
-                <input
-                  type="text"
-                  value={formData.chassisNumber}
-                  onChange={(e) => handleChange('chassisNumber', e.target.value.toUpperCase())}
-                  placeholder="e.g., MD2A14AZ8RWD12345"
-                  className="w-full px-4 py-3 text-lg font-mono uppercase border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 bg-white"
-                />
-              </div>
-
-              {/* Engine Number */}
-              <div className="bg-gray-50 rounded-xl p-4">
-                <label className="block text-sm font-semibold text-gray-800 mb-2">
-                  <span className="inline-flex items-center gap-2">
-                    <span className="w-7 h-7 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center">
-                      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M13 10V3L4 14h7v7l9-11h-7z" />
-                      </svg>
-                    </span>
-                    Engine Number
-                  </span>
-                </label>
-                <input
-                  type="text"
-                  value={formData.engineNumber}
-                  onChange={(e) => handleChange('engineNumber', e.target.value.toUpperCase())}
-                  placeholder="e.g., ENG123456789"
-                  className="w-full px-4 py-3 text-lg font-mono uppercase border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 bg-white"
-                />
-              </div>
-
-              {/* Current Odometer Reading */}
-              <div className="bg-gray-50 rounded-xl p-4">
-                <label className="block text-sm font-semibold text-gray-800 mb-2">
-                  <span className="inline-flex items-center gap-2">
-                    <span className="w-7 h-7 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center">
-                      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M12 14a2 2 0 100-4 2 2 0 000 4z" />
-                        <path d="M19.4 15a8 8 0 10-14.8 0" />
-                        <path d="M12 2v4" />
-                      </svg>
-                    </span>
-                    Current Odometer Reading (KM) <span className="text-red-500">*</span>
-                  </span>
-                </label>
-                <input
-                  type="number"
-                  value={formData.currentOdometer}
-                  onChange={(e) => handleChange('currentOdometer', e.target.value)}
-                  placeholder="e.g., 15000"
-                  className="w-full px-4 py-3 text-lg border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 bg-white"
-                  required
-                  min={0}
-                />
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    value={formData.currentOdometer}
+                    onChange={(e) => setFormData(prev => ({ ...prev, currentOdometer: e.target.value }))}
+                    placeholder="0"
+                    className="flex-1 bg-gray-700 text-white rounded-lg px-3 py-2 text-sm border border-gray-600 focus:border-amber-500 focus:outline-none"
+                  />
+                  <span className="text-amber-400 font-medium text-sm">KM</span>
+                </div>
               </div>
             </div>
           )}
 
           {/* Step 3: Documents */}
-          {currentStep === 3 && (
-            <div className="space-y-4">
-              <div className="bg-blue-50 rounded-xl p-4 mb-4">
-                <p className="text-blue-800 font-medium">📄 Enter document validity dates to get renewal reminders</p>
-                <p className="text-blue-700 text-sm mt-1">
-                  Choose whether the vehicle is <strong>Private</strong> or <strong>Commercial</strong> to see the correct document list.
-                </p>
-              </div>
-
-              {/* Vehicle Type (Private / Commercial) */}
-              <div className="bg-gray-50 rounded-xl p-4">
-                <label className="block text-sm font-semibold text-gray-800 mb-3">
-                  Vehicle Type
-                </label>
-
-                <div className="grid grid-cols-2 gap-3">
+          {step === 3 && (
+            <div className="space-y-3">
+              {/* Usage Type Toggle */}
+              <div className="bg-gray-800/50 rounded-xl p-3 border border-gray-700">
+                <label className="block text-amber-400 text-xs font-medium mb-2">Vehicle Usage Type</label>
+                <div className="grid grid-cols-2 gap-2">
                   <button
-                    type="button"
-                    onClick={() => handleChange('vehicleType', 'private')}
-                    className={`px-4 py-3 rounded-xl border-2 font-semibold transition-colors ${
-                      formData.vehicleType === 'private'
-                        ? 'bg-gray-900 border-gray-900 text-amber-200'
-                        : 'bg-white border-gray-200 text-gray-700 hover:border-amber-300'
+                    onClick={() => setFormData(prev => ({ ...prev, vehicleUsage: 'Private' }))}
+                    className={`py-2.5 rounded-lg text-sm font-medium transition-all ${
+                      formData.vehicleUsage === 'Private'
+                        ? 'bg-gradient-to-r from-amber-500 to-yellow-500 text-gray-900 shadow-lg'
+                        : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                     }`}
                   >
-                    Private
-                    <div className={`text-xs mt-1 ${formData.vehicleType === 'private' ? 'text-amber-200/80' : 'text-gray-500'}`}>
-                      Registration Validity + Insurance + Pollution
-                    </div>
+                    🏠 Private
                   </button>
-
                   <button
-                    type="button"
-                    onClick={() => handleChange('vehicleType', 'commercial')}
-                    className={`px-4 py-3 rounded-xl border-2 font-semibold transition-colors ${
-                      formData.vehicleType === 'commercial'
-                        ? 'bg-gray-900 border-gray-900 text-amber-200'
-                        : 'bg-white border-gray-200 text-gray-700 hover:border-amber-300'
+                    onClick={() => setFormData(prev => ({ ...prev, vehicleUsage: 'Commercial' }))}
+                    className={`py-2.5 rounded-lg text-sm font-medium transition-all ${
+                      formData.vehicleUsage === 'Commercial'
+                        ? 'bg-gradient-to-r from-amber-500 to-yellow-500 text-gray-900 shadow-lg'
+                        : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                     }`}
                   >
-                    Commercial
-                    <div className={`text-xs mt-1 ${formData.vehicleType === 'commercial' ? 'text-amber-200/80' : 'text-gray-500'}`}>
-                      Insurance + Pollution + Fitness + Road Tax
-                    </div>
+                    🏢 Commercial
                   </button>
                 </div>
-
-                <p className="text-xs text-gray-500 mt-2">
-                  Private vehicles usually don’t require Fitness/Road Tax tracking. Commercial fleets typically do.
-                </p>
               </div>
 
-              {/* Private Documents */}
-              {formData.vehicleType === 'private' && (
-                <div className="space-y-4">
-                  {/* Registration Validity */}
-                  <div className="bg-gray-50 rounded-xl p-4">
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      🪪 Registration Valid Till
-                    </label>
+              {/* Document Fields Based on Usage Type */}
+              <div className="space-y-3">
+                {formData.vehicleUsage === 'Private' && (
+                  <div className="bg-gray-800/30 rounded-xl p-3 border border-gray-700/50">
+                    <label className="block text-amber-400 text-xs font-medium mb-1.5">📋 Registration</label>
                     <input
                       type="date"
                       value={formData.registrationValidity}
-                      onChange={(e) => handleChange('registrationValidity', e.target.value)}
-                      className="w-full px-4 py-3 text-lg border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                      onChange={(e) => setFormData(prev => ({ ...prev, registrationValidity: e.target.value }))}
+                      className="w-full bg-gray-700 text-white rounded-lg px-3 py-2 text-sm border border-gray-600 focus:border-amber-500 focus:outline-none"
                     />
-                    <p className="text-xs text-gray-500 mt-2">Used mainly for Private vehicles.</p>
                   </div>
+                )}
 
-                  {/* Insurance */}
-                  <div className="bg-gray-50 rounded-xl p-4">
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      🛡️ Insurance Valid Till
-                    </label>
-                    <input
-                      type="date"
-                      value={formData.insuranceValidity}
-                      onChange={(e) => handleChange('insuranceValidity', e.target.value)}
-                      className="w-full px-4 py-3 text-lg border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                    />
-                  </div>
-
-                  {/* Pollution */}
-                  <div className="bg-gray-50 rounded-xl p-4">
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      💨 Pollution Certificate Valid Till
-                    </label>
-                    <input
-                      type="date"
-                      value={formData.pollutionValidity}
-                      onChange={(e) => handleChange('pollutionValidity', e.target.value)}
-                      className="w-full px-4 py-3 text-lg border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                    />
-                  </div>
+                <div className="bg-gray-800/30 rounded-xl p-3 border border-gray-700/50">
+                  <label className="block text-amber-400 text-xs font-medium mb-1.5">
+                    🛡️ Insurance <span className="text-red-400">*</span>
+                  </label>
+                  <input
+                    type="date"
+                    value={formData.insuranceValidity}
+                    onChange={(e) => setFormData(prev => ({ ...prev, insuranceValidity: e.target.value }))}
+                    className="w-full bg-gray-700 text-white rounded-lg px-3 py-2 text-sm border border-gray-600 focus:border-amber-500 focus:outline-none"
+                  />
                 </div>
-              )}
 
-              {/* Commercial Documents */}
-              {formData.vehicleType === 'commercial' && (
-                <div className="space-y-4">
-                  {/* Insurance */}
-                  <div className="bg-gray-50 rounded-xl p-4">
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      🛡️ Insurance Valid Till
-                    </label>
-                    <input
-                      type="date"
-                      value={formData.insuranceValidity}
-                      onChange={(e) => handleChange('insuranceValidity', e.target.value)}
-                      className="w-full px-4 py-3 text-lg border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                    />
-                  </div>
-
-                  {/* Pollution */}
-                  <div className="bg-gray-50 rounded-xl p-4">
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      💨 Pollution Certificate Valid Till
-                    </label>
-                    <input
-                      type="date"
-                      value={formData.pollutionValidity}
-                      onChange={(e) => handleChange('pollutionValidity', e.target.value)}
-                      className="w-full px-4 py-3 text-lg border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                    />
-                  </div>
-
-                  {/* Fitness */}
-                  <div className="bg-gray-50 rounded-xl p-4">
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      ✅ Fitness Certificate Valid Till
-                    </label>
-                    <input
-                      type="date"
-                      value={formData.fitnessValidity}
-                      onChange={(e) => handleChange('fitnessValidity', e.target.value)}
-                      className="w-full px-4 py-3 text-lg border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                    />
-                  </div>
-
-                  {/* Road Tax */}
-                  <div className="bg-gray-50 rounded-xl p-4">
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      🛣️ Road Tax Valid Till
-                    </label>
-                    <input
-                      type="date"
-                      value={formData.roadTaxValidity}
-                      onChange={(e) => handleChange('roadTaxValidity', e.target.value)}
-                      className="w-full px-4 py-3 text-lg border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                    />
-                  </div>
+                <div className="bg-gray-800/30 rounded-xl p-3 border border-gray-700/50">
+                  <label className="block text-amber-400 text-xs font-medium mb-1.5">
+                    💨 Pollution <span className="text-red-400">*</span>
+                  </label>
+                  <input
+                    type="date"
+                    value={formData.pollutionValidity}
+                    onChange={(e) => setFormData(prev => ({ ...prev, pollutionValidity: e.target.value }))}
+                    className="w-full bg-gray-700 text-white rounded-lg px-3 py-2 text-sm border border-gray-600 focus:border-amber-500 focus:outline-none"
+                  />
                 </div>
-              )}
+
+                {formData.vehicleUsage === 'Commercial' && (
+                  <>
+                    <div className="bg-gray-800/30 rounded-xl p-3 border border-gray-700/50">
+                      <label className="block text-amber-400 text-xs font-medium mb-1.5">🔧 Fitness</label>
+                      <input
+                        type="date"
+                        value={formData.fitnessValidity}
+                        onChange={(e) => setFormData(prev => ({ ...prev, fitnessValidity: e.target.value }))}
+                        className="w-full bg-gray-700 text-white rounded-lg px-3 py-2 text-sm border border-gray-600 focus:border-amber-500 focus:outline-none"
+                      />
+                    </div>
+                    <div className="bg-gray-800/30 rounded-xl p-3 border border-gray-700/50">
+                      <label className="block text-amber-400 text-xs font-medium mb-1.5">🛣️ Road Tax</label>
+                      <input
+                        type="date"
+                        value={formData.roadTaxValidity}
+                        onChange={(e) => setFormData(prev => ({ ...prev, roadTaxValidity: e.target.value }))}
+                        className="w-full bg-gray-700 text-white rounded-lg px-3 py-2 text-sm border border-gray-600 focus:border-amber-500 focus:outline-none"
+                      />
+                    </div>
+                    <div className="bg-gray-800/30 rounded-xl p-3 border border-gray-700/50">
+                      <label className="block text-amber-400 text-xs font-medium mb-1.5">📜 Permit</label>
+                      <input
+                        type="date"
+                        value={formData.permitValidity}
+                        onChange={(e) => setFormData(prev => ({ ...prev, permitValidity: e.target.value }))}
+                        className="w-full bg-gray-700 text-white rounded-lg px-3 py-2 text-sm border border-gray-600 focus:border-amber-500 focus:outline-none"
+                      />
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
           )}
 
           {/* Step 4: Service */}
-          {currentStep === 4 && (
-            <div className="space-y-4">
-              <div className="bg-amber-50 rounded-xl p-4 mb-4">
-                <p className="text-amber-800 font-medium">🔧 Set service intervals to get maintenance reminders</p>
-              </div>
-
-              {/* Service Interval - Months */}
-              <div className="bg-gray-50 rounded-xl p-4">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  📅 Service Interval (Months)
-                </label>
-                <select
-                  value={formData.serviceIntervalMonths}
-                  onChange={(e) => handleChange('serviceIntervalMonths', parseInt(e.target.value))}
-                  className="w-full px-4 py-3 text-lg border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                >
-                  <option value={3}>Every 3 months</option>
-                  <option value={4}>Every 4 months</option>
-                  <option value={5}>Every 5 months (Recommended)</option>
-                  <option value={6}>Every 6 months</option>
-                  <option value={9}>Every 9 months</option>
-                  <option value={12}>Every 12 months</option>
-                </select>
-              </div>
-
-              {/* Service Interval - KM */}
-              <div className="bg-gray-50 rounded-xl p-4">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  🛣️ Service Interval (Kilometers)
-                </label>
-                <select
-                  value={formData.serviceIntervalKms}
-                  onChange={(e) => handleChange('serviceIntervalKms', parseInt(e.target.value))}
-                  className="w-full px-4 py-3 text-lg border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                >
-                  <option value={3000}>Every 3,000 KM</option>
-                  <option value={4000}>Every 4,000 KM</option>
-                  <option value={5000}>Every 5,000 KM (Recommended)</option>
-                  <option value={6000}>Every 6,000 KM</option>
-                  <option value={8000}>Every 8,000 KM</option>
-                  <option value={10000}>Every 10,000 KM</option>
-                </select>
-              </div>
-
-              {/* Last Service Date */}
-              <div className="bg-gray-50 rounded-xl p-4">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  📆 Last Service Date
-                </label>
-                <input
-                  type="date"
-                  value={formData.lastServiceDate}
-                  onChange={(e) => handleChange('lastServiceDate', e.target.value)}
-                  className="w-full px-4 py-3 text-lg border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                />
-              </div>
-
-              {/* Last Service KM */}
-              <div className="bg-gray-50 rounded-xl p-4">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  🔢 Last Service Odometer (KM)
-                </label>
-                <input
-                  type="number"
-                  value={formData.lastServiceKm}
-                  onChange={(e) => handleChange('lastServiceKm', e.target.value)}
-                  placeholder="e.g., 15000"
-                  className="w-full px-4 py-3 text-lg border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                />
-              </div>
-
-              {/* Summary */}
-              {formData.lastServiceDate && formData.currentOdometer && (
-                <div className="bg-green-50 rounded-xl p-4 border-2 border-green-200">
-                  <h4 className="font-bold text-green-800 mb-2">📊 Service Summary</h4>
-                  <div className="space-y-1 text-sm text-green-700">
-                    <p>Current Odometer: <strong>{parseInt(formData.currentOdometer).toLocaleString()} KM</strong></p>
-                    <p>Last Service: <strong>{formData.lastServiceDate}</strong> at <strong>{parseInt(formData.lastServiceKm || '0').toLocaleString()} KM</strong></p>
-                    <p>KM Since Last Service: <strong>{(parseInt(formData.currentOdometer) - parseInt(formData.lastServiceKm || '0')).toLocaleString()} KM</strong></p>
+          {step === 4 && (
+            <div className="space-y-3">
+              {/* Service Interval */}
+              <div className="bg-gray-800/50 rounded-xl p-3 border border-gray-700">
+                <label className="block text-amber-400 text-xs font-medium mb-2">⏱️ Service Interval</label>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <span className="text-gray-400 text-[10px]">Every</span>
+                    <select
+                      value={formData.serviceIntervalMonths}
+                      onChange={(e) => setFormData(prev => ({ ...prev, serviceIntervalMonths: e.target.value }))}
+                      className="w-full bg-gray-700 text-white rounded-lg px-3 py-2 text-sm border border-gray-600 focus:border-amber-500 focus:outline-none mt-1"
+                    >
+                      <option value="3">3 Months</option>
+                      <option value="4">4 Months</option>
+                      <option value="5">5 Months</option>
+                      <option value="6">6 Months</option>
+                      <option value="9">9 Months</option>
+                      <option value="12">12 Months</option>
+                    </select>
+                  </div>
+                  <div>
+                    <span className="text-gray-400 text-[10px]">Or Every</span>
+                    <select
+                      value={formData.serviceIntervalKms}
+                      onChange={(e) => setFormData(prev => ({ ...prev, serviceIntervalKms: e.target.value }))}
+                      className="w-full bg-gray-700 text-white rounded-lg px-3 py-2 text-sm border border-gray-600 focus:border-amber-500 focus:outline-none mt-1"
+                    >
+                      <option value="3000">3,000 KM</option>
+                      <option value="4000">4,000 KM</option>
+                      <option value="5000">5,000 KM</option>
+                      <option value="6000">6,000 KM</option>
+                      <option value="8000">8,000 KM</option>
+                      <option value="10000">10,000 KM</option>
+                    </select>
                   </div>
                 </div>
-              )}
+              </div>
+
+              {/* Last Service */}
+              <div className="bg-gray-800/30 rounded-xl p-3 border border-gray-700/50">
+                <label className="block text-amber-400 text-xs font-medium mb-2">📅 Last Service</label>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <span className="text-gray-400 text-[10px]">Date</span>
+                    <input
+                      type="date"
+                      value={formData.lastServiceDate}
+                      onChange={(e) => setFormData(prev => ({ ...prev, lastServiceDate: e.target.value }))}
+                      className="w-full bg-gray-700 text-white rounded-lg px-3 py-2 text-sm border border-gray-600 focus:border-amber-500 focus:outline-none mt-1"
+                    />
+                  </div>
+                  <div>
+                    <span className="text-gray-400 text-[10px]">Odometer (KM)</span>
+                    <input
+                      type="number"
+                      value={formData.lastServiceKm}
+                      onChange={(e) => setFormData(prev => ({ ...prev, lastServiceKm: e.target.value }))}
+                      placeholder="0"
+                      className="w-full bg-gray-700 text-white rounded-lg px-3 py-2 text-sm border border-gray-600 focus:border-amber-500 focus:outline-none mt-1"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Vehicle Summary Card */}
+              <div className="bg-gradient-to-br from-amber-500/10 to-orange-600/10 rounded-xl p-3 border border-amber-500/30">
+                <h4 className="text-amber-400 text-xs font-medium mb-2">📋 Vehicle Summary</h4>
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div className="flex items-center gap-2">
+                    <span className="text-gray-400">Type:</span>
+                    <span className="text-white">{vehicleType === 'Bike' ? '🏍️' : '🚗'} {vehicleType}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-gray-400">Usage:</span>
+                    <span className="text-white">{formData.vehicleUsage === 'Private' ? '🏠' : '🏢'} {formData.vehicleUsage}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-gray-400">Make:</span>
+                    <span className="text-white">{formData.make || '-'}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-gray-400">Model:</span>
+                    <span className="text-white">{formData.model || '-'}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-gray-400">Reg:</span>
+                    <span className="text-white font-mono">{formData.registrationNumber || '-'}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-gray-400">Odometer:</span>
+                    <span className="text-white">{formData.currentOdometer || '0'} km</span>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
         </div>
 
-        {/* Footer Navigation */}
-        <div className="border-t bg-gray-50 p-4">
-          <div className="flex items-center justify-between gap-3">
-            <button
-              type="button"
-              onClick={onCancel}
-              className="px-4 py-2.5 text-gray-600 hover:text-gray-800 font-medium"
-            >
-              Cancel
-            </button>
-
-            <div className="flex items-center gap-2">
-              {currentStep > 1 && (
-                <button
-                  type="button"
-                  onClick={() => setCurrentStep(currentStep - 1)}
-                  className="px-4 py-2.5 bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium rounded-xl"
-                >
-                  ← Previous
-                </button>
-              )}
-              
-              {currentStep < 4 ? (
-                <button
-                  type="button"
-                  onClick={() => setCurrentStep(currentStep + 1)}
-                  className="px-6 py-2.5 bg-gray-900 hover:bg-black text-amber-200 font-semibold rounded-xl"
-                >
-                  Next →
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={handleSubmit}
-                  className="px-6 py-2.5 bg-gray-900 hover:bg-black text-amber-200 font-semibold rounded-xl"
-                >
-                  ✓ Save Vehicle
-                </button>
-              )}
-            </div>
+        {/* Footer Buttons */}
+        <div className="px-4 py-3 bg-gray-800/50 border-t border-gray-700 flex items-center justify-between gap-2">
+          <button
+            onClick={onCancel}
+            className="px-4 py-2 text-gray-400 hover:text-white text-sm transition-colors"
+          >
+            Cancel
+          </button>
+          
+          <div className="flex items-center gap-2">
+            {step > 1 && (
+              <button
+                onClick={() => setStep(s => s - 1)}
+                className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg text-sm font-medium transition-colors"
+              >
+                ← Back
+              </button>
+            )}
+            
+            {step < 4 ? (
+              <button
+                onClick={() => setStep(s => s + 1)}
+                disabled={!canProceed()}
+                className="px-5 py-2 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-gray-900 rounded-lg text-sm font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-amber-500/20"
+              >
+                Next →
+              </button>
+            ) : (
+              <button
+                onClick={handleSubmit}
+                className="px-5 py-2 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-400 hover:to-emerald-400 text-white rounded-lg text-sm font-bold transition-all shadow-lg shadow-green-500/20"
+              >
+                ✓ Save Vehicle
+              </button>
+            )}
           </div>
         </div>
       </div>
     </div>
   );
-};
+}
+
+export default BikeForm;

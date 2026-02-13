@@ -1,26 +1,106 @@
-import { useEffect, useState } from "react";
-import { Dashboard } from "./components/Dashboard";
-import { ServiceHistory } from "./components/ServiceHistory";
-import Analytics from "./components/Analytics";
-import CompanySettings from "./components/CompanySettings";
-import AuthScreen from "./components/AuthScreen";
-import HelpCenter from "./components/HelpCenter";
-import ExcelImportExport from "./components/ExcelImportExport";
-import {
-  IconChart,
-  IconFleet,
-  IconHelp,
-  IconLogout,
-  IconSettings,
-  IconWrench,
-} from "./components/ui/Icons";
-import type {
-  CompanySettings as CompanySettingsType,
-  Motorcycle,
-  ServiceRecord,
-} from "./types";
-import { useSupabaseFleet } from "@/hooks/useSupabaseFleet";
-import { isSupabaseConfigured, supabase } from "@/lib/supabase";
+import { useState, useEffect } from 'react';
+import { Dashboard } from './components/Dashboard';
+import { ServiceHistory } from './components/ServiceHistory';
+import Analytics from './components/Analytics';
+import CompanySettings from './components/CompanySettings';
+import AuthScreen from './components/AuthScreen';
+import { HomePage } from './components/HomePage';
+import { AdminBackend } from './components/AdminBackend';
+import { Motorcycle, ServiceRecord, CompanySettings as CompanySettingsType } from './types';
+
+interface SiteSettings {
+  siteName: string;
+  tagline: string;
+  logo: string;
+  favicon: string;
+  primaryColor: string;
+  secondaryColor: string;
+  accentColor: string;
+  backgroundColor: string;
+  textColor: string;
+  headingFont: string;
+  bodyFont: string;
+  fontSize: 'small' | 'medium' | 'large';
+  heroImage: string;
+  aboutImage: string;
+  featureImages: string[];
+  metaTitle: string;
+  metaDescription: string;
+  metaKeywords: string;
+  ogImage: string;
+  googleAnalyticsId: string;
+  googleSearchConsole: string;
+  facebookPixel: string;
+  facebook: string;
+  twitter: string;
+  instagram: string;
+  linkedin: string;
+  youtube: string;
+  email: string;
+  phone: string;
+  whatsapp: string;
+  address: string;
+  starterPrice: number;
+  starterVehicles: number;
+  proPrice: number;
+  proVehicles: number;
+  enterprisePrice: number;
+  showPricing: boolean;
+  showReviews: boolean;
+  showFaq: boolean;
+  showContact: boolean;
+  showBrands: boolean;
+  customCss: string;
+  headerScripts: string;
+  footerScripts: string;
+}
+
+const defaultSiteSettings: SiteSettings = {
+  siteName: 'Fleet Guard',
+  tagline: 'Protect Your Fleet',
+  logo: '',
+  favicon: '',
+  primaryColor: '#f59e0b',
+  secondaryColor: '#1f2937',
+  accentColor: '#10b981',
+  backgroundColor: '#000000',
+  textColor: '#ffffff',
+  headingFont: 'Inter',
+  bodyFont: 'Inter',
+  fontSize: 'medium',
+  heroImage: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1920',
+  aboutImage: '',
+  featureImages: [],
+  metaTitle: 'Fleet Guard - Protect Your Fleet | Vehicle Management System',
+  metaDescription: 'Manage your vehicle fleet with ease. Track services, documents, and maintenance for cars & bikes.',
+  metaKeywords: 'fleet management, vehicle tracking, service reminder',
+  ogImage: '',
+  googleAnalyticsId: '',
+  googleSearchConsole: '',
+  facebookPixel: '',
+  facebook: '',
+  twitter: '',
+  instagram: '',
+  linkedin: '',
+  youtube: '',
+  email: 'support@fleetguard.in',
+  phone: '+91 98765 43210',
+  whatsapp: '+91 98765 43210',
+  address: 'Mumbai, Maharashtra, India',
+  starterPrice: 0,
+  starterVehicles: 5,
+  proPrice: 2000,
+  proVehicles: 30,
+  enterprisePrice: 3500,
+  showPricing: true,
+  showReviews: true,
+  showFaq: true,
+  showContact: true,
+  showBrands: true,
+  customCss: '',
+  headerScripts: '',
+  footerScripts: ''
+};
 
 interface User {
   id: string;
@@ -42,170 +122,204 @@ interface AppData {
 const defaultData: AppData = {
   motorcycles: [],
   serviceRecords: [],
-  savedMakes: [
-    "Honda",
-    "Yamaha",
-    "Suzuki",
-    "Royal Enfield",
-    "Bajaj",
-    "TVS",
-    "KTM",
-    "Hero",
-  ],
+  savedMakes: ['Honda', 'Yamaha', 'Suzuki', 'Royal Enfield', 'Bajaj', 'TVS', 'KTM', 'Hero'],
   savedModels: {
-    Honda: ["Activa 6G", "Shine", "Unicorn", "CB350", "Hornet"],
-    Yamaha: ["FZ", "R15", "MT15", "Fascino", "Ray ZR"],
-    Suzuki: ["Access", "Gixxer", "Burgman"],
-    "Royal Enfield": ["Classic 350", "Bullet 350", "Meteor", "Hunter 350"],
-    Bajaj: ["Pulsar", "Avenger", "Dominar", "Platina"],
-    TVS: ["Apache", "Jupiter", "Ntorq", "Raider"],
-    KTM: ["Duke 200", "Duke 390", "RC 200", "Adventure 390"],
-    Hero: ["Splendor", "HF Deluxe", "Passion", "Glamour"],
+    'Honda': ['Activa 6G', 'Shine', 'Unicorn', 'CB350', 'Hornet'],
+    'Yamaha': ['FZ', 'R15', 'MT15', 'Fascino', 'Ray ZR'],
+    'Suzuki': ['Access', 'Gixxer', 'Burgman'],
+    'Royal Enfield': ['Classic 350', 'Bullet 350', 'Meteor', 'Hunter 350'],
+    'Bajaj': ['Pulsar', 'Avenger', 'Dominar', 'Platina'],
+    'TVS': ['Apache', 'Jupiter', 'Ntorq', 'Raider'],
+    'KTM': ['Duke 200', 'Duke 390', 'RC 200', 'Adventure 390'],
+    'Hero': ['Splendor', 'HF Deluxe', 'Passion', 'Glamour']
   },
   companySettings: {
-    companyName: "",
-    tagline: "",
-    logo: "",
-    email: "",
-    phone: "",
-    alternatePhone: "",
-    website: "",
-    address: "",
-    city: "",
-    state: "",
-    pincode: "",
-    gstNumber: "",
-    panNumber: "",
-    businessRegNumber: "",
-    // Default theme: Golden + Black
-    primaryColor: "#D4AF37",
-    secondaryColor: "#0B0B0B",
-  },
+    companyName: 'Fleet Guard',
+    tagline: 'Protect Your Fleet',
+    logo: '',
+    email: '',
+    phone: '',
+    alternatePhone: '',
+    website: '',
+    address: '',
+    city: '',
+    state: '',
+    pincode: '',
+    gstNumber: '',
+    panNumber: '',
+    businessRegNumber: '',
+    primaryColor: '#F59E0B',
+    secondaryColor: '#D97706'
+  }
 };
 
+type AppView = 'home' | 'auth' | 'dashboard' | 'admin';
+
 function App() {
-  // Data store (Supabase + local cache fallback)
-  // If Supabase env vars are configured, data is stored per-user in Supabase table: fleet_store
-  // Otherwise, the hook falls back to localStorage on this device.
-  const { data, setData } = useSupabaseFleet(defaultData);
-
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [currentView, setCurrentView] = useState<AppView>('home');
+  const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
   const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [activeTab, setActiveTab] = useState<
-    "fleet" | "service" | "analytics" | "settings" | "help"
-  >("fleet");
-  const [isBootLoading, setIsBootLoading] = useState(true);
+  const [data, setData] = useState<AppData>(defaultData);
+  const [activeTab, setActiveTab] = useState<'fleet' | 'service' | 'analytics' | 'settings'>('fleet');
+  const [isLoading, setIsLoading] = useState(true);
+  const [siteSettings, setSiteSettings] = useState<SiteSettings>(defaultSiteSettings);
+  const [showAdminPanel, setShowAdminPanel] = useState(false);
 
-  // Restore session on mount.
+  // Load site settings
   useEffect(() => {
-    let cancelled = false;
-
-    (async () => {
-      try {
-        // 1) Local session (fast path)
-        const savedUser = localStorage.getItem("fleet_current_user");
-        if (savedUser) {
-          const user = JSON.parse(savedUser) as User;
-          if (!cancelled) {
-            setCurrentUser(user);
-            setIsAuthenticated(true);
-          }
-          return;
-        }
-
-        // 2) Supabase session (if configured)
-        if (isSupabaseConfigured() && supabase) {
-          const { data: sessData, error } = await supabase.auth.getSession();
-          if (error) throw error;
-
-          const u = sessData.session?.user;
-          if (u) {
-            const restored: User = {
-              id: u.id,
-              username: (u.email || "user").split("@")[0],
-              email: u.email || "",
-              companyName: (u.user_metadata as any)?.companyName || "",
-              phone: (u.user_metadata as any)?.phone || "",
-            };
-
-            localStorage.setItem("fleet_current_user", JSON.stringify(restored));
-
-            if (!cancelled) {
-              setCurrentUser(restored);
-              setIsAuthenticated(true);
-            }
-          }
-        }
-      } catch (e) {
-        console.error("Error restoring session:", e);
-      } finally {
-        if (!cancelled) setIsBootLoading(false);
+    try {
+      const savedSiteSettings = localStorage.getItem('fleet_site_settings');
+      if (savedSiteSettings) {
+        setSiteSettings({ ...defaultSiteSettings, ...JSON.parse(savedSiteSettings) });
       }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
+    } catch (e) {
+      console.error('Error loading site settings:', e);
+    }
   }, []);
+
+  // Save site settings
+  const handleSaveSiteSettings = (settings: SiteSettings) => {
+    setSiteSettings(settings);
+    localStorage.setItem('fleet_site_settings', JSON.stringify(settings));
+    
+    // Apply Google Analytics if provided
+    if (settings.googleAnalyticsId && !document.querySelector(`script[src*="googletagmanager"]`)) {
+      const script = document.createElement('script');
+      script.async = true;
+      script.src = `https://www.googletagmanager.com/gtag/js?id=${settings.googleAnalyticsId}`;
+      document.head.appendChild(script);
+      
+      const inlineScript = document.createElement('script');
+      inlineScript.innerHTML = `
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', '${settings.googleAnalyticsId}');
+      `;
+      document.head.appendChild(inlineScript);
+    }
+
+    // Apply custom CSS
+    let styleEl = document.getElementById('custom-site-styles');
+    if (!styleEl) {
+      styleEl = document.createElement('style');
+      styleEl.id = 'custom-site-styles';
+      document.head.appendChild(styleEl);
+    }
+    styleEl.innerHTML = settings.customCss || '';
+  };
+
+  // Check if user is admin (simple check - can be enhanced)
+  const isAdmin = currentUser?.email?.toLowerCase() === 'admin@fleetguard.com' || 
+                  currentUser?.email?.toLowerCase() === 'admin@fleetguard.in' ||
+                  currentUser?.username?.toLowerCase() === 'admin' ||
+                  currentUser?.id === 'admin';
+
+  // Check for existing session on mount
+  useEffect(() => {
+    try {
+      const savedUser = localStorage.getItem('fleet_current_user');
+      if (savedUser) {
+        const user = JSON.parse(savedUser);
+        setCurrentUser(user);
+        setCurrentView('dashboard');
+      }
+    } catch (e) {
+      console.error('Error loading user session:', e);
+    }
+    setIsLoading(false);
+  }, []);
+
+  // Load data from localStorage
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('motorcycle_fleet_data');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        setData({
+          ...defaultData,
+          ...parsed,
+          motorcycles: Array.isArray(parsed.motorcycles) ? parsed.motorcycles : [],
+          serviceRecords: Array.isArray(parsed.serviceRecords) ? parsed.serviceRecords : [],
+          savedMakes: Array.isArray(parsed.savedMakes) ? parsed.savedMakes : defaultData.savedMakes,
+          savedModels: parsed.savedModels || defaultData.savedModels,
+          companySettings: { ...defaultData.companySettings, ...parsed.companySettings }
+        });
+      }
+    } catch (e) {
+      console.error('Error loading data:', e);
+    }
+  }, []);
+
+  // Save data to localStorage
+  const saveData = (updater: AppData | ((prev: AppData) => AppData)) => {
+    setData(prev => {
+      const next = typeof updater === 'function' ? (updater as (p: AppData) => AppData)(prev) : updater;
+      try {
+        localStorage.setItem('motorcycle_fleet_data', JSON.stringify(next));
+      } catch (e) {
+        console.error('Error saving data:', e);
+      }
+      return next;
+    });
+  };
 
   const handleLogin = (user: User) => {
     setCurrentUser(user);
-    setIsAuthenticated(true);
+    setCurrentView('dashboard');
   };
 
-  const handleLogout = async () => {
-    try {
-      if (isSupabaseConfigured() && supabase) {
-        await supabase.auth.signOut();
-      }
-    } catch {
-      // ignore
-    }
-    localStorage.removeItem("fleet_current_user");
+  const handleLogout = () => {
+    localStorage.removeItem('fleet_current_user');
     setCurrentUser(null);
-    setIsAuthenticated(false);
+    setCurrentView('home');
   };
 
-  // --------------------
-  // Data mutation helpers
-  // --------------------
+  const handleGetStarted = () => {
+    setAuthMode('signup');
+    setCurrentView('auth');
+  };
 
+  const handleGoToLogin = () => {
+    setAuthMode('login');
+    setCurrentView('auth');
+  };
+
+  // Motorcycle handlers
   const handleAddBike = (bike: Motorcycle) => {
-    setData((prev) => ({
+    saveData(prev => ({
       ...prev,
       motorcycles: [...(Array.isArray(prev.motorcycles) ? prev.motorcycles : []), bike],
     }));
   };
 
   const handleUpdateBike = (updatedBike: Motorcycle) => {
-    setData((prev) => ({
+    saveData(prev => ({
       ...prev,
-      motorcycles: (Array.isArray(prev.motorcycles) ? prev.motorcycles : []).map((b) =>
+      motorcycles: (Array.isArray(prev.motorcycles) ? prev.motorcycles : []).map(b =>
         b.id === updatedBike.id ? updatedBike : b
       ),
     }));
   };
 
   const handleDeleteBike = (bikeId: string) => {
-    setData((prev) => ({
+    saveData(prev => ({
       ...prev,
-      motorcycles: (Array.isArray(prev.motorcycles) ? prev.motorcycles : []).filter(
-        (b) => b.id !== bikeId
-      ),
-      serviceRecords: (Array.isArray(prev.serviceRecords) ? prev.serviceRecords : []).filter(
-        (r) => r.motorcycleId !== bikeId
-      ),
+      motorcycles: (Array.isArray(prev.motorcycles) ? prev.motorcycles : []).filter(b => b.id !== bikeId),
+      serviceRecords: (Array.isArray(prev.serviceRecords) ? prev.serviceRecords : []).filter(r => r.motorcycleId !== bikeId),
     }));
   };
 
   const handleAddMake = (make: string) => {
     const trimmed = make.trim();
     if (!trimmed) return;
-
-    setData((prev) => {
+    saveData(prev => {
       const existing = Array.isArray(prev.savedMakes) ? prev.savedMakes : [];
       if (existing.includes(trimmed)) return prev;
-      return { ...prev, savedMakes: [...existing, trimmed] };
+      return {
+        ...prev,
+        savedMakes: [...existing, trimmed],
+      };
     });
   };
 
@@ -213,8 +327,7 @@ function App() {
     const mk = make.trim();
     const md = model.trim();
     if (!mk || !md) return;
-
-    setData((prev) => {
+    saveData(prev => {
       const current = prev.savedModels?.[mk] || [];
       if (current.includes(md)) return prev;
       return {
@@ -227,239 +340,158 @@ function App() {
     });
   };
 
+  // Service record handlers
   const handleAddServiceRecord = (record: ServiceRecord) => {
-    setData((prev) => ({
+    saveData(prev => ({
       ...prev,
       serviceRecords: [...(Array.isArray(prev.serviceRecords) ? prev.serviceRecords : []), record],
     }));
   };
 
   const handleUpdateServiceRecord = (record: ServiceRecord) => {
-    setData((prev) => ({
+    saveData(prev => ({
       ...prev,
-      serviceRecords: (Array.isArray(prev.serviceRecords) ? prev.serviceRecords : []).map((r) =>
-        r.id === record.id ? record : r
-      ),
+      serviceRecords: (Array.isArray(prev.serviceRecords) ? prev.serviceRecords : []).map(r => (r.id === record.id ? record : r)),
     }));
   };
 
   const handleDeleteServiceRecord = (recordId: string) => {
-    setData((prev) => ({
+    saveData(prev => ({
       ...prev,
-      serviceRecords: (Array.isArray(prev.serviceRecords) ? prev.serviceRecords : []).filter(
-        (r) => r.id !== recordId
-      ),
+      serviceRecords: (Array.isArray(prev.serviceRecords) ? prev.serviceRecords : []).filter(r => r.id !== recordId),
     }));
   };
 
+  // Settings handlers
   const handleUpdateSettings = (settings: CompanySettingsType) => {
-    setData((prev) => ({ ...prev, companySettings: settings }));
+    saveData(prev => ({ ...prev, companySettings: settings }));
   };
 
+  // Restore data handler
   const handleRestoreData = (restoredData: AppData) => {
-    setData(() => ({
+    saveData({
       ...defaultData,
       ...restoredData,
       motorcycles: Array.isArray(restoredData.motorcycles) ? restoredData.motorcycles : [],
-      serviceRecords: Array.isArray(restoredData.serviceRecords)
-        ? restoredData.serviceRecords
-        : [],
-    }));
-  };
-
-  const handleApplyExcelImport = (
-    payload: { vehicles: Motorcycle[]; serviceRecords: ServiceRecord[] },
-    mode: "merge" | "replace"
-  ) => {
-    setData((prev) => {
-      const prevVehicles = Array.isArray(prev.motorcycles) ? prev.motorcycles : [];
-      const prevServices = Array.isArray(prev.serviceRecords) ? prev.serviceRecords : [];
-
-      const importedVehicles = Array.isArray(payload.vehicles) ? payload.vehicles : [];
-      const importedServices = Array.isArray(payload.serviceRecords)
-        ? payload.serviceRecords
-        : [];
-
-      // Build maps for matching
-      const prevById = new Map(prevVehicles.map((v) => [v.id, v] as const));
-      const prevByReg = new Map(
-        prevVehicles.map((v) => [v.registrationNumber.toUpperCase(), v] as const)
-      );
-
-      const nextVehicles: Motorcycle[] = [];
-
-      if (mode === "replace") {
-        nextVehicles.push(...importedVehicles);
-      } else {
-        // merge: update existing by id or registrationNumber, else add
-        const usedPrevIds = new Set<string>();
-
-        for (const imp of importedVehicles) {
-          const reg = imp.registrationNumber.toUpperCase();
-          const existing = prevById.get(imp.id) || prevByReg.get(reg);
-
-          if (existing) {
-            usedPrevIds.add(existing.id);
-            nextVehicles.push({
-              ...existing,
-              ...imp,
-              id: existing.id,
-              createdAt: existing.createdAt || imp.createdAt,
-              kmReadings: Array.isArray(imp.kmReadings) && imp.kmReadings.length > 0
-                ? imp.kmReadings
-                : (Array.isArray(existing.kmReadings) ? existing.kmReadings : []),
-            });
-          } else {
-            nextVehicles.push(imp);
-          }
-        }
-
-        // keep vehicles not mentioned in import
-        for (const v of prevVehicles) {
-          if (!usedPrevIds.has(v.id) && !importedVehicles.some((iv) => iv.id === v.id || iv.registrationNumber.toUpperCase() === v.registrationNumber.toUpperCase())) {
-            nextVehicles.push(v);
-          }
-        }
-      }
-
-      const nextVehicleIds = new Set(nextVehicles.map((v) => v.id));
-      const nextRegToId = new Map(nextVehicles.map((v) => [v.registrationNumber.toUpperCase(), v.id] as const));
-
-      const normalizeServiceVehicleId = (raw: string) => {
-        const key = raw.toUpperCase();
-        return nextVehicleIds.has(raw) ? raw : (nextRegToId.get(key) || raw);
-      };
-
-      const normalizedImportedServices = importedServices.map((s) => ({
-        ...s,
-        motorcycleId: normalizeServiceVehicleId(s.motorcycleId),
-      }));
-
-      let nextServices: ServiceRecord[] = [];
-      if (mode === "replace") {
-        nextServices = normalizedImportedServices;
-      } else {
-        const prevSvcById = new Map(prevServices.map((s) => [s.id, s] as const));
-        const merged: ServiceRecord[] = [];
-
-        for (const imp of normalizedImportedServices) {
-          const existing = prevSvcById.get(imp.id);
-          if (existing) merged.push({ ...existing, ...imp, id: existing.id });
-          else merged.push(imp);
-        }
-
-        // keep old records not updated
-        for (const s of prevServices) {
-          if (!merged.some((m) => m.id === s.id)) merged.push(s);
-        }
-
-        nextServices = merged;
-      }
-
-      // Update saved make/model lists from vehicles
-      const makes = Array.isArray(prev.savedMakes) ? prev.savedMakes : [];
-      const models = prev.savedModels || {};
-
-      const nextMakes = new Set(makes);
-      const nextModels: Record<string, string[]> = { ...models };
-
-      for (const v of nextVehicles) {
-        if (v.make) nextMakes.add(v.make);
-        if (v.make && v.model) {
-          const list = nextModels[v.make] || [];
-          if (!list.includes(v.model)) nextModels[v.make] = [...list, v.model];
-        }
-      }
-
-      return {
-        ...prev,
-        motorcycles: nextVehicles,
-        serviceRecords: nextServices,
-        savedMakes: Array.from(nextMakes).sort((a, b) => a.localeCompare(b)),
-        savedModels: Object.fromEntries(
-          Object.entries(nextModels).map(([mk, list]) => [
-            mk,
-            Array.from(new Set(list)).sort((a, b) => a.localeCompare(b)),
-          ])
-        ),
-      };
+      serviceRecords: Array.isArray(restoredData.serviceRecords) ? restoredData.serviceRecords : []
     });
   };
 
-  if (isBootLoading) {
+  // Show loading screen
+  if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-600 to-indigo-800 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-950 flex items-center justify-center">
         <div className="text-center text-white">
-          <div className="text-6xl mb-4 animate-bounce">🏍️</div>
-          <p className="text-xl">Loading Fleet Manager...</p>
+          <div className="w-20 h-20 bg-gradient-to-br from-amber-400 to-amber-600 rounded-2xl flex items-center justify-center mx-auto mb-4 animate-pulse">
+            <span className="text-4xl">🛡️</span>
+          </div>
+          <p className="text-xl text-amber-400 font-semibold">Fleet Guard</p>
+          <p className="text-gray-400 mt-2">Loading...</p>
         </div>
       </div>
     );
   }
 
-  // Auth gate
-  if (!isAuthenticated) {
-    return <AuthScreen onLogin={handleLogin} companySettings={data.companySettings} />;
+  // Show Admin Panel
+  if (showAdminPanel && isAdmin) {
+    return (
+      <AdminBackend
+        onClose={() => setShowAdminPanel(false)}
+        onSave={handleSaveSiteSettings}
+        settings={siteSettings}
+      />
+    );
   }
 
-  return (
-    <div className="min-h-screen">
-      {/* Header */}
-      <header
-        className="text-white shadow-lg sticky top-0 z-40"
-        style={{
-          background: `linear-gradient(90deg, ${data.companySettings.secondaryColor || "#0B0B0B"} 0%, #111827 45%, ${data.companySettings.secondaryColor || "#0B0B0B"} 100%)`,
-          borderBottom: `1px solid rgba(212, 175, 55, 0.25)`,
+  // Show Homepage
+  if (currentView === 'home') {
+    return (
+      <HomePage 
+        onGetStarted={handleGetStarted}
+        onLogin={handleGoToLogin}
+        onAdminAccess={() => {
+          setAuthMode('login');
+          setCurrentView('auth');
         }}
+        siteSettings={siteSettings}
+      />
+    );
+  }
+
+  // Show Auth Screen
+  if (currentView === 'auth') {
+    return (
+      <AuthScreen 
+        onLogin={handleLogin}
+        companySettings={data.companySettings}
+        initialMode={authMode}
+        onBack={() => setCurrentView('home')}
+      />
+    );
+  }
+
+  // Show Dashboard (authenticated)
+  return (
+    <div className="min-h-screen bg-gray-950">
+      {/* Sticky Back to Home Button - Always Visible */}
+      <button
+        onClick={handleLogout}
+        className="fixed bottom-6 left-6 z-50 flex items-center gap-2 px-4 py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 rounded-full text-white font-medium shadow-lg shadow-amber-500/30 transition-all duration-300 hover:scale-105 group"
       >
+        <svg className="w-5 h-5 transform group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+        </svg>
+        <span>Back to Home</span>
+      </button>
+
+      {/* Header */}
+      <header className="bg-gradient-to-r from-gray-900 to-gray-800 text-white shadow-lg sticky top-0 z-40 border-b border-gray-700">
         <div className="max-w-7xl mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               {data.companySettings.logo ? (
-                <img
-                  src={data.companySettings.logo}
-                  alt="Logo"
-                  className="w-10 h-10 rounded-full bg-white p-1"
+                <img 
+                  src={data.companySettings.logo} 
+                  alt="Logo" 
+                  className="w-10 h-10 rounded-xl bg-white p-1"
                 />
               ) : (
-                <span className="text-3xl">🏍️</span>
+                <div className="w-10 h-10 bg-gradient-to-br from-amber-400 to-amber-600 rounded-xl flex items-center justify-center">
+                  <span className="text-xl">🛡️</span>
+                </div>
               )}
               <div>
-                <h1 className="text-xl font-bold">
-                  {data.companySettings.companyName || "Fleet Manager"}
+                <h1 className="text-xl font-bold bg-gradient-to-r from-amber-400 to-amber-200 bg-clip-text text-transparent">
+                  {data.companySettings.companyName || 'Fleet Guard'}
                 </h1>
-                <p
-                  className="text-xs hidden sm:block"
-                  style={{ color: "rgba(253, 230, 138, 0.85)" }}
-                >
-                  {data.companySettings.tagline || "Vehicle Fleet Management"}
+                <p className="text-xs text-gray-400 hidden sm:block">
+                  {data.companySettings.tagline || 'Protect Your Fleet'}
                 </p>
               </div>
             </div>
 
             {/* User Menu */}
             <div className="flex items-center gap-4">
-              <div className="hidden sm:block text-right">
-                <p className="text-sm font-medium">{currentUser?.username}</p>
-                <p
-                  className="text-xs"
-                  style={{ color: "rgba(253, 230, 138, 0.75)" }}
+              {isAdmin && (
+                <button
+                  onClick={() => setShowAdminPanel(true)}
+                  className="px-3 py-2 bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/30 rounded-lg text-sm font-medium text-purple-400 transition-colors flex items-center gap-1"
+                  title="Admin Panel"
                 >
-                  {currentUser?.email}
-                </p>
+                  <span className="hidden sm:inline">Admin</span>
+                  <span>⚙️</span>
+                </button>
+              )}
+              <div className="hidden sm:block text-right">
+                <p className="text-sm font-medium text-white">{currentUser?.username}</p>
+                <p className="text-xs text-gray-400">{currentUser?.email}</p>
               </div>
-
               <button
                 onClick={handleLogout}
-                className="px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
-                style={{
-                  backgroundColor: "rgba(212, 175, 55, 0.12)",
-                  border: "1px solid rgba(212, 175, 55, 0.35)",
-                  color: "#FDE68A",
-                }}
+                className="px-3 py-2 bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 rounded-lg text-sm font-medium text-red-400 transition-colors flex items-center gap-1"
               >
-                <IconLogout className="w-4 h-4" />
                 <span className="hidden sm:inline">Logout</span>
+                <span>🚪</span>
               </button>
             </div>
           </div>
@@ -467,43 +499,25 @@ function App() {
       </header>
 
       {/* Tab Navigation */}
-      <nav
-        className="shadow-md sticky top-[60px] z-30 overflow-x-auto"
-        style={{
-          background:
-            "linear-gradient(180deg, rgba(11,11,11,0.96) 0%, rgba(17,17,17,0.96) 100%)",
-          borderBottom: "1px solid rgba(212, 175, 55, 0.22)",
-        }}
-      >
+      <nav className="bg-gray-900 shadow-md sticky top-[60px] z-30 overflow-x-auto border-b border-gray-800">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex min-w-max">
-            {([
-              { id: "fleet", label: "Fleet", Icon: IconFleet },
-              { id: "service", label: "Service", Icon: IconWrench },
-              { id: "analytics", label: "Analytics", Icon: IconChart },
-              { id: "settings", label: "Settings", Icon: IconSettings },
-              { id: "help", label: "Help", Icon: IconHelp },
-            ] as const).map((tab) => (
+            {[
+              { id: 'fleet', label: 'Fleet & Vehicles', icon: '🚗' },
+              { id: 'service', label: 'Service Records', icon: '🔧' },
+              { id: 'analytics', label: 'Analytics', icon: '📊' },
+              { id: 'settings', label: 'Settings', icon: '⚙️' }
+            ].map(tab => (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
+                onClick={() => setActiveTab(tab.id as typeof activeTab)}
                 className={`px-4 py-3 font-medium transition-colors whitespace-nowrap flex items-center gap-2 border-b-2 ${
                   activeTab === tab.id
-                    ? "text-amber-200"
-                    : "text-gray-300 hover:text-amber-100"
+                    ? 'border-amber-500 text-amber-500 bg-amber-500/10'
+                    : 'border-transparent text-gray-400 hover:text-amber-400 hover:bg-gray-800'
                 }`}
-                style={{
-                  borderBottomColor:
-                    activeTab === tab.id
-                      ? "rgba(212,175,55,0.95)"
-                      : "transparent",
-                  background:
-                    activeTab === tab.id
-                      ? "rgba(212,175,55,0.10)"
-                      : "transparent",
-                }}
               >
-                <tab.Icon className="w-5 h-5" />
+                <span>{tab.icon}</span>
                 <span className="hidden sm:inline">{tab.label}</span>
               </button>
             ))}
@@ -513,7 +527,7 @@ function App() {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 py-6">
-        {activeTab === "fleet" && (
+        {activeTab === 'fleet' && (
           <Dashboard
             motorcycles={data.motorcycles}
             makes={data.savedMakes}
@@ -526,7 +540,7 @@ function App() {
           />
         )}
 
-        {activeTab === "service" && (
+        {activeTab === 'service' && (
           <ServiceHistory
             motorcycles={data.motorcycles}
             serviceRecords={data.serviceRecords}
@@ -537,53 +551,35 @@ function App() {
           />
         )}
 
-        {activeTab === "analytics" && (
+        {activeTab === 'analytics' && (
           <Analytics
             motorcycles={data.motorcycles}
             serviceRecords={data.serviceRecords}
             companySettings={data.companySettings}
-            onOpenVehicle={(vehicleId) => {
-              setActiveTab("fleet");
-              // Let Dashboard open the vehicle detail view
-              window.dispatchEvent(
-                new CustomEvent("fleet:openVehicle", {
-                  detail: { vehicleId },
-                })
-              );
-            }}
           />
         )}
 
-        {activeTab === "help" && <HelpCenter />}
-
-        {activeTab === "settings" && (
+        {activeTab === 'settings' && (
           <div className="space-y-6">
-            <CompanySettings settings={data.companySettings} onUpdate={handleUpdateSettings} />
-
-            <ExcelImportExport
-              existingVehicles={data.motorcycles}
-              existingServiceRecords={data.serviceRecords}
-              onApplyImport={handleApplyExcelImport}
+            <CompanySettings
+              settings={data.companySettings}
+              onUpdate={handleUpdateSettings}
             />
 
             {/* Data Backup Section */}
-            <div className="bg-white rounded-xl shadow-lg p-6">
-              <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+            <div className="bg-gray-900 rounded-xl shadow-lg p-6 border border-gray-800">
+              <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
                 💾 Data Backup & Security
               </h2>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-                <div className="bg-blue-50 rounded-lg p-4">
-                  <p className="text-sm text-blue-600 font-medium">Total Vehicles</p>
-                  <p className="text-2xl font-bold text-blue-800">
-                    {data.motorcycles.length}
-                  </p>
+                <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-4">
+                  <p className="text-sm text-amber-400 font-medium">Total Vehicles</p>
+                  <p className="text-2xl font-bold text-white">{data.motorcycles.length}</p>
                 </div>
-                <div className="bg-green-50 rounded-lg p-4">
-                  <p className="text-sm text-green-600 font-medium">Service Records</p>
-                  <p className="text-2xl font-bold text-green-800">
-                    {data.serviceRecords.length}
-                  </p>
+                <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-4">
+                  <p className="text-sm text-green-400 font-medium">Service Records</p>
+                  <p className="text-2xl font-bold text-white">{data.serviceRecords.length}</p>
                 </div>
               </div>
 
@@ -593,26 +589,23 @@ function App() {
                     const exportData = {
                       ...data,
                       exportDate: new Date().toISOString(),
-                      version: "1.0",
+                      version: '1.0'
                     };
-                    const blob = new Blob([JSON.stringify(exportData, null, 2)], {
-                      type: "application/json",
-                    });
+                    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
                     const url = URL.createObjectURL(blob);
-                    const a = document.createElement("a");
+                    const a = document.createElement('a');
                     a.href = url;
-                    a.download = `fleet-backup-${new Date().toISOString().split("T")[0]}.json`;
+                    a.download = `fleet-guard-backup-${new Date().toISOString().split('T')[0]}.json`;
                     a.click();
                     URL.revokeObjectURL(url);
-
-                    setData((prev) => ({ ...prev, lastBackup: new Date().toISOString() }));
+                    saveData({ ...data, lastBackup: new Date().toISOString() });
                   }}
-                  className="px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center gap-2"
+                  className="px-6 py-3 bg-gradient-to-r from-amber-500 to-amber-600 text-white rounded-lg font-medium hover:from-amber-400 hover:to-amber-500 transition-colors flex items-center gap-2"
                 >
                   📥 Download Backup
                 </button>
 
-                <label className="px-6 py-3 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors cursor-pointer flex items-center gap-2">
+                <label className="px-6 py-3 bg-green-600 text-white rounded-lg font-medium hover:bg-green-500 transition-colors cursor-pointer flex items-center gap-2">
                   📤 Restore Backup
                   <input
                     type="file"
@@ -620,25 +613,21 @@ function App() {
                     className="hidden"
                     onChange={(e) => {
                       const file = e.target.files?.[0];
-                      if (!file) return;
-
-                      const reader = new FileReader();
-                      reader.onload = (event) => {
-                        try {
-                          const restored = JSON.parse(event.target?.result as string);
-                          if (
-                            window.confirm(
-                              "This will replace all current data. Are you sure?"
-                            )
-                          ) {
-                            handleRestoreData(restored);
-                            alert("Data restored successfully!");
+                      if (file) {
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                          try {
+                            const restored = JSON.parse(event.target?.result as string);
+                            if (window.confirm('This will replace all current data. Are you sure?')) {
+                              handleRestoreData(restored);
+                              alert('Data restored successfully!');
+                            }
+                          } catch {
+                            alert('Invalid backup file');
                           }
-                        } catch {
-                          alert("Invalid backup file");
-                        }
-                      };
-                      reader.readAsText(file);
+                        };
+                        reader.readAsText(file);
+                      }
                     }}
                   />
                 </label>
@@ -649,54 +638,34 @@ function App() {
                   Last backup: {new Date(data.lastBackup).toLocaleString()}
                 </p>
               )}
-
-              <div
-                className="mt-6 p-4 rounded-xl"
-                style={{
-                  backgroundColor: "rgba(212,175,55,0.10)",
-                  border: "1px solid rgba(212,175,55,0.22)",
-                }}
-              >
-                <p className="text-sm text-gray-800">
-                  <strong>Storage mode:</strong>{" "}
-                  {isSupabaseConfigured()
-                    ? "Supabase Cloud (per-user) + local cache"
-                    : "Local only (on this device/browser)"}
-                </p>
-                <p className="text-xs text-gray-600 mt-1">
-                  {isSupabaseConfigured()
-                    ? "If you face issues, confirm your Supabase table (fleet_store) and RLS policies are set." 
-                    : "To keep data safe, download backups regularly."}
-                </p>
-              </div>
             </div>
 
-            {/* User Info */}
-            <div className="bg-white rounded-xl shadow-lg p-6">
-              <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+            {/* User Info Section */}
+            <div className="bg-gray-900 rounded-xl shadow-lg p-6 border border-gray-800">
+              <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
                 👤 Account Information
               </h2>
-
+              
               <div className="space-y-3">
-                <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                <div className="flex items-center gap-3 p-3 bg-gray-800 rounded-lg border border-gray-700">
                   <span className="text-2xl">👤</span>
                   <div>
-                    <p className="text-sm text-gray-500">Username</p>
-                    <p className="font-medium">{currentUser?.username}</p>
+                    <p className="text-sm text-gray-400">Username</p>
+                    <p className="font-medium text-white">{currentUser?.username}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                <div className="flex items-center gap-3 p-3 bg-gray-800 rounded-lg border border-gray-700">
                   <span className="text-2xl">📧</span>
                   <div>
-                    <p className="text-sm text-gray-500">Email</p>
-                    <p className="font-medium">{currentUser?.email}</p>
+                    <p className="text-sm text-gray-400">Email</p>
+                    <p className="font-medium text-white">{currentUser?.email}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                <div className="flex items-center gap-3 p-3 bg-gray-800 rounded-lg border border-gray-700">
                   <span className="text-2xl">🏢</span>
                   <div>
-                    <p className="text-sm text-gray-500">Company</p>
-                    <p className="font-medium">{currentUser?.companyName || "Not set"}</p>
+                    <p className="text-sm text-gray-400">Company</p>
+                    <p className="font-medium text-white">{currentUser?.companyName || 'Not set'}</p>
                   </div>
                 </div>
               </div>
@@ -706,9 +675,9 @@ function App() {
       </main>
 
       {/* Footer */}
-      <footer className="bg-gray-900 text-gray-400 py-4 mt-8" style={{ borderTop: "1px solid rgba(212,175,55,0.20)" }}>
+      <footer className="bg-gray-900 text-gray-400 py-4 mt-8 border-t border-gray-800">
         <div className="max-w-7xl mx-auto px-4 text-center text-sm">
-          <p>© 2024 {data.companySettings.companyName || "Fleet Manager"}. All rights reserved.</p>
+          <p>© 2026 {data.companySettings.companyName || 'Fleet Guard'}. All rights reserved.</p>
         </div>
       </footer>
     </div>

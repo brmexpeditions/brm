@@ -1,0 +1,38 @@
+{
+  "version": "1.0.1",
+  "codename": "🖖 Fleet Guard Stable",
+  "releaseDate": "2025-06-05",
+  "description": "Stable release with Homepage, Auth, Dashboard, Analytics, Admin Panel, and all features working",
+  "features": [
+    "Homepage with sticky navigation",
+    "Login/Signup authentication",
+    "Fleet & Vehicles management (Cars + Bikes)",
+    "Service Records tracking",
+    "Analytics dashboard with clickable details",
+    "Company Settings & Branding",
+    "Admin Panel with SEO, Analytics, Pricing settings",
+    "Data Backup & Restore",
+    "Make/Model dropdowns saved for reuse",
+    "Current Odometer reading in vehicle form",
+    "Service alerts with color coding",
+    "Document validity tracking",
+    "Excel Import/Export",
+    "4-step vehicle form (Type, Details, Documents, Service)",
+    "Private/Commercial vehicle support",
+    "Indian brands pre-loaded",
+    "Back to Home button always visible"
+  ],
+  "defaultCredentials": {
+    "username": "admin",
+    "password": "admin123"
+  },
+  "quickLogin": {
+    "description": "Quick Admin Login button on login page"
+  },
+  "notes": "All features tested and working. No white screen issues. Ready for deployment.",
+  "pricing": {
+    "starter": { "price": 0, "vehicles": 5 },
+    "professional": { "price": 2000, "vehicles": 30 },
+    "enterprise": { "price": 3500, "vehicles": "Unlimited" }
+  }
+}
