@@ -3,11 +3,69 @@ import { useState, useEffect } from 'react';
 interface HomePageProps {
   onGetStarted: () => void;
   onLogin: () => void;
-  onAdminAccess?: () => void;
-  siteSettings?: any;
+  siteSettings?: {
+    siteName?: string;
+    tagline?: string;
+    logo?: string;
+    primaryColor?: string;
+    secondaryColor?: string;
+    accentColor?: string;
+    backgroundColor?: string;
+    textColor?: string;
+    starterPrice?: number;
+    starterVehicles?: number;
+    proPrice?: number;
+    proVehicles?: number;
+    enterprisePrice?: number;
+    showPricing?: boolean;
+    showReviews?: boolean;
+    showFaq?: boolean;
+    showContact?: boolean;
+    email?: string;
+    phone?: string;
+    whatsapp?: string;
+    address?: string;
+    facebook?: string;
+    twitter?: string;
+    instagram?: string;
+    linkedin?: string;
+    youtube?: string;
+    fontFamily?: 'System' | 'Inter' | 'Poppins' | 'Montserrat';
+    heroBackgroundImage?: string;
+    ctaBackgroundImage?: string;
+    showcaseImage1?: string;
+    showcaseImage2?: string;
+    showcaseImage3?: string;
+    showcaseImage4?: string;
+  };
 }
 
-export function HomePage({ onGetStarted, onLogin, onAdminAccess: _onAdminAccess, siteSettings: _siteSettings }: HomePageProps) {
+export function HomePage({ onGetStarted, onLogin, siteSettings }: HomePageProps) {
+  const settings = siteSettings || {};
+  const siteName = settings.siteName || 'Fleet Guard';
+  const tagline = settings.tagline || 'Protect Your Fleet';
+  const bg = settings.backgroundColor || '#030712';
+  const text = settings.textColor || '#ffffff';
+  const showPricing = settings.showPricing !== false;
+  const showReviews = settings.showReviews !== false;
+  const showFaq = settings.showFaq !== false;
+  const showContact = settings.showContact !== false;
+  const starterVehicles = settings.starterVehicles ?? 5;
+  const proVehicles = settings.proVehicles ?? 30;
+  const starterPrice = settings.starterPrice ?? 0;
+  const proPrice = settings.proPrice ?? 2000;
+  const enterprisePrice = settings.enterprisePrice ?? 3500;
+  const contactEmail = settings.email || 'hello@fleetguard.in';
+  const contactPhone = settings.phone || '+91 98765 43210';
+  const contactWhatsapp = settings.whatsapp || '+91 98765 43210';
+  const contactAddress = settings.address || 'Mumbai, Maharashtra, India';
+
+  const heroImg = settings.heroBackgroundImage || 'https://images.unsplash.com/photo-1558981403-c5f9899a28bc?w=1920&h=1080&fit=crop&q=80';
+  const ctaImg = settings.ctaBackgroundImage || 'https://images.unsplash.com/photo-1494976388531-d1058494cdd8?w=1200&q=80';
+  const showcase1 = settings.showcaseImage1 || 'https://images.unsplash.com/photo-1558981806-ec527fa84c39?w=400&h=500&fit=crop';
+  const showcase2 = settings.showcaseImage2 || 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=400&h=300&fit=crop';
+  const showcase3 = settings.showcaseImage3 || 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=400&h=300&fit=crop';
+  const showcase4 = settings.showcaseImage4 || 'https://images.unsplash.com/photo-1619767886558-efdc259cde1a?w=400&h=500&fit=crop';  
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState('home');
@@ -16,8 +74,16 @@ export function HomePage({ onGetStarted, onLogin, onAdminAccess: _onAdminAccess,
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 50);
-      
-      const sections = ['home', 'features', 'how-it-works', 'pricing', 'reviews', 'contact'];
+
+      const sections: string[] = [
+        'home',
+        'features',
+        'how-it-works',
+        ...(showPricing ? ['pricing'] : []),
+        ...(showReviews ? ['reviews'] : []),
+        ...(showContact ? ['contact'] : []),
+      ];
+
       for (const section of sections.reverse()) {
         const element = document.getElementById(section);
         if (element) {
@@ -32,7 +98,7 @@ export function HomePage({ onGetStarted, onLogin, onAdminAccess: _onAdminAccess,
 
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  }, [showPricing, showReviews, showContact]);
 
   const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(sectionId);
@@ -46,9 +112,10 @@ export function HomePage({ onGetStarted, onLogin, onAdminAccess: _onAdminAccess,
     { id: 'home', label: 'Home' },
     { id: 'features', label: 'Features' },
     { id: 'how-it-works', label: 'How It Works' },
-    { id: 'pricing', label: 'Pricing' },
-    { id: 'reviews', label: 'Reviews' },
-    { id: 'contact', label: 'Contact' },
+    ...(showPricing ? [{ id: 'pricing', label: 'Pricing' }] : []),
+    ...(showReviews ? [{ id: 'reviews', label: 'Reviews' }] : []),
+    ...(showFaq ? [{ id: 'faq', label: 'FAQ' }] : []),
+    ...(showContact ? [{ id: 'contact', label: 'Contact' }] : []),
   ];
 
   const features = [
@@ -164,8 +231,19 @@ export function HomePage({ onGetStarted, onLogin, onAdminAccess: _onAdminAccess,
     },
   ];
 
+  const fontMap: Record<string, string> = {
+    System: "ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, 'Apple Color Emoji', 'Segoe UI Emoji'",
+    Inter: "Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial",
+    Poppins: "Poppins, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial",
+    Montserrat: "Montserrat, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial",
+  };
+  const chosenFont = fontMap[(settings.fontFamily || 'System') as keyof typeof fontMap] || fontMap.System;
+
   return (
-    <div className="min-h-screen bg-gray-950 text-white overflow-x-hidden">
+    <div
+      className="min-h-screen text-white overflow-x-hidden"
+      style={{ backgroundColor: bg, color: text, fontFamily: chosenFont }}
+    >
       {/* Sticky Navigation */}
       <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
         isScrolled 
@@ -176,14 +254,18 @@ export function HomePage({ onGetStarted, onLogin, onAdminAccess: _onAdminAccess,
           <div className="flex items-center justify-between h-16 sm:h-20">
             {/* Logo */}
             <div className="flex items-center gap-2 cursor-pointer" onClick={() => scrollToSection('home')}>
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-amber-400 to-orange-500 rounded-xl flex items-center justify-center shadow-lg shadow-amber-500/30">
-                <span className="text-xl sm:text-2xl">🛡️</span>
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-amber-400 to-orange-500 rounded-xl flex items-center justify-center shadow-lg shadow-amber-500/30 overflow-hidden">
+                {settings.logo ? (
+                  <img src={settings.logo} alt={siteName} className="w-full h-full object-cover" />
+                ) : (
+                  <span className="text-xl sm:text-2xl">🛡️</span>
+                )}
               </div>
               <div>
                 <span className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent">
-                  Fleet Guard
+                  {siteName}
                 </span>
-                <p className="text-[10px] text-gray-400 -mt-1 hidden sm:block">Protect Your Fleet</p>
+                <p className="text-[10px] text-gray-400 -mt-1 hidden sm:block">{tagline}</p>
               </div>
             </div>
 
@@ -271,7 +353,7 @@ export function HomePage({ onGetStarted, onLogin, onAdminAccess: _onAdminAccess,
         {/* Full Screen Background Image */}
         <div className="absolute inset-0">
           <img 
-            src="https://images.unsplash.com/photo-1558981403-c5f9899a28bc?w=1920&h=1080&fit=crop&q=80" 
+            src={heroImg}
             alt="Professional fleet management"
             className="w-full h-full object-cover"
           />
@@ -369,7 +451,7 @@ export function HomePage({ onGetStarted, onLogin, onAdminAccess: _onAdminAccess,
                 <div className="space-y-4">
                   <div className="relative rounded-2xl overflow-hidden shadow-2xl transform hover:scale-105 transition-all group">
                     <img 
-                      src="https://images.unsplash.com/photo-1558981806-ec527fa84c39?w=400&h=500&fit=crop" 
+                      src={showcase1}
                       alt="Motorcycle" 
                       className="w-full h-64 object-cover group-hover:scale-110 transition-transform duration-500"
                     />
@@ -381,7 +463,7 @@ export function HomePage({ onGetStarted, onLogin, onAdminAccess: _onAdminAccess,
                   </div>
                   <div className="relative rounded-2xl overflow-hidden shadow-2xl transform hover:scale-105 transition-all group">
                     <img 
-                      src="https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=400&h=300&fit=crop" 
+                      src={showcase2}
                       alt="Luxury car" 
                       className="w-full h-40 object-cover group-hover:scale-110 transition-transform duration-500"
                     />
@@ -395,7 +477,7 @@ export function HomePage({ onGetStarted, onLogin, onAdminAccess: _onAdminAccess,
                 <div className="space-y-4 pt-8">
                   <div className="relative rounded-2xl overflow-hidden shadow-2xl transform hover:scale-105 transition-all group">
                     <img 
-                      src="https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=400&h=300&fit=crop" 
+                      src={showcase3}
                       alt="SUV" 
                       className="w-full h-40 object-cover group-hover:scale-110 transition-transform duration-500"
                     />
@@ -407,7 +489,7 @@ export function HomePage({ onGetStarted, onLogin, onAdminAccess: _onAdminAccess,
                   </div>
                   <div className="relative rounded-2xl overflow-hidden shadow-2xl transform hover:scale-105 transition-all group">
                     <img 
-                      src="https://images.unsplash.com/photo-1619767886558-efdc259cde1a?w=400&h=500&fit=crop" 
+                      src={showcase4}
                       alt="Commercial vehicle" 
                       className="w-full h-64 object-cover group-hover:scale-110 transition-transform duration-500"
                     />
@@ -693,6 +775,7 @@ export function HomePage({ onGetStarted, onLogin, onAdminAccess: _onAdminAccess,
       </section>
 
       {/* Pricing Section */}
+      {showPricing && (
       <section id="pricing" className="relative z-10 py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
@@ -714,12 +797,12 @@ export function HomePage({ onGetStarted, onLogin, onAdminAccess: _onAdminAccess,
               <p className="text-gray-400 text-sm mb-6">Perfect for personal use</p>
               
               <div className="mb-6">
-                <span className="text-5xl font-black text-white">FREE</span>
-                <span className="text-gray-500 ml-2">forever</span>
+                <span className="text-5xl font-black text-white">{starterPrice === 0 ? 'FREE' : `₹${starterPrice.toLocaleString()}`}</span>
+                <span className="text-gray-500 ml-2">{starterPrice === 0 ? 'forever' : '/year'}</span>
               </div>
 
               <ul className="space-y-4 mb-8">
-                {['Up to 5 vehicles', 'Basic reminders', 'Document tracking', 'Mobile access', 'Email support'].map((feature, i) => (
+                {[`Up to ${starterVehicles} vehicles`, 'Basic reminders', 'Document tracking', 'Mobile access', 'Email support'].map((feature, i) => (
                   <li key={i} className="flex items-center gap-3 text-gray-300">
                     <span className="text-emerald-400">✓</span>
                     {feature}
@@ -746,12 +829,12 @@ export function HomePage({ onGetStarted, onLogin, onAdminAccess: _onAdminAccess,
               <p className="text-gray-400 text-sm mb-6">For small fleet owners</p>
               
               <div className="mb-6">
-                <span className="text-5xl font-black bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent">₹2,000</span>
+                <span className="text-5xl font-black bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent">₹{proPrice.toLocaleString()}</span>
                 <span className="text-gray-500 ml-2">/year</span>
               </div>
 
               <ul className="space-y-4 mb-8">
-                {['Up to 30 vehicles', 'Smart reminders', 'Advanced analytics', 'Excel import/export', 'Priority support', 'Custom branding'].map((feature, i) => (
+                {[`Up to ${proVehicles} vehicles`, 'Smart reminders', 'Advanced analytics', 'Excel import/export', 'Priority support', 'Custom branding'].map((feature, i) => (
                   <li key={i} className="flex items-center gap-3 text-gray-300">
                     <span className="text-amber-400">✓</span>
                     {feature}
@@ -773,7 +856,7 @@ export function HomePage({ onGetStarted, onLogin, onAdminAccess: _onAdminAccess,
               <p className="text-gray-400 text-sm mb-6">For large fleets</p>
               
               <div className="mb-6">
-                <span className="text-5xl font-black text-white">₹3,500</span>
+                <span className="text-5xl font-black text-white">₹{enterprisePrice.toLocaleString()}</span>
                 <span className="text-gray-500 ml-2">/year</span>
               </div>
 
@@ -804,8 +887,10 @@ export function HomePage({ onGetStarted, onLogin, onAdminAccess: _onAdminAccess,
           </div>
         </div>
       </section>
+      )}
 
       {/* Reviews Section */}
+      {showReviews && (
       <section id="reviews" className="relative z-10 py-24 bg-gradient-to-b from-gray-900/50 to-transparent">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
@@ -853,9 +938,11 @@ export function HomePage({ onGetStarted, onLogin, onAdminAccess: _onAdminAccess,
           </div>
         </div>
       </section>
+      )}
 
       {/* FAQ Section */}
-      <section className="relative z-10 py-24">
+      {showFaq && (
+      <section id="faq" className="relative z-10 py-24">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <span className="inline-block px-4 py-2 bg-cyan-500/10 text-cyan-400 text-sm font-semibold rounded-full mb-4">
@@ -891,8 +978,10 @@ export function HomePage({ onGetStarted, onLogin, onAdminAccess: _onAdminAccess,
           </div>
         </div>
       </section>
+      )}
 
       {/* Contact Section */}
+      {showContact && (
       <section id="contact" className="relative z-10 py-24 bg-gradient-to-b from-gray-900/50 to-transparent">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12">
@@ -910,10 +999,10 @@ export function HomePage({ onGetStarted, onLogin, onAdminAccess: _onAdminAccess,
 
               <div className="space-y-6">
                 {[
-                  { icon: '📧', label: 'Email', value: 'hello@fleetguard.in' },
-                  { icon: '📱', label: 'Phone', value: '+91 98765 43210' },
-                  { icon: '💬', label: 'WhatsApp', value: '+91 98765 43210' },
-                  { icon: '📍', label: 'Office', value: 'Mumbai, Maharashtra, India' },
+                  { icon: '📧', label: 'Email', value: contactEmail },
+                  { icon: '📱', label: 'Phone', value: contactPhone },
+                  { icon: '💬', label: 'WhatsApp', value: contactWhatsapp },
+                  { icon: '📍', label: 'Office', value: contactAddress },
                 ].map((item, i) => (
                   <div key={i} className="flex items-center gap-4">
                     <div className="w-12 h-12 bg-gray-800 rounded-xl flex items-center justify-center text-2xl border border-gray-700">
@@ -978,6 +1067,7 @@ export function HomePage({ onGetStarted, onLogin, onAdminAccess: _onAdminAccess,
           </div>
         </div>
       </section>
+      )}
 
       {/* CTA Section */}
       <section className="relative z-10 py-24">
@@ -985,8 +1075,8 @@ export function HomePage({ onGetStarted, onLogin, onAdminAccess: _onAdminAccess,
           <div className="relative overflow-hidden rounded-3xl">
             {/* Background Image */}
             <img 
-              src="https://images.unsplash.com/photo-1494976388531-d1058494cdd8?w=1200&q=80" 
-              alt="Fleet of cars"
+              src={ctaImg}
+              alt="Fleet Guard"
               className="absolute inset-0 w-full h-full object-cover"
             />
             <div className="absolute inset-0 bg-gradient-to-r from-gray-900/95 via-gray-900/90 to-gray-900/95"></div>
@@ -1024,22 +1114,39 @@ export function HomePage({ onGetStarted, onLogin, onAdminAccess: _onAdminAccess,
             {/* Brand */}
             <div className="col-span-2 md:col-span-1">
               <div className="flex items-center gap-2 mb-4">
-                <div className="w-10 h-10 bg-gradient-to-br from-amber-400 to-orange-500 rounded-xl flex items-center justify-center">
-                  🛡️
+                <div className="w-10 h-10 bg-gradient-to-br from-amber-400 to-orange-500 rounded-xl flex items-center justify-center overflow-hidden">
+                  {settings.logo ? (
+                    <img src={settings.logo} alt={siteName} className="w-full h-full object-cover" />
+                  ) : (
+                    <span>🛡️</span>
+                  )}
                 </div>
                 <span className="text-xl font-bold bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent">
-                  Fleet Guard
+                  {siteName}
                 </span>
               </div>
               <p className="text-gray-500 text-sm mb-4">
                 The smart way to manage your vehicle fleet. Track, protect, and grow with confidence.
               </p>
-              <div className="flex gap-4">
-                {['Twitter', 'LinkedIn', 'Instagram'].map((social, i) => (
-                  <a key={i} href="#" className="text-gray-500 hover:text-amber-400 transition-colors text-sm">
-                    {social}
-                  </a>
-                ))}
+              <div className="flex gap-4 flex-wrap">
+                {settings.twitter && (
+                  <a href={settings.twitter} target="_blank" rel="noopener" className="text-gray-500 hover:text-amber-400 transition-colors text-sm">Twitter</a>
+                )}
+                {settings.linkedin && (
+                  <a href={settings.linkedin} target="_blank" rel="noopener" className="text-gray-500 hover:text-amber-400 transition-colors text-sm">LinkedIn</a>
+                )}
+                {settings.instagram && (
+                  <a href={settings.instagram} target="_blank" rel="noopener" className="text-gray-500 hover:text-amber-400 transition-colors text-sm">Instagram</a>
+                )}
+                {settings.facebook && (
+                  <a href={settings.facebook} target="_blank" rel="noopener" className="text-gray-500 hover:text-amber-400 transition-colors text-sm">Facebook</a>
+                )}
+                {settings.youtube && (
+                  <a href={settings.youtube} target="_blank" rel="noopener" className="text-gray-500 hover:text-amber-400 transition-colors text-sm">YouTube</a>
+                )}
+                {!settings.twitter && !settings.linkedin && !settings.instagram && !settings.facebook && !settings.youtube && (
+                  <span className="text-gray-600 text-sm">Add social links in Admin → Social Media</span>
+                )}
               </div>
             </div>
 
@@ -1087,7 +1194,7 @@ export function HomePage({ onGetStarted, onLogin, onAdminAccess: _onAdminAccess,
           {/* Bottom Bar */}
           <div className="border-t border-gray-800 pt-8 flex flex-col sm:flex-row justify-between items-center gap-4">
             <p className="text-gray-500 text-sm">
-              © 2026 Fleet Guard. All rights reserved.
+              © 2026 {siteName}. All rights reserved.
             </p>
             <p className="text-gray-600 text-sm">
               Made with ❤️ in India

@@ -5,79 +5,37 @@ import Analytics from './components/Analytics';
 import CompanySettings from './components/CompanySettings';
 import AuthScreen from './components/AuthScreen';
 import { HomePage } from './components/HomePage';
-import { AdminBackend } from './components/AdminBackend';
+import { AdminPanel, SiteSettings } from './components/AdminPanel';
 import { Motorcycle, ServiceRecord, CompanySettings as CompanySettingsType } from './types';
-
-interface SiteSettings {
-  siteName: string;
-  tagline: string;
-  logo: string;
-  favicon: string;
-  primaryColor: string;
-  secondaryColor: string;
-  accentColor: string;
-  backgroundColor: string;
-  textColor: string;
-  headingFont: string;
-  bodyFont: string;
-  fontSize: 'small' | 'medium' | 'large';
-  heroImage: string;
-  aboutImage: string;
-  featureImages: string[];
-  metaTitle: string;
-  metaDescription: string;
-  metaKeywords: string;
-  ogImage: string;
-  googleAnalyticsId: string;
-  googleSearchConsole: string;
-  facebookPixel: string;
-  facebook: string;
-  twitter: string;
-  instagram: string;
-  linkedin: string;
-  youtube: string;
-  email: string;
-  phone: string;
-  whatsapp: string;
-  address: string;
-  starterPrice: number;
-  starterVehicles: number;
-  proPrice: number;
-  proVehicles: number;
-  enterprisePrice: number;
-  showPricing: boolean;
-  showReviews: boolean;
-  showFaq: boolean;
-  showContact: boolean;
-  showBrands: boolean;
-  customCss: string;
-  headerScripts: string;
-  footerScripts: string;
-}
+import { isSupabaseConfigured } from './lib/supabase';
+import { loadPublicSiteSettings, savePublicSiteSettings } from './lib/supabaseSiteSettings';
+import { loadFleetForCurrentUser, saveFleetForCurrentUser } from './lib/supabaseFleetStore';
 
 const defaultSiteSettings: SiteSettings = {
   siteName: 'Fleet Guard',
   tagline: 'Protect Your Fleet',
   logo: '',
   favicon: '',
+  fontFamily: 'System',
+
+  heroBackgroundImage: 'https://images.unsplash.com/photo-1558981403-c5f9899a28bc?w=1920&h=1080&fit=crop&q=80',
+  ctaBackgroundImage: 'https://images.unsplash.com/photo-1494976388531-d1058494cdd8?w=1200&q=80',
+  showcaseImage1: 'https://images.unsplash.com/photo-1558981806-ec527fa84c39?w=400&h=500&fit=crop',
+  showcaseImage2: 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=400&h=300&fit=crop',
+  showcaseImage3: 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=400&h=300&fit=crop',
+  showcaseImage4: 'https://images.unsplash.com/photo-1619767886558-efdc259cde1a?w=400&h=500&fit=crop',
+
   primaryColor: '#f59e0b',
   secondaryColor: '#1f2937',
   accentColor: '#10b981',
   backgroundColor: '#000000',
   textColor: '#ffffff',
-  headingFont: 'Inter',
-  bodyFont: 'Inter',
-  fontSize: 'medium',
-  heroImage: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1920',
-  aboutImage: '',
-  featureImages: [],
+  googleAnalyticsId: '',
+  googleSearchConsoleId: '',
   metaTitle: 'Fleet Guard - Protect Your Fleet | Vehicle Management System',
   metaDescription: 'Manage your vehicle fleet with ease. Track services, documents, and maintenance for cars & bikes.',
   metaKeywords: 'fleet management, vehicle tracking, service reminder',
   ogImage: '',
-  googleAnalyticsId: '',
-  googleSearchConsole: '',
-  facebookPixel: '',
   facebook: '',
   twitter: '',
   instagram: '',
@@ -96,7 +54,6 @@ const defaultSiteSettings: SiteSettings = {
   showReviews: true,
   showFaq: true,
   showContact: true,
-  showBrands: true,
   customCss: '',
   headerScripts: '',
   footerScripts: ''
@@ -164,31 +121,51 @@ function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [siteSettings, setSiteSettings] = useState<SiteSettings>(defaultSiteSettings);
   const [showAdminPanel, setShowAdminPanel] = useState(false);
+  const [pendingAdminOpen, setPendingAdminOpen] = useState(false);
 
-  // Load site settings
+  // Helper: hidden admin backend URL
+  // Visit /admin in the browser to request backend access (admin-only).
+
+  // Load site settings (local first, then Supabase if configured)
   useEffect(() => {
-    try {
-      const savedSiteSettings = localStorage.getItem('fleet_site_settings');
-      if (savedSiteSettings) {
-        setSiteSettings({ ...defaultSiteSettings, ...JSON.parse(savedSiteSettings) });
+    const load = async () => {
+      // Local cache first (fast)
+      try {
+        const savedSiteSettings = localStorage.getItem('fleet_site_settings');
+        if (savedSiteSettings) {
+          setSiteSettings({ ...defaultSiteSettings, ...JSON.parse(savedSiteSettings) });
+        }
+      } catch (e) {
+        console.error('Error loading site settings (local):', e);
       }
-    } catch (e) {
-      console.error('Error loading site settings:', e);
-    }
+
+      // Supabase public settings (shared for all users)
+      if (isSupabaseConfigured) {
+        try {
+          const remote = await loadPublicSiteSettings();
+          if (remote) {
+            const merged = { ...defaultSiteSettings, ...remote };
+            setSiteSettings(merged);
+            localStorage.setItem('fleet_site_settings', JSON.stringify(merged));
+          }
+        } catch (e) {
+          console.warn('Could not load site settings from Supabase. Using local settings.', e);
+        }
+      }
+    };
+
+    load();
   }, []);
 
-  // Save site settings
-  const handleSaveSiteSettings = (settings: SiteSettings) => {
-    setSiteSettings(settings);
-    localStorage.setItem('fleet_site_settings', JSON.stringify(settings));
-    
+  // Apply site settings to document (CSS + analytics)
+  const applySiteSettings = (settings: SiteSettings) => {
     // Apply Google Analytics if provided
     if (settings.googleAnalyticsId && !document.querySelector(`script[src*="googletagmanager"]`)) {
       const script = document.createElement('script');
       script.async = true;
       script.src = `https://www.googletagmanager.com/gtag/js?id=${settings.googleAnalyticsId}`;
       document.head.appendChild(script);
-      
+
       const inlineScript = document.createElement('script');
       inlineScript.innerHTML = `
         window.dataLayer = window.dataLayer || [];
@@ -207,51 +184,138 @@ function App() {
       document.head.appendChild(styleEl);
     }
     styleEl.innerHTML = settings.customCss || '';
+
+    // Title/meta
+    if (settings.metaTitle) document.title = settings.metaTitle;
   };
 
-  // Check if user is admin (simple check - can be enhanced)
-  const isAdmin = currentUser?.email?.toLowerCase() === 'admin@fleetguard.com' || 
-                  currentUser?.email?.toLowerCase() === 'admin@fleetguard.in' ||
-                  currentUser?.username?.toLowerCase() === 'admin' ||
-                  currentUser?.id === 'admin';
+  // Save site settings (local + Supabase if configured)
+  const handleSaveSiteSettings = async (settings: SiteSettings) => {
+    setSiteSettings(settings);
+    localStorage.setItem('fleet_site_settings', JSON.stringify(settings));
 
-  // Check for existing session on mount
+    applySiteSettings(settings);
+
+    if (isSupabaseConfigured) {
+      try {
+        await savePublicSiteSettings(settings);
+      } catch (e) {
+        console.warn('Failed saving site settings to Supabase. Saved locally only.', e);
+        // Non-blocking message
+        alert('Saved locally, but could not save to Supabase. Please ensure the "site_settings" table exists and RLS policies are correct.');
+      }
+    }
+  };
+
+  // Check if user is admin (simple check - case-insensitive)
+  const isAdmin = (() => {
+    if (!currentUser) return false;
+    const email = (currentUser.email || '').toLowerCase().trim();
+    const username = (currentUser.username || '').toLowerCase().trim();
+    return (
+      username === 'admin' ||
+      email === 'admin@fleetguard.in' ||
+      email === 'admin@fleetguard.com'
+    );
+  })();
+
+  // Check for existing session + route (supports hidden /admin backend entry)
   useEffect(() => {
+    const applyRoute = (user: User | null) => {
+      const path = window.location.pathname;
+      const wantsAdmin = path === '/admin' || path.startsWith('/admin/');
+
+      if (!wantsAdmin) return;
+
+      // If user is already admin, open backend directly
+      if (isAdminUser(user)) {
+        setCurrentView('dashboard');
+        setShowAdminPanel(true);
+        setPendingAdminOpen(false);
+        return;
+      }
+
+      // Otherwise require login; if they login as admin, backend will open
+      setPendingAdminOpen(true);
+      setAuthMode('login');
+      setCurrentView('auth');
+    };
+
     try {
       const savedUser = localStorage.getItem('fleet_current_user');
       if (savedUser) {
         const user = JSON.parse(savedUser);
         setCurrentUser(user);
+        // Default route
         setCurrentView('dashboard');
+        applyRoute(user);
+      } else {
+        applyRoute(null);
       }
     } catch (e) {
       console.error('Error loading user session:', e);
+      applyRoute(null);
     }
+
+    const onPopState = () => {
+      applyRoute(currentUser);
+    };
+    window.addEventListener('popstate', onPopState);
+
     setIsLoading(false);
+    return () => window.removeEventListener('popstate', onPopState);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Load data from localStorage
+  // Load data (local first, then Supabase per-user if configured and logged in)
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem('motorcycle_fleet_data');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        setData({
-          ...defaultData,
-          ...parsed,
-          motorcycles: Array.isArray(parsed.motorcycles) ? parsed.motorcycles : [],
-          serviceRecords: Array.isArray(parsed.serviceRecords) ? parsed.serviceRecords : [],
-          savedMakes: Array.isArray(parsed.savedMakes) ? parsed.savedMakes : defaultData.savedMakes,
-          savedModels: parsed.savedModels || defaultData.savedModels,
-          companySettings: { ...defaultData.companySettings, ...parsed.companySettings }
-        });
+    const load = async () => {
+      // Local cache first
+      try {
+        const saved = localStorage.getItem('motorcycle_fleet_data');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          setData({
+            ...defaultData,
+            ...parsed,
+            motorcycles: Array.isArray(parsed.motorcycles) ? parsed.motorcycles : [],
+            serviceRecords: Array.isArray(parsed.serviceRecords) ? parsed.serviceRecords : [],
+            savedMakes: Array.isArray(parsed.savedMakes) ? parsed.savedMakes : defaultData.savedMakes,
+            savedModels: parsed.savedModels || defaultData.savedModels,
+            companySettings: { ...defaultData.companySettings, ...parsed.companySettings }
+          });
+        }
+      } catch (e) {
+        console.error('Error loading data (local):', e);
       }
-    } catch (e) {
-      console.error('Error loading data:', e);
-    }
-  }, []);
 
-  // Save data to localStorage
+      if (isSupabaseConfigured && currentUser) {
+        try {
+          const remote = await loadFleetForCurrentUser();
+          if (remote) {
+            const merged: AppData = {
+              ...defaultData,
+              ...remote,
+              motorcycles: Array.isArray(remote.motorcycles) ? remote.motorcycles : [],
+              serviceRecords: Array.isArray(remote.serviceRecords) ? remote.serviceRecords : [],
+              savedMakes: Array.isArray(remote.savedMakes) ? remote.savedMakes : defaultData.savedMakes,
+              savedModels: remote.savedModels || defaultData.savedModels,
+              companySettings: { ...defaultData.companySettings, ...(remote.companySettings || {}) },
+              lastBackup: remote.lastBackup,
+            };
+            setData(merged);
+            localStorage.setItem('motorcycle_fleet_data', JSON.stringify(merged));
+          }
+        } catch (e) {
+          console.warn('Could not load fleet data from Supabase. Using local data.', e);
+        }
+      }
+    };
+
+    load();
+  }, [currentUser]);
+
+  // Save data (local + Supabase per-user when configured)
   const saveData = (updater: AppData | ((prev: AppData) => AppData)) => {
     setData(prev => {
       const next = typeof updater === 'function' ? (updater as (p: AppData) => AppData)(prev) : updater;
@@ -260,13 +324,34 @@ function App() {
       } catch (e) {
         console.error('Error saving data:', e);
       }
+
+      // Fire-and-forget cloud save
+      if (isSupabaseConfigured && currentUser) {
+        saveFleetForCurrentUser(next).catch((e) => {
+          console.warn('Failed saving fleet data to Supabase. Saved locally only.', e);
+        });
+      }
+
       return next;
     });
+  };
+
+  const isAdminUser = (user: User | null) => {
+    if (!user) return false;
+    const email = (user.email || '').toLowerCase().trim();
+    const username = (user.username || '').toLowerCase().trim();
+    return username === 'admin' || email === 'admin@fleetguard.in' || email === 'admin@fleetguard.com';
   };
 
   const handleLogin = (user: User) => {
     setCurrentUser(user);
     setCurrentView('dashboard');
+
+    // If user requested admin access from the homepage, open backend right after login
+    if (pendingAdminOpen && isAdminUser(user)) {
+      setShowAdminPanel(true);
+    }
+    setPendingAdminOpen(false);
   };
 
   const handleLogout = () => {
@@ -281,9 +366,12 @@ function App() {
   };
 
   const handleGoToLogin = () => {
+    setPendingAdminOpen(false);
     setAuthMode('login');
     setCurrentView('auth');
   };
+
+  // Admin route handling is implemented in the mount effect (supports hidden /admin entry)
 
   // Motorcycle handlers
   const handleAddBike = (bike: Motorcycle) => {
@@ -395,10 +483,10 @@ function App() {
   // Show Admin Panel
   if (showAdminPanel && isAdmin) {
     return (
-      <AdminBackend
+      <AdminPanel
         onClose={() => setShowAdminPanel(false)}
         onSave={handleSaveSiteSettings}
-        settings={siteSettings}
+        currentSettings={siteSettings}
       />
     );
   }
@@ -409,10 +497,6 @@ function App() {
       <HomePage 
         onGetStarted={handleGetStarted}
         onLogin={handleGoToLogin}
-        onAdminAccess={() => {
-          setAuthMode('login');
-          setCurrentView('auth');
-        }}
         siteSettings={siteSettings}
       />
     );
@@ -475,8 +559,8 @@ function App() {
               {isAdmin && (
                 <button
                   onClick={() => setShowAdminPanel(true)}
-                  className="px-3 py-2 bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/30 rounded-lg text-sm font-medium text-purple-400 transition-colors flex items-center gap-1"
-                  title="Admin Panel"
+                  className="px-3 py-2 bg-gradient-to-r from-purple-500/20 to-purple-600/20 hover:from-purple-500/30 hover:to-purple-600/30 border border-purple-400/30 rounded-lg text-sm font-semibold text-purple-200 transition-colors flex items-center gap-2"
+                  title="Admin Backend"
                 >
                   <span className="hidden sm:inline">Admin</span>
                   <span>⚙️</span>

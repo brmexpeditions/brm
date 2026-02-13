@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { supabase, isSupabaseConfigured } from '../lib/supabase';
 
 interface User {
   id: string;
@@ -76,82 +77,141 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin, companySettings, initi
     }, 300);
   };
 
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
-
-    setTimeout(() => {
-      const users = getUsers();
-      const user = users.find(
-        u => (u.email.toLowerCase() === loginEmail.toLowerCase() || u.username.toLowerCase() === loginEmail.toLowerCase()) 
-             && u.password === loginPassword
-      );
-
-      if (user) {
-        localStorage.setItem('fleet_current_user', JSON.stringify(user));
-        onLogin(user);
-      } else {
-        // Check for default admin
-        if ((loginEmail === 'admin' || loginEmail === 'admin@admin.com' || loginEmail === 'admin@fleetguard.com') && loginPassword === 'admin123') {
-          const adminUser: User = {
-            id: 'admin',
-            username: 'Admin',
-            email: 'admin@fleetguard.com',
-            password: 'admin123',
-            companyName: 'Fleet Guard',
-            phone: '',
-            createdAt: new Date().toISOString()
-          };
-          localStorage.setItem('fleet_current_user', JSON.stringify(adminUser));
-          onLogin(adminUser);
-        } else {
-          setError('Invalid email/username or password');
-        }
-      }
-      setLoading(false);
-    }, 500);
-  };
-
-  const handleSignup = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setSuccess('');
     setLoading(true);
 
-    setTimeout(() => {
-      // Validation
-      if (!signupName.trim()) {
-        setError('Please enter your full name');
-        setLoading(false);
-        return;
-      }
-      if (!signupEmail.trim() || !signupEmail.includes('@')) {
-        setError('Please enter a valid email address');
-        setLoading(false);
-        return;
-      }
-      if (signupPassword.length < 6) {
-        setError('Password must be at least 6 characters');
-        setLoading(false);
-        return;
-      }
-      if (signupPassword !== signupConfirmPassword) {
-        setError('Passwords do not match');
-        setLoading(false);
+    try {
+      // Supabase mode
+      if (isSupabaseConfigured && supabase) {
+        const email = loginEmail.trim();
+        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+          email,
+          password: loginPassword,
+        });
+
+        if (signInError) {
+          setError(signInError.message);
+          return;
+        }
+
+        const u = signInData.user;
+        if (!u) {
+          setError('Login failed. Please try again.');
+          return;
+        }
+
+        const meta = (u.user_metadata || {}) as Record<string, unknown>;
+        const appUser: User = {
+          id: u.id,
+          username: String(meta.name || u.email || 'User'),
+          email: u.email || email,
+          password: '',
+          companyName: String(meta.companyName || ''),
+          phone: String(meta.phone || ''),
+          createdAt: u.created_at || new Date().toISOString(),
+        };
+
+        localStorage.setItem('fleet_current_user', JSON.stringify(appUser));
+        onLogin(appUser);
         return;
       }
 
+      // Local (demo/offline) mode
       const users = getUsers();
-      
-      // Check if email already exists
+      const user = users.find(
+        u => (u.email.toLowerCase() === loginEmail.toLowerCase() || u.username.toLowerCase() === loginEmail.toLowerCase())
+          && u.password === loginPassword
+      );
+
+      if (user) {
+        localStorage.setItem('fleet_current_user', JSON.stringify(user));
+        onLogin(user);
+        return;
+      }
+
+      // Local default admin
+      if ((loginEmail === 'admin' || loginEmail === 'admin@admin.com' || loginEmail === 'admin@fleetguard.com') && loginPassword === 'admin123') {
+        const adminUser: User = {
+          id: 'admin',
+          username: 'Admin',
+          email: 'admin@fleetguard.com',
+          password: 'admin123',
+          companyName: 'Fleet Guard',
+          phone: '',
+          createdAt: new Date().toISOString(),
+        };
+        localStorage.setItem('fleet_current_user', JSON.stringify(adminUser));
+        onLogin(adminUser);
+        return;
+      }
+
+      setError('Invalid email/username or password');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Login failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSignup = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setSuccess('');
+    setLoading(true);
+
+    try {
+      // Validation
+      if (!signupName.trim()) throw new Error('Please enter your full name');
+      if (!signupEmail.trim() || !signupEmail.includes('@')) throw new Error('Please enter a valid email address');
+      if (signupPassword.length < 6) throw new Error('Password must be at least 6 characters');
+      if (signupPassword !== signupConfirmPassword) throw new Error('Passwords do not match');
+
+      // Supabase mode
+      if (isSupabaseConfigured && supabase) {
+        const email = signupEmail.trim();
+        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+          email,
+          password: signupPassword,
+          options: {
+            emailRedirectTo: window.location.origin,
+            data: {
+              name: signupName,
+              phone: signupPhone,
+              companyName: signupCompany,
+            },
+          },
+        });
+
+        if (signUpError) {
+          setError(signUpError.message);
+          return;
+        }
+
+        if (!signUpData.session) {
+          setSuccess('Account created. Please check your email to confirm, then login.');
+        } else {
+          setSuccess('Account created successfully! You can login now.');
+        }
+
+        setIsLogin(true);
+        setLoginEmail(email);
+        setLoginPassword('');
+        setSignupPassword('');
+        setSignupConfirmPassword('');
+        return;
+      }
+
+      // Local (demo/offline) mode
+      const users = getUsers();
+
       if (users.find(u => u.email.toLowerCase() === signupEmail.toLowerCase())) {
         setError('Email already registered. Please login instead.');
-        setLoading(false);
         return;
       }
 
-      // Create new user
       const newUser: User = {
         id: Date.now().toString(),
         username: signupName,
@@ -159,7 +219,7 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin, companySettings, initi
         password: signupPassword,
         companyName: signupCompany || signupName,
         phone: signupPhone,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
       };
 
       users.push(newUser);
@@ -169,7 +229,7 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin, companySettings, initi
       setIsLogin(true);
       setLoginEmail(signupEmail);
       setLoginPassword('');
-      
+
       // Clear signup form
       setSignupName('');
       setSignupEmail('');
@@ -177,9 +237,11 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin, companySettings, initi
       setSignupCompany('');
       setSignupPassword('');
       setSignupConfirmPassword('');
-      
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Signup failed');
+    } finally {
       setLoading(false);
-    }, 500);
+    }
   };
 
   return (
@@ -269,16 +331,19 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin, companySettings, initi
               <form onSubmit={handleLogin} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-1">
-                    📧 Email or Username
+                    📧 {isSupabaseConfigured ? 'Email' : 'Email or Username'}
                   </label>
                   <input
-                    type="text"
+                    type={isSupabaseConfigured ? 'email' : 'text'}
                     value={loginEmail}
                     onChange={(e) => setLoginEmail(e.target.value)}
                     className="w-full px-4 py-3 bg-gray-700 border-2 border-gray-600 rounded-xl focus:border-amber-500 focus:outline-none text-white"
-                    placeholder="Enter your email or username"
+                    placeholder={isSupabaseConfigured ? 'Enter your email' : 'Enter your email or username'}
                     required
                   />
+                  {isSupabaseConfigured && (
+                    <p className="text-xs text-gray-500 mt-1">Supabase login requires a valid email address.</p>
+                  )}
                 </div>
 
                 <div>
@@ -313,15 +378,17 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin, companySettings, initi
                   </div>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={handleDemoLogin}
-                  disabled={loading}
-                  className="w-full py-3 bg-gray-700 text-white font-semibold rounded-xl hover:bg-gray-600 transition-all disabled:opacity-50 flex items-center justify-center gap-2 border border-gray-600"
-                >
-                  <span>⚡</span>
-                  {loading ? 'Logging in...' : 'Quick Admin Login'}
-                </button>
+                {!isSupabaseConfigured && (
+                  <button
+                    type="button"
+                    onClick={handleDemoLogin}
+                    disabled={loading}
+                    className="w-full py-3 bg-gray-700 text-white font-semibold rounded-xl hover:bg-gray-600 transition-all disabled:opacity-50 flex items-center justify-center gap-2 border border-gray-600"
+                  >
+                    <span>⚡</span>
+                    {loading ? 'Logging in...' : 'Quick Admin Login'}
+                  </button>
+                )}
               </form>
             ) : (
               /* Signup Form */
