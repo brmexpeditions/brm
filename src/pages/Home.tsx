@@ -914,11 +914,9 @@ export function Home() {
     whyChooseUs: { ...defaultHomepage.whyChooseUs, ...(siteSettings?.homepage?.whyChooseUs || {}) },
     testimonials: { ...defaultHomepage.testimonials, ...(siteSettings?.homepage?.testimonials || {}) },
     ctaSection: { ...defaultHomepage.ctaSection, ...(siteSettings?.homepage?.ctaSection || {}) },
-    blogSection: siteSettings?.homepage?.blogSection || {
-      enabled: true,
-      title: 'From Our Blog',
-      subtitle: 'Latest stories, tips, and guides from the road',
-      posts: posts.filter(p => p.status === 'published').slice(0, 3).map(post => ({
+    blogSection: {
+      ...(siteSettings?.homepage?.blogSection || { enabled: true, title: 'From Our Blog', subtitle: 'Latest stories, tips, and guides from the road' }),
+      posts: (posts || []).filter(p => p.status === 'published').slice(0, 3).map(post => ({
         id: post.id,
         title: post.title,
         excerpt: post.excerpt,
