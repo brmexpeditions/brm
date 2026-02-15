@@ -361,7 +361,84 @@ function UpcomingDepartures({ tours }: { tours: Tour[] }) {
     </section>
   );
 }
+// 1. Add these helper components inside Home.tsx
 
+function InstagramSection({ data }: { data: any }) {
+  if (!data?.enabled) return null;
+  return (
+    <section className="py-16 bg-white overflow-hidden">
+      <div className="max-w-7xl mx-auto px-4 text-center">
+        <h2 className="text-3xl font-bold mb-2">{data.title}</h2>
+        <a href={`https://instagram.com/${data.username}`} target="_blank" className="text-amber-600 font-medium hover:underline mb-8 block flex items-center justify-center gap-2">
+          @{data.username} <ExternalLink size={14} />
+        </a>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
+          {data.posts?.map((post: any) => (
+            <a key={post.id} href={post.link} target="_blank" className="group relative aspect-square overflow-hidden block rounded-lg">
+              <img src={post.imageUrl} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" alt="Insta" />
+              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                <span className="text-white font-bold tracking-widest text-sm">VIEW POST</span>
+              </div>
+            </a>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function BlogSection({ data }: { data: any }) {
+  if (!data?.enabled) return null;
+  return (
+    <section className="py-20 bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4">
+        <div className="text-center mb-12">
+          <h2 className="text-4xl font-bold text-gray-900">{data.title}</h2>
+          <p className="text-gray-600 mt-2">{data.subtitle}</p>
+        </div>
+        <div className="grid md:grid-cols-3 gap-8">
+          {data.posts?.map((post: any) => (
+            <article key={post.id} className="bg-white rounded-2xl shadow-sm hover:shadow-xl transition overflow-hidden group border border-gray-100">
+              <div className="h-48 overflow-hidden relative">
+                <img src={post.imageUrl} className="w-full h-full object-cover transition-transform group-hover:scale-105" alt={post.title} />
+                <span className="absolute top-4 left-4 bg-amber-500 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">{post.category}</span>
+              </div>
+              <div className="p-6">
+                <div className="flex justify-between items-center text-xs text-gray-400 mb-3">
+                  <span>{post.date}</span>
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-amber-600 transition leading-tight">{post.title}</h3>
+                <p className="text-gray-600 text-sm line-clamp-3 mb-4">{post.excerpt}</p>
+                <button className="text-sm font-semibold text-amber-600 group-hover:text-amber-700 flex items-center gap-1">Read Article <ArrowRight size={14} /></button>
+              </div>
+            </article>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// 2. Add them to your main Home return
+
+export function Home() {
+  // ... existing setup ...
+  
+  // Get sections from settings
+  const sections = siteSettings?.homepageSections || {};
+
+  return (
+    <Layout>
+      {/* ... Hero, Stats ... */}
+      
+      {/* ADD THESE NEW SECTIONS */}
+      <InstagramSection data={sections.instagram} />
+      <BlogSection data={sections.blog} />
+      
+      {/* ... Rest of sections ... */}
+    </Layout>
+  );
+}
 function VideoSection() {
   return (
     <section className="py-20 bg-gray-900 relative overflow-hidden">
