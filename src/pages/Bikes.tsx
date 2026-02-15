@@ -366,36 +366,120 @@ export function Bikes() {
       </section>
 
       {/* Bike Detail Modal */}
-      {selectedBike && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div 
-            className="absolute inset-0 bg-black/80 backdrop-blur-sm" 
-            onClick={() => setSelectedBike(null)}
-          />
-          
-          <div className="relative bg-white rounded-xl max-w-5xl w-full max-h-[90vh] overflow-hidden shadow-2xl">
-            {/* Close button */}
-            <button 
-              onClick={() => setSelectedBike(null)}
-              className="absolute top-4 right-4 z-10 w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-lg hover:bg-gray-100 transition-colors"
-            >
-              <svg className="w-5 h-5 text-gray-900" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
+      function BikeDetailModal({ bike, onClose }: { bike: Bike, onClose: () => void }) {
+  if (!bike) return null;
 
-            <div className="flex flex-col lg:flex-row h-full overflow-y-auto">
-              {/* Image Gallery */}
-              <div className="lg:w-1/2 relative bg-gray-100">
-                <div className="aspect-[4/3] lg:aspect-auto lg:h-full relative">
-                  <img 
-                    src={selectedBike.gallery && selectedBike.gallery.length > 0 
-                      ? selectedBike.gallery[imageIndex] || selectedBike.image 
-                      : selectedBike.image
-                    } 
-                    alt={selectedBike.name}
-                    className="w-full h-full object-cover"
-                  />
+  return (
+    <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 backdrop-blur-sm" onClick={onClose}>
+      <div 
+        className="bg-white rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col md:flex-row shadow-2xl animate-fade-in-up"
+        onClick={e => e.stopPropagation()}
+      >
+        {/* Left Side: Image */}
+        <div className="w-full md:w-1/2 bg-gray-100 relative group h-64 md:h-auto">
+          <img 
+            src={bike.image} 
+            alt={bike.name} 
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute top-4 left-4">
+            <span className="bg-amber-500 text-white px-3 py-1 rounded-full text-sm font-bold shadow-md">
+              {bike.brand}
+            </span>
+          </div>
+          <button 
+            onClick={onClose}
+            className="absolute top-4 right-4 p-2 bg-black/50 text-white rounded-full hover:bg-black/70 md:hidden z-10"
+          >
+            <X size={20} />
+          </button>
+        </div>
+
+        {/* Right Side: Details */}
+        <div className="w-full md:w-1/2 flex flex-col h-full bg-white relative">
+          {/* Close Button (Desktop) */}
+          <button 
+            onClick={onClose}
+            className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full hidden md:block"
+          >
+            <X size={24} />
+          </button>
+
+          {/* Scrollable Content */}
+          <div className="flex-1 overflow-y-auto p-6 md:p-8">
+            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">{bike.name}</h2>
+            <div className="flex flex-wrap gap-2 mb-6">
+              <span className="px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-sm font-medium">
+                {bike.model}
+              </span>
+              <span className="px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-sm font-medium">
+                {bike.year}
+              </span>
+              <span className="px-3 py-1 bg-amber-50 text-amber-700 rounded-full text-sm font-medium border border-amber-100">
+                {bike.category}
+              </span>
+            </div>
+
+            <div className="space-y-6">
+              <div>
+                <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-3">Specifications</h3>
+                <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+                  <div className="flex justify-between py-2 border-b border-gray-100">
+                    <span className="text-gray-500 text-sm">Engine</span>
+                    <span className="font-medium text-gray-900 text-sm">{bike.engineCapacity}</span>
+                  </div>
+                  <div className="flex justify-between py-2 border-b border-gray-100">
+                    <span className="text-gray-500 text-sm">Power</span>
+                    <span className="font-medium text-gray-900 text-sm">{bike.power}</span>
+                  </div>
+                  <div className="flex justify-between py-2 border-b border-gray-100">
+                    <span className="text-gray-500 text-sm">Weight</span>
+                    <span className="font-medium text-gray-900 text-sm">{bike.weight}</span>
+                  </div>
+                  <div className="flex justify-between py-2 border-b border-gray-100">
+                    <span className="text-gray-500 text-sm">Seat Height</span>
+                    <span className="font-medium text-gray-900 text-sm">{bike.seatHeight}</span>
+                  </div>
+                </div>
+              </div>
+
+              {bike.features && bike.features.length > 0 && (
+                <div>
+                  <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-3">Key Features</h3>
+                  <ul className="grid grid-cols-1 gap-2">
+                    {bike.features.map((feature, i) => (
+                      <li key={i} className="flex items-start gap-2 text-sm text-gray-600">
+                        <Check size={16} className="text-green-500 mt-0.5 flex-shrink-0" />
+                        <span>{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Sticky Footer */}
+          <div className="p-6 border-t border-gray-100 bg-gray-50 flex items-center justify-between mt-auto">
+            <div>
+              <p className="text-xs text-gray-500 uppercase tracking-wide">Daily Rate</p>
+              <div className="flex items-baseline gap-1">
+                <span className="text-2xl font-bold text-amber-600">${bike.rentalPrice}</span>
+                <span className="text-gray-400 text-sm">/ day</span>
+              </div>
+            </div>
+            <Link 
+              to="/contact" 
+              className="bg-gray-900 text-white px-6 py-3 rounded-xl font-semibold hover:bg-gray-800 transition flex items-center gap-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+            >
+              Book This Bike <ArrowRight size={18} />
+            </Link>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
                   
                   {/* Image Navigation */}
                   {selectedBike.gallery && selectedBike.gallery.length > 1 && (
