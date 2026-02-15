@@ -614,26 +614,27 @@ export function Home() {
   
   // Merge with defaults to ensure all properties exist
   const homepage = {
-  hero: { ...defaultHomepage.hero, ...(siteSettings?.homepage?.hero || {}) },
-  stats: { ...defaultHomepage.stats, ...(siteSettings?.homepage?.stats || {}) },
-  featuredSection: { ...defaultHomepage.featuredSection, ...(siteSettings?.homepage?.featuredSection || {}) },
-  whyChooseUs: { ...defaultHomepage.whyChooseUs, ...(siteSettings?.homepage?.whyChooseUs || {}) },
-  testimonials: { ...defaultHomepage.testimonials, ...(siteSettings?.homepage?.testimonials || {}) },
-  ctaSection: { ...defaultHomepage.ctaSection, ...(siteSettings?.homepage?.ctaSection || {}) },
+  hero: { ...defaultHomepage.hero, ...(siteSettings?.homepageSections?.hero || {}) },
+  stats: { ...defaultHomepage.stats, ...(siteSettings?.homepageSections?.stats || {}) },
+  featuredSection: { ...defaultHomepage.featuredSection, ...(siteSettings?.homepageSections?.featuredSection || {}) },
+  whyChooseUs: { ...defaultHomepage.whyChooseUs, ...(siteSettings?.homepageSections?.whyChooseUs || {}) },
+  testimonials: { ...defaultHomepage.testimonials, ...(siteSettings?.homepageSections?.testimonials || {}) },
+  ctaSection: { ...defaultHomepage.ctaSection, ...(siteSettings?.homepageSections?.ctaSection || {}) },
 
-  // ✅ ADD THESE TWO LINES
-  blogSection: siteSettings?.homepage?.blogSection || {
+  blogSection: {
     enabled: false,
     title: 'From Our Blog',
     subtitle: '',
-    posts: []
+    posts: [],
+    ...(siteSettings?.homepageSections?.blogSection || {})
   },
 
-  instagramSection: siteSettings?.homepage?.instagramSection || {
+  instagramSection: {
     enabled: false,
     title: 'Follow Our Journey',
     username: 'brmexpeditions',
-    posts: []
+    posts: [],
+    ...(siteSettings?.homepageSections?.instagramSection || {})
   }
 };
   
