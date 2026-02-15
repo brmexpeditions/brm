@@ -622,7 +622,7 @@ export function Home() {
   ctaSection: { ...defaultHomepage.ctaSection, ...(siteSettings?.homepageSections?.ctaSection || {}) },
 
   blogSection: {
-    enabled: false,
+    enabled: true,
     title: 'From Our Blog',
     subtitle: '',
     posts: [],
@@ -630,7 +630,7 @@ export function Home() {
   },
 
   instagramSection: {
-    enabled: false,
+    enabled: true,
     title: 'Follow Our Journey',
     username: 'brmexpeditions',
     posts: [],
