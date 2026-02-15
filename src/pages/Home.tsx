@@ -614,13 +614,28 @@ export function Home() {
   
   // Merge with defaults to ensure all properties exist
   const homepage = {
-    hero: { ...defaultHomepage.hero, ...(siteSettings?.homepage?.hero || {}) },
-    stats: { ...defaultHomepage.stats, ...(siteSettings?.homepage?.stats || {}) },
-    featuredSection: { ...defaultHomepage.featuredSection, ...(siteSettings?.homepage?.featuredSection || {}) },
-    whyChooseUs: { ...defaultHomepage.whyChooseUs, ...(siteSettings?.homepage?.whyChooseUs || {}) },
-    testimonials: { ...defaultHomepage.testimonials, ...(siteSettings?.homepage?.testimonials || {}) },
-    ctaSection: { ...defaultHomepage.ctaSection, ...(siteSettings?.homepage?.ctaSection || {}) }
-  };
+  hero: { ...defaultHomepage.hero, ...(siteSettings?.homepage?.hero || {}) },
+  stats: { ...defaultHomepage.stats, ...(siteSettings?.homepage?.stats || {}) },
+  featuredSection: { ...defaultHomepage.featuredSection, ...(siteSettings?.homepage?.featuredSection || {}) },
+  whyChooseUs: { ...defaultHomepage.whyChooseUs, ...(siteSettings?.homepage?.whyChooseUs || {}) },
+  testimonials: { ...defaultHomepage.testimonials, ...(siteSettings?.homepage?.testimonials || {}) },
+  ctaSection: { ...defaultHomepage.ctaSection, ...(siteSettings?.homepage?.ctaSection || {}) },
+
+  // ✅ ADD THESE TWO LINES
+  blogSection: siteSettings?.homepage?.blogSection || {
+    enabled: false,
+    title: 'From Our Blog',
+    subtitle: '',
+    posts: []
+  },
+
+  instagramSection: siteSettings?.homepage?.instagramSection || {
+    enabled: false,
+    title: 'Follow Our Journey',
+    username: 'brmexpeditions',
+    posts: []
+  }
+};
   
   // Safe access to featuredSection properties
   const maxItems = homepage.featuredSection?.maxItems || 6;
