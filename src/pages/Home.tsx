@@ -475,66 +475,6 @@ function WhatsAppButton() {
 
 // --- NEW COMPONENTS END ---
 
-function TourCard({ tour }: { tour: Tour }) {
-  if (!tour) return null;
-  return (
-    <Link to={`/tours/${tour.slug}`} className="group block bg-white rounded-2xl shadow-lg overflow-hidden hover:-translate-y-2 transition">
-      <div className="h-64 overflow-hidden">
-        <img src={tour.heroImage} className="w-full h-full object-cover group-hover:scale-110 transition" />
-      </div>
-      <div className="p-6">
-        <h3 className="text-xl font-bold mb-2">{tour.title}</h3>
-        <div className="flex justify-between text-sm text-gray-500">
-          <span>{tour.duration}</span>
-          <span>{tour.difficulty}</span>
-        </div>
-        <div className="mt-4 flex justify-between items-center">
-          <span className="text-amber-600 font-bold text-xl">${tour.price}</span>
-          <span className="text-gray-900 font-medium group-hover:text-amber-600">View Tour →</span>
-        </div>
-      </div>
-    </Link>
-  );
-}
-
-export function Home() {
-  const { tours, siteSettings } = useApp();
-  const featured = tours.filter(t => t.featured).slice(0, 3);
-  const homepage = siteSettings?.homepage?.hero || {};
-
-  return (
-    <Layout>
-      <SEOHead title="Home" description="Welcome" />
-      
-      {/* HERO */}
-      <section className="h-[80vh] relative flex items-center justify-center text-white text-center">
-        <div className="absolute inset-0 bg-black/50 z-10" />
-        <img src={homepage.backgroundImage || "https://images.unsplash.com/photo-1558618666-fcd25c85cd64"} className="absolute inset-0 w-full h-full object-cover" />
-        <div className="relative z-20 max-w-4xl px-4">
-          <h1 className="text-5xl md:text-7xl font-bold mb-6">{homepage.title || "Ride the Himalayas"}</h1>
-          <p className="text-xl mb-8">{homepage.subtitle || "Premium Motorcycle Adventures"}</p>
-          <Link to="/tours" className="bg-amber-500 text-white px-8 py-4 rounded-full font-bold hover:bg-amber-600 transition">Explore Tours</Link>
-        </div>
-      </section>
-
-      {/* FEATURED */}
-      <section className="py-20 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4">
-          <h2 className="text-4xl font-bold text-center mb-12">Featured Adventures</h2>
-          <div className="grid md:grid-cols-3 gap-8">
-            {featured.map(tour => <TourCard key={tour.id} tour={tour} />)}
-          </div>
-        </div>
-      </section>
-
-      {/* NEW SECTIONS */}
-      <TeamSection />
-      <FAQSection />
-      <WhatsAppButton />
-      
-    </Layout>
-  );
-}
 function VideoSection() {
   return (
     <section className="py-20 bg-gray-900 relative overflow-hidden">
