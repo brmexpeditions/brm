@@ -168,15 +168,10 @@ function BikeDetailModal({ bike, onClose }: { bike: Bike, onClose: () => void })
 // ==========================================
 export function Bikes() {
   const { bikes } = useApp();
-  const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [selectedBike, setSelectedBike] = useState<Bike | null>(null);
 
-  const categories = ['All', 'Adventure', 'Touring', 'Cruiser', 'Standard'];
+  // Removed Filter State and Logic
   
-  const filteredBikes = selectedCategory === 'All' 
-    ? bikes 
-    : bikes.filter(bike => bike.category.toLowerCase() === selectedCategory.toLowerCase());
-
   return (
     <Layout>
       <SEOHead 
@@ -223,27 +218,6 @@ export function Bikes() {
         </div>
       </section>
 
-      {/* Filter Bar */}
-      <div className="sticky top-16 z-30 bg-white/95 backdrop-blur shadow-sm border-b border-gray-100 py-4">
-        <div className="max-w-7xl mx-auto px-4 overflow-x-auto">
-          <div className="flex gap-2 min-w-max">
-            {categories.map(category => (
-              <button
-                key={category}
-                onClick={() => setSelectedCategory(category)}
-                className={`px-6 py-2 rounded-full text-sm font-bold transition-all ${
-                  selectedCategory === category
-                    ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/30'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                }`}
-              >
-                {category}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-
       {/* Main Content */}
       <section className="py-16 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4">
@@ -284,20 +258,20 @@ export function Bikes() {
 
           {/* Bikes Grid */}
           <div className="space-y-8">
-            {filteredBikes.map((bike, index) => (
+            {bikes.map((bike, index) => (
               <div 
                 key={bike.id} 
                 className={`bg-white rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 flex flex-col ${index % 2 === 0 ? 'lg:flex-row' : 'lg:flex-row-reverse'}`}
               >
-                {/* Image Side */}
-                <div className="w-full lg:w-3/5 relative h-64 lg:h-96 group overflow-hidden bg-gray-100 flex items-center justify-center">
+                {/* Image Side - Fixed Cropping Here */}
+                <div className="w-full lg:w-3/5 relative h-64 lg:h-96 group overflow-hidden bg-gray-50 flex items-center justify-center p-6">
                   <img 
                     src={bike.image} 
                     alt={bike.name} 
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                    className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-700 mix-blend-multiply"
                   />
                   <div className="absolute top-4 left-4 flex gap-2">
-                    <span className="bg-white/90 backdrop-blur text-gray-900 px-3 py-1 rounded-full text-sm font-bold shadow-sm">
+                    <span className="bg-white/90 backdrop-blur text-gray-900 px-3 py-1 rounded-full text-sm font-bold shadow-sm border border-gray-200">
                       {bike.brand}
                     </span>
                     {bike.featured && (
@@ -326,7 +300,7 @@ export function Bikes() {
                   </div>
 
                   {/* Specs Grid - Table Style */}
-                  <div className="bg-gray-50 rounded-xl p-4 mb-6">
+                  <div className="bg-gray-50 rounded-xl p-4 mb-6 border border-gray-100">
                     <div className="grid grid-cols-2 gap-y-3 gap-x-6">
                       <div className="flex justify-between border-b border-gray-200 pb-2">
                         <span className="text-xs text-gray-500 uppercase font-semibold">Engine</span>
@@ -338,7 +312,7 @@ export function Bikes() {
                       </div>
                       <div className="flex justify-between border-b border-gray-200 pb-2">
                         <span className="text-xs text-gray-500 uppercase font-semibold">Torque</span>
-                        <span className="text-sm font-bold text-gray-900">{bike.torque || 'N/A'}</span>
+                        <span className="text-sm font-bold text-gray-900">{bike.torque}</span>
                       </div>
                       <div className="flex justify-between border-b border-gray-200 pb-2">
                         <span className="text-xs text-gray-500 uppercase font-semibold">Weight</span>
@@ -350,7 +324,7 @@ export function Bikes() {
                       </div>
                       <div className="flex justify-between pb-1">
                         <span className="text-xs text-gray-500 uppercase font-semibold">Speed</span>
-                        <span className="text-sm font-bold text-gray-900">{bike.topSpeed || 'N/A'}</span>
+                        <span className="text-sm font-bold text-gray-900">{bike.topSpeed}</span>
                       </div>
                     </div>
                   </div>
@@ -395,13 +369,14 @@ export function Bikes() {
                     <th className="py-4 px-6 text-left font-bold">Motorcycle</th>
                     <th className="py-4 px-6 text-center font-bold">Engine</th>
                     <th className="py-4 px-6 text-center font-bold">Power</th>
+                    <th className="py-4 px-6 text-center font-bold">Torque</th>
                     <th className="py-4 px-6 text-center font-bold">Weight</th>
                     <th className="py-4 px-6 text-center font-bold">Seat Height</th>
                     <th className="py-4 px-6 text-center font-bold">Price/Day</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
-                  {filteredBikes.map((bike, index) => (
+                  {bikes.map((bike, index) => (
                     <tr 
                       key={bike.id} 
                       className={`hover:bg-amber-50/50 transition cursor-pointer ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50/30'}`}
@@ -409,7 +384,7 @@ export function Bikes() {
                     >
                       <td className="py-4 px-6">
                         <div className="flex items-center gap-3">
-                          <img src={bike.image} alt="" className="w-12 h-12 rounded-lg object-cover bg-gray-200" />
+                          <img src={bike.image} alt="" className="w-12 h-12 rounded-lg object-contain bg-gray-100 p-1 border border-gray-200" />
                           <div>
                             <div className="font-bold text-gray-900">{bike.name}</div>
                             <div className="text-xs text-gray-500">{bike.brand}</div>
@@ -418,6 +393,7 @@ export function Bikes() {
                       </td>
                       <td className="py-4 px-6 text-center font-medium text-gray-700">{bike.engineCapacity}</td>
                       <td className="py-4 px-6 text-center font-medium text-gray-700">{bike.power}</td>
+                      <td className="py-4 px-6 text-center font-medium text-gray-700">{bike.torque}</td>
                       <td className="py-4 px-6 text-center font-medium text-gray-700">{bike.weight}</td>
                       <td className="py-4 px-6 text-center font-medium text-gray-700">{bike.seatHeight}</td>
                       <td className="py-4 px-6 text-center font-bold text-amber-600">${bike.rentalPrice}</td>
