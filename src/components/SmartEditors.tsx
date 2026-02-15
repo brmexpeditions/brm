@@ -1,304 +1,515 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Bold, Italic, Underline, List, ListOrdered, Link2, Image,
   AlignLeft, AlignCenter, AlignRight, Quote, Heading1, Heading2, Heading3,
   X, Plus, GripVertical, ChevronUp, ChevronDown, Eye, EyeOff,
   Check, Settings, Maximize2, Minimize2, Type, Strikethrough, Code,
-  Highlighter, Undo, Redo, Minus
+  Highlighter, Undo, Redo
 } from 'lucide-react';
 
-// Enhanced Rich Text Editor Component
+import { useEditor, EditorContent, Extension } from '@tiptap/react';
+import StarterKit from '@tiptap/starter-kit';
+import ImageExtension from '@tiptap/extension-image';
+import LinkExtension from '@tiptap/extension-link';
+import UnderlineExtension from '@tiptap/extension-underline';
+import { TextStyle } from '@tiptap/extension-text-style';
+import { Color } from '@tiptap/extension-color';
+import Highlight from '@tiptap/extension-highlight';
+import TextAlign from '@tiptap/extension-text-align';
+import Placeholder from '@tiptap/extension-placeholder';
+import Youtube from '@tiptap/extension-youtube';
+
+// Custom Font Size Extension
+const FontSize = Extension.create({
+  name: 'fontSize',
+  addGlobalAttributes() {
+    return [
+      {
+        types: ['textStyle'],
+        attributes: {
+          fontSize: {
+            default: null,
+            parseHTML: (element: HTMLElement) => element.style.fontSize.replace(/['"]+/g, ''),
+            renderHTML: (attributes: any) => {
+              if (!attributes.fontSize) {
+                return {};
+              }
+              return { style: `font-size: ${attributes.fontSize}` };
+            },
+          },
+        },
+      },
+    ];
+  },
+  addCommands() {
+    return {
+      setFontSize: (fontSize: string) => ({ chain }: any) => {
+        return chain()
+          .setMark('textStyle', { fontSize })
+          .run();
+      },
+      unsetFontSize: () => ({ chain }: any) => {
+        return chain()
+          .setMark('textStyle', { fontSize: null })
+          .run();
+      },
+    };
+  },
+} as any);
+
+// Enhanced Rich Text Editor Component using Tiptap
 interface RichTextEditorProps {
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
   minHeight?: number;
   label?: string;
-  simple?: boolean; // Simplified toolbar for smaller areas
+  simple?: boolean;
 }
 
 export function RichTextEditor({ value, onChange, placeholder, minHeight = 200, label, simple = false }: RichTextEditorProps) {
-  const editorRef = useRef<HTMLDivElement>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showHtml, setShowHtml] = useState(false);
-  const [activeFormats, setActiveFormats] = useState<string[]>([]);
   const [showColorPicker, setShowColorPicker] = useState(false);
-  const [fontSize, setFontSize] = useState('16');
+  const [showMediaPicker, setShowMediaPicker] = useState(false);
 
+  const editor = useEditor({
+    extensions: [
+      StarterKit,
+      UnderlineExtension,
+      LinkExtension.configure({
+        openOnClick: false,
+        HTMLAttributes: {
+          class: 'text-blue-600 underline cursor-pointer',
+        },
+      }),
+      ImageExtension.configure({
+        allowBase64: true,
+        HTMLAttributes: {
+          class: 'rounded-xl max-w-full h-auto my-4 shadow-md',
+        },
+      }),
+      Youtube.configure({
+        width: 840,
+        height: 480,
+        HTMLAttributes: {
+          class: 'aspect-video w-full rounded-xl my-4 shadow-md',
+        },
+      }),
+      TextStyle,
+      FontSize,
+      Color,
+      Highlight.configure({ multicolor: true }),
+      TextAlign.configure({
+        types: ['heading', 'paragraph'],
+      }),
+      Placeholder.configure({
+        placeholder: placeholder || 'Write something amazing...',
+      }),
+    ],
+    content: value,
+    onUpdate: ({ editor }) => {
+      onChange(editor.getHTML());
+    },
+  });
+
+  // Sync value from outside if it changes (and it's different from current editor content)
   useEffect(() => {
-    if (editorRef.current && !showHtml) {
-      editorRef.current.innerHTML = value;
+    if (editor && value !== editor.getHTML()) {
+      editor.commands.setContent(value);
     }
-  }, []);
+  }, [value, editor]);
 
-  const updateActiveFormats = () => {
-    const formats: string[] = [];
-    if (document.queryCommandState('bold')) formats.push('bold');
-    if (document.queryCommandState('italic')) formats.push('italic');
-    if (document.queryCommandState('underline')) formats.push('underline');
-    if (document.queryCommandState('strikeThrough')) formats.push('strikethrough');
-    if (document.queryCommandState('insertUnorderedList')) formats.push('ul');
-    if (document.queryCommandState('insertOrderedList')) formats.push('ol');
-    setActiveFormats(formats);
-  };
+  if (!editor) {
+    return null;
+  }
 
-  const execCommand = (command: string, value?: string) => {
-    document.execCommand(command, false, value);
-    if (editorRef.current) {
-      onChange(editorRef.current.innerHTML);
+  const toggleLink = () => {
+    if (editor.isActive('link')) {
+      editor.chain().focus().unsetLink().run();
+      return;
     }
-    updateActiveFormats();
-  };
-
-  const handleInput = () => {
-    if (editorRef.current) {
-      onChange(editorRef.current.innerHTML);
-    }
-    updateActiveFormats();
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    // Keyboard shortcuts
-    if (e.ctrlKey || e.metaKey) {
-      switch (e.key.toLowerCase()) {
-        case 'b':
-          e.preventDefault();
-          execCommand('bold');
-          break;
-        case 'i':
-          e.preventDefault();
-          execCommand('italic');
-          break;
-        case 'u':
-          e.preventDefault();
-          execCommand('underline');
-          break;
-        case 'z':
-          e.preventDefault();
-          execCommand('undo');
-          break;
-        case 'y':
-          e.preventDefault();
-          execCommand('redo');
-          break;
-      }
-    }
-  };
-
-  const insertLink = () => {
-    const url = prompt('Enter URL:');
+    const url = window.prompt('URL:');
     if (url) {
-      execCommand('createLink', url);
+      editor.chain().focus().setLink({ href: url }).run();
     }
   };
 
-  const insertImage = () => {
-    const url = prompt('Enter image URL:');
+  const addImage = (url: string) => {
     if (url) {
-      execCommand('insertImage', url);
+      editor.chain().focus().setImage({ src: url }).run();
+    }
+    setShowMediaPicker(false);
+  };
+
+  const addYoutubeVideo = () => {
+    const url = window.prompt('YouTube URL:');
+    if (url) {
+      editor.commands.setYoutubeVideo({ src: url });
     }
   };
 
-  const setTextColor = (color: string) => {
-    execCommand('foreColor', color);
-    setShowColorPicker(false);
-  };
-
-  const setBackgroundColor = (color: string) => {
-    execCommand('hiliteColor', color);
-    setShowColorPicker(false);
-  };
-
-  const changeFontSize = (size: string) => {
-    setFontSize(size);
-    execCommand('fontSize', '7');
-    // Apply actual pixel size
-    const selection = window.getSelection();
-    if (selection && selection.rangeCount > 0) {
-      const range = selection.getRangeAt(0);
-      const span = document.createElement('span');
-      span.style.fontSize = size + 'px';
-      range.surroundContents(span);
-    }
-  };
+  const ToolbarButton = ({
+    onClick,
+    isActive = false,
+    icon: Icon,
+    title
+  }: {
+    onClick: () => void;
+    isActive?: boolean;
+    icon: any;
+    title: string
+  }) => (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`p-1.5 rounded transition ${isActive
+        ? 'bg-amber-100 text-amber-700'
+        : 'text-gray-600 hover:bg-gray-200 hover:text-gray-900'
+        }`}
+      title={title}
+    >
+      <Icon size={16} />
+    </button>
+  );
 
   const colors = [
-    '#000000', '#333333', '#666666', '#999999', '#CCCCCC', '#FFFFFF',
-    '#ef4444', '#f97316', '#f59e0b', '#84cc16', '#22c55e', '#14b8a6',
-    '#06b6d4', '#3b82f6', '#6366f1', '#8b5cf6', '#a855f7', '#ec4899'
+    '#000000', '#333333', '#666666', '#999999', '#ef4444', '#f59e0b',
+    '#22c55e', '#3b82f6', '#6366f1', '#a855f7', '#ec4899', '#ffffff'
   ];
 
-  const simpleToolbar = [
-    { icon: Bold, command: 'bold', label: 'Bold', format: 'bold' },
-    { icon: Italic, command: 'italic', label: 'Italic', format: 'italic' },
-    { type: 'divider' },
-    { icon: List, command: 'insertUnorderedList', label: 'Bullet List', format: 'ul' },
-    { icon: ListOrdered, command: 'insertOrderedList', label: 'Numbered List', format: 'ol' },
-    { type: 'divider' },
-    { icon: Link2, action: insertLink, label: 'Insert Link' },
-  ];
-
-  const fullToolbar = [
-    { icon: Undo, command: 'undo', label: 'Undo' },
-    { icon: Redo, command: 'redo', label: 'Redo' },
-    { type: 'divider' },
-    { icon: Bold, command: 'bold', label: 'Bold (Ctrl+B)', format: 'bold' },
-    { icon: Italic, command: 'italic', label: 'Italic (Ctrl+I)', format: 'italic' },
-    { icon: Underline, command: 'underline', label: 'Underline (Ctrl+U)', format: 'underline' },
-    { icon: Strikethrough, command: 'strikeThrough', label: 'Strikethrough', format: 'strikethrough' },
-    { type: 'divider' },
-    { icon: Heading1, command: 'formatBlock', value: 'h1', label: 'Heading 1' },
-    { icon: Heading2, command: 'formatBlock', value: 'h2', label: 'Heading 2' },
-    { icon: Heading3, command: 'formatBlock', value: 'h3', label: 'Heading 3' },
-    { icon: Type, command: 'formatBlock', value: 'p', label: 'Paragraph' },
-    { type: 'divider' },
-    { icon: List, command: 'insertUnorderedList', label: 'Bullet List', format: 'ul' },
-    { icon: ListOrdered, command: 'insertOrderedList', label: 'Numbered List', format: 'ol' },
-    { icon: Quote, command: 'formatBlock', value: 'blockquote', label: 'Quote' },
-    { icon: Code, command: 'formatBlock', value: 'pre', label: 'Code Block' },
-    { type: 'divider' },
-    { icon: AlignLeft, command: 'justifyLeft', label: 'Align Left' },
-    { icon: AlignCenter, command: 'justifyCenter', label: 'Align Center' },
-    { icon: AlignRight, command: 'justifyRight', label: 'Align Right' },
-    { type: 'divider' },
-    { icon: Link2, action: insertLink, label: 'Insert Link' },
-    { icon: Image, action: insertImage, label: 'Insert Image' },
-    { icon: Minus, command: 'insertHorizontalRule', label: 'Horizontal Line' },
-  ];
-
-  const toolbarButtons = simple ? simpleToolbar : fullToolbar;
+  const fontSizes = ['12px', '14px', '16px', '18px', '20px', '24px', '30px', '36px', '48px'];
 
   return (
-    <div className={`border border-gray-200 rounded-xl overflow-hidden bg-white ${isFullscreen ? 'fixed inset-4 z-50 flex flex-col' : ''}`}>
-      {label && (
-        <div className="px-4 py-2 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
-          <span className="text-sm font-medium text-gray-700">{label}</span>
-          <div className="flex items-center gap-2">
+    <div className={`border border-gray-200 rounded-xl overflow-hidden bg-white ${isFullscreen ? 'fixed inset-4 z-[9999] flex flex-col shadow-2xl' : ''
+      }`}>
+      {/* Header */}
+      <div className="px-4 py-2 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
+        <span className="text-sm font-medium text-gray-700">{label || 'Content Editor'}</span>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setShowHtml(!showHtml)}
+            className={`p-1.5 rounded-lg text-xs flex items-center gap-1 ${showHtml ? 'bg-blue-100 text-blue-700' : 'text-gray-500 hover:bg-gray-100'
+              }`}
+          >
+            {showHtml ? <Eye size={14} /> : <EyeOff size={14} />}
+            {showHtml ? 'Preview' : 'HTML'}
+          </button>
+          {!simple && (
             <button
-              onClick={() => setShowHtml(!showHtml)}
-              className={`p-1.5 rounded-lg text-xs flex items-center gap-1 ${showHtml ? 'bg-blue-100 text-blue-700' : 'text-gray-500 hover:bg-gray-100'}`}
+              type="button"
+              onClick={() => setIsFullscreen(!isFullscreen)}
+              className="p-1.5 rounded-lg text-gray-500 hover:bg-gray-100"
             >
-              {showHtml ? <Eye size={14} /> : <EyeOff size={14} />}
-              {showHtml ? 'Preview' : 'HTML'}
+              {isFullscreen ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
             </button>
-            {!simple && (
-              <button
-                onClick={() => setIsFullscreen(!isFullscreen)}
-                className="p-1.5 rounded-lg text-gray-500 hover:bg-gray-100"
+          )}
+        </div>
+      </div>
+
+      {/* Toolbar */}
+      {!showHtml && (
+        <div className="flex flex-wrap items-center gap-0.5 px-2 py-1.5 bg-white border-b border-gray-100">
+          <ToolbarButton
+            onClick={() => editor.chain().focus().undo().run()}
+            icon={Undo}
+            title="Undo"
+          />
+          <ToolbarButton
+            onClick={() => editor.chain().focus().redo().run()}
+            icon={Redo}
+            title="Redo"
+          />
+          <div className="w-px h-6 bg-gray-200 mx-1" />
+
+          <ToolbarButton
+            onClick={() => editor.chain().focus().toggleBold().run()}
+            isActive={editor.isActive('bold')}
+            icon={Bold}
+            title="Bold"
+          />
+          <ToolbarButton
+            onClick={() => editor.chain().focus().toggleItalic().run()}
+            isActive={editor.isActive('italic')}
+            icon={Italic}
+            title="Italic"
+          />
+          <ToolbarButton
+            onClick={() => editor.chain().focus().toggleUnderline().run()}
+            isActive={editor.isActive('underline')}
+            icon={Underline}
+            title="Underline"
+          />
+          <ToolbarButton
+            onClick={() => editor.chain().focus().toggleStrike().run()}
+            isActive={editor.isActive('strike')}
+            icon={Strikethrough}
+            title="Strikethrough"
+          />
+
+          {!simple && (
+            <>
+              <div className="w-px h-6 bg-gray-200 mx-1" />
+              <select
+                onChange={(e) => {
+                  if (e.target.value === 'default') {
+                    editor.chain().focus().unsetFontSize().run();
+                  } else {
+                    editor.chain().focus().setFontSize(e.target.value).run();
+                  }
+                }}
+                className="text-xs px-2 py-1 border border-gray-200 rounded-lg bg-gray-50 text-gray-700 focus:outline-none"
               >
-                {isFullscreen ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
+                <option value="default">Size: Default</option>
+                {fontSizes.map(size => (
+                  <option key={size} value={size}>{size}</option>
+                ))}
+              </select>
+
+              <div className="w-px h-6 bg-gray-200 mx-1" />
+              <ToolbarButton
+                onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
+                isActive={editor.isActive('heading', { level: 1 })}
+                icon={Heading1}
+                title="Heading 1"
+              />
+              <ToolbarButton
+                onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+                isActive={editor.isActive('heading', { level: 2 })}
+                icon={Heading2}
+                title="Heading 2"
+              />
+              <ToolbarButton
+                onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
+                isActive={editor.isActive('heading', { level: 3 })}
+                icon={Heading3}
+                title="Heading 3"
+              />
+              <ToolbarButton
+                onClick={() => editor.chain().focus().setParagraph().run()}
+                isActive={editor.isActive('paragraph')}
+                icon={Type}
+                title="Paragraph"
+              />
+            </>
+          )}
+
+          <div className="w-px h-6 bg-gray-200 mx-1" />
+          <ToolbarButton
+            onClick={() => editor.chain().focus().toggleBulletList().run()}
+            isActive={editor.isActive('bulletList')}
+            icon={List}
+            title="Bullet List"
+          />
+          <ToolbarButton
+            onClick={() => editor.chain().focus().toggleOrderedList().run()}
+            isActive={editor.isActive('orderedList')}
+            icon={ListOrdered}
+            title="Ordered List"
+          />
+          {!simple && (
+            <>
+              <ToolbarButton
+                onClick={() => editor.chain().focus().toggleBlockquote().run()}
+                isActive={editor.isActive('blockquote')}
+                icon={Quote}
+                title="Quote"
+              />
+              <ToolbarButton
+                onClick={() => editor.chain().focus().toggleCodeBlock().run()}
+                isActive={editor.isActive('codeBlock')}
+                icon={Code}
+                title="Code Block"
+              />
+            </>
+          )}
+
+          <div className="w-px h-6 bg-gray-200 mx-1" />
+          <ToolbarButton
+            onClick={() => editor.chain().focus().setTextAlign('left').run()}
+            isActive={editor.isActive({ textAlign: 'left' })}
+            icon={AlignLeft}
+            title="Align Left"
+          />
+          <ToolbarButton
+            onClick={() => editor.chain().focus().setTextAlign('center').run()}
+            isActive={editor.isActive({ textAlign: 'center' })}
+            icon={AlignCenter}
+            title="Align Center"
+          />
+          <ToolbarButton
+            onClick={() => editor.chain().focus().setTextAlign('right').run()}
+            isActive={editor.isActive({ textAlign: 'right' })}
+            icon={AlignRight}
+            title="Align Right"
+          />
+
+          {!simple && (
+            <>
+              <div className="w-px h-6 bg-gray-200 mx-1" />
+              <div className="relative">
+                <ToolbarButton
+                  onClick={() => setShowColorPicker(!showColorPicker)}
+                  isActive={showColorPicker}
+                  icon={Highlighter}
+                  title="Text Color"
+                />
+                {showColorPicker && (
+                  <div className="absolute top-full left-0 mt-1 p-2 bg-white border border-gray-200 rounded-lg shadow-xl z-50 w-40">
+                    <p className="text-[10px] text-gray-500 uppercase font-bold mb-1 px-1">Colors</p>
+                    <div className="grid grid-cols-4 gap-1">
+                      {colors.map(color => (
+                        <button
+                          key={color}
+                          type="button"
+                          onClick={() => {
+                            editor.chain().focus().setColor(color).run();
+                            setShowColorPicker(false);
+                          }}
+                          className="w-8 h-8 rounded border border-gray-100 hover:scale-110 transition shadow-sm"
+                          style={{ backgroundColor: color }}
+                        />
+                      ))}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        editor.chain().focus().unsetColor().run();
+                        setShowColorPicker(false);
+                      }}
+                      className="w-full mt-2 py-1 text-[10px] bg-gray-50 text-gray-600 rounded hover:bg-gray-100"
+                    >
+                      Clear Color
+                    </button>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+
+          <div className="w-px h-6 bg-gray-200 mx-1" />
+          <ToolbarButton onClick={toggleLink} isActive={editor.isActive('link')} icon={Link2} title="Link" />
+          <ToolbarButton onClick={() => setShowMediaPicker(true)} icon={Image} title="Insert Image from Library" />
+          {!simple && (
+            <ToolbarButton onClick={addYoutubeVideo} icon={Plus} title="Insert YouTube Video" />
+          )}
+        </div>
+      )}
+
+      {/* Editor Content */}
+      <div className={`overflow-auto ${isFullscreen ? 'flex-1' : ''}`} style={{ minHeight: isFullscreen ? 'auto' : minHeight }}>
+        {showHtml ? (
+          <textarea
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            className="w-full h-full p-4 font-mono text-sm focus:outline-none resize-none bg-gray-900 text-gray-100"
+            style={{ minHeight }}
+          />
+        ) : (
+          <EditorContent
+            editor={editor}
+            className="tiptap-editor px-6 py-4 min-h-full prose prose-amber max-w-none focus:outline-none"
+          />
+        )}
+      </div>
+
+      {/* Media Picker Modal */}
+      {showMediaPicker && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[10000] p-4 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl w-full max-w-4xl max-h-[80vh] flex flex-col shadow-2xl overflow-hidden border border-gray-200">
+            <div className="p-4 border-b border-gray-100 flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-bold text-gray-900">Choose Media</h3>
+                <p className="text-xs text-gray-500">Select an image from your library or enter a URL</p>
+              </div>
+              <button onClick={() => setShowMediaPicker(false)} className="p-2 hover:bg-gray-100 rounded-full transition">
+                <X size={20} />
               </button>
-            )}
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-4 bg-gray-50">
+              <div className="mb-6 flex gap-2">
+                <input
+                  type="url"
+                  placeholder="Paste external image URL here..."
+                  className="flex-1 px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 outline-none text-sm"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      addImage((e.target as HTMLInputElement).value);
+                    }
+                  }}
+                />
+                <button
+                  onClick={() => {
+                    const input = document.querySelector('input[type="url"]') as HTMLInputElement;
+                    if (input?.value) addImage(input.value);
+                  }}
+                  className="px-6 py-2 bg-amber-500 text-white rounded-xl font-medium hover:bg-amber-600 transition"
+                >
+                  Add URL
+                </button>
+              </div>
+
+              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                {(() => {
+                  const saved = localStorage.getItem('brm_media_library');
+                  const images = saved ? JSON.parse(saved) : [];
+                  if (images.length === 0) {
+                    return (
+                      <div className="col-span-full py-12 text-center">
+                        <Image size={40} className="mx-auto text-gray-300 mb-2" />
+                        <p className="text-gray-500 text-sm">Media library is empty.</p>
+                      </div>
+                    );
+                  }
+                  return images.map((img: any) => (
+                    <div
+                      key={img.id}
+                      onClick={() => addImage(img.url)}
+                      className="group relative aspect-square bg-white rounded-xl border border-gray-200 overflow-hidden cursor-pointer hover:border-amber-500 transition shadow-sm"
+                    >
+                      <img src={img.url} alt={img.name} className="w-full h-full object-cover group-hover:scale-105 transition duration-300" />
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                        <Plus className="text-white opacity-0 group-hover:opacity-100" />
+                      </div>
+                    </div>
+                  ));
+                })()}
+              </div>
+            </div>
           </div>
         </div>
       )}
-      
-      {/* Toolbar */}
-      <div className="flex flex-wrap items-center gap-0.5 px-2 py-1.5 bg-gray-50 border-b border-gray-200">
-        {toolbarButtons.map((btn, i) => {
-          if (btn.type === 'divider') {
-            return <div key={i} className="w-px h-6 bg-gray-300 mx-1" />;
-          }
-          const Icon = btn.icon!;
-          const isActive = btn.format && activeFormats.includes(btn.format);
-          const btnValue = 'value' in btn ? btn.value : undefined;
-          return (
-            <button
-              key={i}
-              onClick={() => btn.action ? btn.action() : execCommand(btn.command!, btnValue)}
-              className={`p-1.5 rounded hover:bg-gray-200 transition ${isActive ? 'bg-amber-100 text-amber-700' : 'text-gray-600 hover:text-gray-900'}`}
-              title={btn.label}
-            >
-              <Icon size={16} />
-            </button>
-          );
-        })}
-        
-        {/* Color Picker Button */}
-        {!simple && (
-          <div className="relative">
-            <button
-              onClick={() => setShowColorPicker(!showColorPicker)}
-              className="p-1.5 rounded hover:bg-gray-200 text-gray-600 hover:text-gray-900 transition flex items-center gap-1"
-              title="Text Color"
-            >
-              <Highlighter size={16} />
-            </button>
-            {showColorPicker && (
-              <div className="absolute top-full left-0 mt-1 p-2 bg-white border border-gray-200 rounded-lg shadow-lg z-10 w-48">
-                <p className="text-xs text-gray-500 mb-1">Text Color</p>
-                <div className="grid grid-cols-6 gap-1 mb-2">
-                  {colors.map(color => (
-                    <button
-                      key={color}
-                      onClick={() => setTextColor(color)}
-                      className="w-6 h-6 rounded border border-gray-200"
-                      style={{ backgroundColor: color }}
-                    />
-                  ))}
-                </div>
-                <p className="text-xs text-gray-500 mb-1">Highlight</p>
-                <div className="grid grid-cols-6 gap-1">
-                  {colors.slice(6).map(color => (
-                    <button
-                      key={color}
-                      onClick={() => setBackgroundColor(color)}
-                      className="w-6 h-6 rounded border border-gray-200"
-                      style={{ backgroundColor: color }}
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
 
-        {/* Font Size Selector */}
-        {!simple && (
-          <select
-            value={fontSize}
-            onChange={(e) => changeFontSize(e.target.value)}
-            className="px-2 py-1 text-xs border border-gray-200 rounded bg-white text-gray-600"
-          >
-            <option value="12">12px</option>
-            <option value="14">14px</option>
-            <option value="16">16px</option>
-            <option value="18">18px</option>
-            <option value="20">20px</option>
-            <option value="24">24px</option>
-            <option value="28">28px</option>
-            <option value="32">32px</option>
-          </select>
-        )}
+      {/* Footer / Stats */}
+      <div className="px-4 py-1.5 bg-gray-50 border-t border-gray-100 text-[10px] text-gray-400 flex justify-between uppercase font-bold tracking-wider">
+        <div className="flex gap-4">
+          <span>{editor.storage.characterCount?.words?.() || 0} Words</span>
+          <span>{editor.getText().length} Characters</span>
+        </div>
+        <div>
+          {editor.isActive('bold') && <span className="mr-2">Bold</span>}
+          {editor.isActive('italic') && <span className="mr-2">Italic</span>}
+          {editor.isActive('link') && <span>Link</span>}
+        </div>
       </div>
 
-      {/* Editor */}
-      {showHtml ? (
-        <textarea
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          className="w-full p-4 font-mono text-sm focus:outline-none resize-none flex-1"
-          style={{ minHeight }}
-        />
-      ) : (
-        <div
-          ref={editorRef}
-          contentEditable
-          onInput={handleInput}
-          onKeyDown={handleKeyDown}
-          onMouseUp={updateActiveFormats}
-          onKeyUp={updateActiveFormats}
-          className={`w-full p-4 focus:outline-none prose prose-sm max-w-none overflow-auto ${isFullscreen ? 'flex-1' : ''}`}
-          style={{ minHeight: isFullscreen ? 'auto' : minHeight }}
-          data-placeholder={placeholder}
-        />
-      )}
-
-      {/* Word count */}
-      <div className="px-4 py-1.5 bg-gray-50 border-t border-gray-100 text-xs text-gray-400 flex justify-between">
-        <span>{value.replace(/<[^>]*>/g, '').split(/\s+/).filter(Boolean).length} words</span>
-        <span>{value.replace(/<[^>]*>/g, '').length} characters</span>
-      </div>
+      <style>{`
+        .tiptap-editor .ProseMirror:focus {
+          outline: none;
+        }
+        .tiptap-editor .ProseMirror p.is-editor-empty:first-child::before {
+          content: attr(data-placeholder);
+          float: left;
+          color: #adb5bd;
+          pointer-events: none;
+          height: 0;
+        }
+        .tiptap-editor .ProseMirror {
+          min-height: ${minHeight}px;
+        }
+      `}</style>
     </div>
   );
 }
@@ -319,7 +530,7 @@ export function ImageInput({ value, onChange, label, aspectRatio = '16/9', place
   return (
     <div className="space-y-2">
       {label && <label className="block text-sm font-medium text-gray-700">{label}</label>}
-      
+
       <div className="flex gap-2">
         <div className="flex-1 relative">
           <input
@@ -400,7 +611,7 @@ export function HighlightsEditor({ highlights, onChange, label }: HighlightsEdit
   return (
     <div className="space-y-3">
       {label && <label className="block text-sm font-medium text-gray-700">{label}</label>}
-      
+
       {highlights.map((highlight, index) => (
         <div key={index} className="flex gap-2 p-3 bg-gray-50 rounded-lg border border-gray-200">
           {/* Icon Selector */}
@@ -420,7 +631,7 @@ export function HighlightsEditor({ highlights, onChange, label }: HighlightsEdit
               ))}
             </div>
           </div>
-          
+
           {/* Title & Description */}
           <div className="flex-1 space-y-2">
             <input
@@ -438,7 +649,7 @@ export function HighlightsEditor({ highlights, onChange, label }: HighlightsEdit
               className="w-full px-3 py-1.5 text-sm border border-gray-200 rounded-lg text-gray-600"
             />
           </div>
-          
+
           {/* Remove Button */}
           <button
             onClick={() => removeHighlight(index)}
@@ -448,7 +659,7 @@ export function HighlightsEditor({ highlights, onChange, label }: HighlightsEdit
           </button>
         </div>
       ))}
-      
+
       <button
         onClick={addHighlight}
         className="w-full py-2 border-2 border-dashed border-gray-200 rounded-lg text-gray-500 hover:border-amber-300 hover:text-amber-600 transition flex items-center justify-center gap-2 text-sm"
@@ -474,10 +685,10 @@ interface DraggableListProps<T extends DraggableListItem> {
   emptyMessage?: string;
 }
 
-export function DraggableList<T extends DraggableListItem>({ 
-  items, 
-  onChange, 
-  renderItem, 
+export function DraggableList<T extends DraggableListItem>({
+  items,
+  onChange,
+  renderItem,
   addLabel = 'Add Item',
   onAdd,
   emptyMessage = 'No items added'
@@ -526,9 +737,8 @@ export function DraggableList<T extends DraggableListItem>({
                 }
                 setDraggedIndex(null);
               }}
-              className={`group relative bg-white border border-gray-200 rounded-xl overflow-hidden transition-all ${
-                draggedIndex === index ? 'opacity-50 scale-98' : ''
-              }`}
+              className={`group relative bg-white border border-gray-200 rounded-xl overflow-hidden transition-all ${draggedIndex === index ? 'opacity-50 scale-98' : ''
+                }`}
             >
               <div className="absolute left-0 top-0 bottom-0 w-8 flex items-center justify-center cursor-grab bg-gray-50 border-r border-gray-100 opacity-0 group-hover:opacity-100 transition-opacity">
                 <GripVertical size={16} className="text-gray-400" />
@@ -543,7 +753,7 @@ export function DraggableList<T extends DraggableListItem>({
           ))}
         </div>
       )}
-      
+
       {onAdd && items.length > 0 && (
         <button
           onClick={onAdd}
@@ -574,7 +784,7 @@ export function ColorPicker({ value, onChange, label, presets = [] }: ColorPicke
   return (
     <div className="space-y-2">
       {label && <label className="block text-sm font-medium text-gray-700">{label}</label>}
-      
+
       <div className="flex items-center gap-3">
         <div className="relative">
           <input
@@ -600,11 +810,10 @@ export function ColorPicker({ value, onChange, label, presets = [] }: ColorPicke
           <button
             key={color}
             onClick={() => onChange(color)}
-            className={`w-7 h-7 rounded-lg border-2 transition ${
-              value.toLowerCase() === color.toLowerCase()
-                ? 'border-gray-900 scale-110'
-                : 'border-transparent hover:border-gray-300'
-            }`}
+            className={`w-7 h-7 rounded-lg border-2 transition ${value.toLowerCase() === color.toLowerCase()
+              ? 'border-gray-900 scale-110'
+              : 'border-transparent hover:border-gray-300'
+              }`}
             style={{ backgroundColor: color }}
           />
         ))}
@@ -793,18 +1002,18 @@ interface ActionButtonProps {
   fullWidth?: boolean;
 }
 
-export function ActionButton({ 
-  children, 
-  onClick, 
-  variant = 'primary', 
-  size = 'md', 
+export function ActionButton({
+  children,
+  onClick,
+  variant = 'primary',
+  size = 'md',
   icon: Icon,
   disabled = false,
   loading = false,
   fullWidth = false
 }: ActionButtonProps) {
   const baseStyles = 'inline-flex items-center justify-center gap-2 font-medium rounded-xl transition-all focus:outline-none focus:ring-2 focus:ring-offset-2';
-  
+
   const variantStyles = {
     primary: 'bg-amber-500 text-white hover:bg-amber-600 focus:ring-amber-500 disabled:bg-amber-300',
     secondary: 'bg-gray-100 text-gray-700 hover:bg-gray-200 focus:ring-gray-500 disabled:bg-gray-50',

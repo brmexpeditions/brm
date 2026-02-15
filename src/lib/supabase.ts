@@ -21,10 +21,10 @@ try {
 function cleanValue(value: unknown, key: string): unknown {
   // If undefined or null, return null
   if (value === undefined || value === null) return null;
-  
+
   // If empty string, return null (especially important for date fields)
   if (value === '') return null;
-  
+
   // Date fields need special handling
   const dateFields = ['next_departure', 'nextDeparture', 'created_at', 'updated_at', 'createdAt', 'updatedAt'];
   if (dateFields.includes(key)) {
@@ -44,7 +44,7 @@ function cleanValue(value: unknown, key: string): unknown {
       }
     }
   }
-  
+
   return value;
 }
 
@@ -166,6 +166,24 @@ export const syncToDatabase = {
     try {
       await supabase.from('pages').delete().eq('id', id);
     } catch { /* ignore */ }
+  },
+
+  post: async (post: Record<string, unknown>) => {
+    if (!supabase) return;
+    try {
+      const data = toSnakeCase(post);
+      const { error } = await supabase.from('posts').upsert(data, { onConflict: 'id' });
+      if (error) console.error('Post sync error:', error.message);
+      else console.log('✅ Post synced');
+    } catch { /* ignore */ }
+  },
+
+  deletePost: async (id: string) => {
+    if (!supabase) return;
+    try {
+      await supabase.from('posts').delete().eq('id', id);
+      console.log('✅ Post deleted from database');
+    } catch { /* ignore */ }
   }
 };
 
@@ -181,6 +199,7 @@ export async function loadFromDatabase(): Promise<{
   bikes: unknown[];
   bookings: unknown[];
   pages: unknown[];
+  posts: unknown[];
   siteSettings: unknown | null;
   media: unknown[];
 } | null> {
@@ -193,6 +212,7 @@ export async function loadFromDatabase(): Promise<{
       bikes: unknown[];
       bookings: unknown[];
       pages: unknown[];
+      posts: unknown[];
       siteSettings: unknown | null;
       media: unknown[];
     } = {
@@ -201,6 +221,7 @@ export async function loadFromDatabase(): Promise<{
       bikes: [],
       bookings: [],
       pages: [],
+      posts: [],
       siteSettings: null,
       media: []
     };
@@ -235,6 +256,12 @@ export async function loadFromDatabase(): Promise<{
       if (data) result.pages = data.map(p => toCamelCase(p as Record<string, unknown>));
     } catch { /* ignore */ }
 
+    // Load posts
+    try {
+      const { data } = await supabase.from('posts').select('*').order('created_at', { ascending: false });
+      if (data) result.posts = data.map(p => toCamelCase(p as Record<string, unknown>));
+    } catch { /* ignore */ }
+
     // Load settings
     try {
       const { data } = await supabase.from('site_settings').select('*').eq('id', 'main').single();
@@ -261,7 +288,7 @@ export async function testConnection(): Promise<{
 }> {
   if (!supabase) return { connected: false, tables: [] };
 
-  const tables = ['tours', 'destinations', 'bikes', 'bookings', 'pages', 'site_settings', 'media'];
+  const tables = ['tours', 'destinations', 'bikes', 'bookings', 'pages', 'posts', 'site_settings', 'media'];
   const results: { name: string; count: number; status: 'ok' | 'error' }[] = [];
 
   for (const table of tables) {

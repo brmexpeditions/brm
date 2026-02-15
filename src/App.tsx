@@ -9,6 +9,8 @@ import { DestinationDetail } from './pages/DestinationDetail';
 import { Bikes } from './pages/Bikes';
 import { About } from './pages/About';
 import { Contact } from './pages/Contact';
+import { Blog } from './pages/Blog';
+import { BlogPost } from './pages/BlogPost';
 import { Admin } from './pages/Admin';
 import Login from './pages/Login';
 import { FrontendEditor } from './components/FrontendEditor';
@@ -41,6 +43,8 @@ export function App() {
           <Route path="/destinations/:slug" element={<DestinationDetail />} />
           <Route path="/bikes" element={<Bikes />} />
           <Route path="/about" element={<About />} />
+          <Route path="/blog" element={<Blog />} />
+          <Route path="/blog/:slug" element={<BlogPost />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/admin/*" element={<Admin />} />
           <Route path="/login" element={<Login />} />

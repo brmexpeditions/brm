@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { Tour, Destination, Bike, Booking, Page, SiteSettings } from '../types';
+import { Tour, Destination, Bike, Booking, Page, Post, SiteSettings } from '../types';
 import { defaultTours } from '../data/tours';
 import { defaultDestinations } from '../data/destinations';
 import { defaultBikes } from '../data/bikes';
@@ -18,41 +18,46 @@ interface AppContextType {
   bikes: Bike[];
   bookings: Booking[];
   pages: Page[];
+  posts: Post[];
   siteSettings: SiteSettings;
   mediaItems: MediaItem[];
   loading: boolean;
   isUsingDatabase: boolean;
-  
+
   addTour: (tour: Tour) => void;
   updateTour: (id: string, tour: Tour) => void;
   deleteTour: (id: string) => void;
-  
+
   addDestination: (destination: Destination) => void;
   updateDestination: (id: string, destination: Destination) => void;
   deleteDestination: (id: string) => void;
-  
+
   addBike: (bike: Bike) => void;
   updateBike: (id: string, bike: Bike) => void;
   deleteBike: (id: string) => void;
-  
+
   addBooking: (booking: Booking) => void;
   updateBooking: (id: string, updates: Partial<Booking>) => void;
-  
+
   addPage: (page: Page) => void;
   updatePage: (id: string, page: Page) => void;
   deletePage: (id: string) => void;
-  
+
+  addPost: (post: Post) => void;
+  updatePost: (id: string, post: Post) => void;
+  deletePost: (id: string) => void;
+
   updateSiteSettings: (settings: Partial<SiteSettings>) => void;
-  
+
   addMediaItem: (item: MediaItem) => void;
   deleteMediaItem: (id: string) => void;
-  
+
   isAdmin: boolean;
   setIsAdmin: (value: boolean) => void;
   isAuthenticated: boolean;
   login: (username: string, password: string) => boolean;
   logout: () => void;
-  
+
   refreshFromDatabase: () => Promise<void>;
 }
 
@@ -88,13 +93,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [bikes, setBikes] = useState<Bike[]>(() => safeLocalStorage.get('brm_bikes', defaultBikes));
   const [bookings, setBookings] = useState<Booking[]>(() => safeLocalStorage.get('brm_bookings', []));
   const [pages, setPages] = useState<Page[]>(() => safeLocalStorage.get('brm_pages', []));
+  const [posts, setPosts] = useState<Post[]>(() => safeLocalStorage.get('brm_posts', []));
   const [siteSettings, setSiteSettings] = useState<SiteSettings>(() => safeLocalStorage.get('brm_settings', defaultSiteSettings));
   const [mediaItems, setMediaItems] = useState<MediaItem[]>(() => safeLocalStorage.get('brm_media', []));
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(false);
   const [isUsingDatabase] = useState(true);
   const [hasLoadedFromDb, setHasLoadedFromDb] = useState(false);
-  
+
   // Authentication
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
     try {
@@ -127,14 +133,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Load data from Supabase - safe function
   const loadFromSupabase = useCallback(async () => {
     if (hasLoadedFromDb) return;
-    
+
     console.log('🔄 Loading data from Supabase...');
     setLoading(true);
-    
+
     try {
       const { createClient } = await import('@supabase/supabase-js');
       const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
-      
+
       // Test connection
       const { error: testError } = await supabase.from('tours').select('id').limit(1);
       if (testError) {
@@ -142,7 +148,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setLoading(false);
         return;
       }
-      
+
       console.log('✅ Connected to Supabase');
 
       // Load tours
@@ -310,6 +316,34 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         }
       } catch (e) { console.log('⚠️ Pages load error:', e); }
 
+      // Load posts
+      try {
+        const { data: postsData } = await supabase.from('posts').select('*').order('created_at', { ascending: false });
+        if (postsData && postsData.length > 0) {
+          console.log(`📦 Found ${postsData.length} posts`);
+          const mapped: Post[] = postsData.map((p) => ({
+            id: String(p.id || ''),
+            slug: String(p.slug || ''),
+            title: String(p.title || ''),
+            excerpt: String(p.excerpt || ''),
+            content: String(p.content || ''),
+            image: String(p.image || ''),
+            author: String(p.author || 'Admin'),
+            date: String(p.date || new Date().toISOString()),
+            readTime: String(p.read_time || '5 min read'),
+            category: String(p.category || 'Adventure'),
+            tags: Array.isArray(p.tags) ? p.tags : [],
+            featured: Boolean(p.featured),
+            status: (p.status === 'published' ? 'published' : 'draft') as Post['status'],
+            seo: p.seo || { metaTitle: '', metaDescription: '', keywords: [] },
+            createdAt: String(p.created_at || new Date().toISOString()),
+            updatedAt: String(p.updated_at || new Date().toISOString())
+          }));
+          setPosts(mapped);
+          safeLocalStorage.set('brm_posts', mapped);
+        }
+      } catch (e) { console.log('⚠️ Posts load error:', e); }
+
       // Load site settings
       try {
         const { data: settingsData } = await supabase.from('site_settings').select('*').eq('id', 'main').single();
@@ -332,7 +366,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
       console.log('✅ Data sync complete!');
       setHasLoadedFromDb(true);
-      
+
     } catch (error) {
       console.log('⚠️ Supabase error:', error);
     } finally {
@@ -360,8 +394,32 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   useEffect(() => { safeLocalStorage.set('brm_bikes', bikes); }, [bikes]);
   useEffect(() => { safeLocalStorage.set('brm_bookings', bookings); }, [bookings]);
   useEffect(() => { safeLocalStorage.set('brm_pages', pages); }, [pages]);
+  useEffect(() => { safeLocalStorage.set('brm_posts', posts); }, [posts]);
   useEffect(() => { safeLocalStorage.set('brm_settings', siteSettings); }, [siteSettings]);
   useEffect(() => { safeLocalStorage.set('brm_media', mediaItems); }, [mediaItems]);
+
+  // Force update menu if Blog is missing (Migration)
+  useEffect(() => {
+    const mainMenu = siteSettings.menus.find(m => m.location === 'header');
+    if (mainMenu && !mainMenu.items.some(i => i.label === 'Blog')) {
+      const newSettings = { ...siteSettings };
+      const menuIndex = newSettings.menus.findIndex(m => m.location === 'header');
+      if (menuIndex >= 0) {
+        // Add Blog before Contact (which is usually last)
+        const contactIndex = newSettings.menus[menuIndex].items.findIndex(i => i.label === 'Contact');
+        const blogItem = { id: 'menu-blog', label: 'Blog', url: '/blog', target: '_self' as const, type: 'custom' as const, order: 5 };
+
+        if (contactIndex >= 0) {
+          newSettings.menus[menuIndex].items.splice(contactIndex, 0, blogItem);
+          // Re-index orders if needed, but flexbox should handle it. Just ensure contact is last.
+          newSettings.menus[menuIndex].items[contactIndex + 1].order = 7;
+        } else {
+          newSettings.menus[menuIndex].items.push(blogItem);
+        }
+        setSiteSettings(newSettings);
+      }
+    }
+  }, [siteSettings]);
 
   // Background sync to database
   const syncTour = async (tour: Tour) => {
@@ -399,6 +457,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     } catch { /* ignore */ }
   };
 
+  const syncPost = async (post: Post) => {
+    try {
+      const { syncToDatabase } = await import('../lib/supabase');
+      syncToDatabase.post(post as unknown as Record<string, unknown>);
+    } catch { /* ignore */ }
+  };
+
   const syncSettings = async (settings: SiteSettings) => {
     try {
       const { syncToDatabase } = await import('../lib/supabase');
@@ -411,12 +476,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setTours(prev => [tour, ...prev]);
     syncTour(tour);
   };
-  
+
   const updateTour = (id: string, tour: Tour) => {
     setTours(prev => prev.map(t => t.id === id ? tour : t));
     syncTour(tour);
   };
-  
+
   const deleteTour = async (id: string) => {
     setTours(prev => prev.filter(t => t.id !== id));
     try {
@@ -430,12 +495,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setDestinations(prev => [destination, ...prev]);
     syncDestination(destination);
   };
-  
+
   const updateDestination = (id: string, destination: Destination) => {
     setDestinations(prev => prev.map(d => d.id === id ? destination : d));
     syncDestination(destination);
   };
-  
+
   const deleteDestination = async (id: string) => {
     setDestinations(prev => prev.filter(d => d.id !== id));
     try {
@@ -449,12 +514,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setBikes(prev => [bike, ...prev]);
     syncBike(bike);
   };
-  
+
   const updateBike = (id: string, bike: Bike) => {
     setBikes(prev => prev.map(b => b.id === id ? bike : b));
     syncBike(bike);
   };
-  
+
   const deleteBike = async (id: string) => {
     setBikes(prev => prev.filter(b => b.id !== id));
     try {
@@ -468,7 +533,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setBookings(prev => [booking, ...prev]);
     syncBooking(booking);
   };
-  
+
   const updateBooking = (id: string, updates: Partial<Booking>) => {
     setBookings(prev => {
       const updated = prev.map(b => b.id === id ? { ...b, ...updates } : b);
@@ -483,17 +548,36 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setPages(prev => [page, ...prev]);
     syncPage(page);
   };
-  
+
   const updatePage = (id: string, page: Page) => {
     setPages(prev => prev.map(p => p.id === id ? page : p));
     syncPage(page);
   };
-  
+
   const deletePage = async (id: string) => {
     setPages(prev => prev.filter(p => p.id !== id));
     try {
       const { syncToDatabase } = await import('../lib/supabase');
       syncToDatabase.deletePage(id);
+    } catch { /* ignore */ }
+  };
+
+  // Post functions
+  const addPost = (post: Post) => {
+    setPosts(prev => [post, ...prev]);
+    syncPost(post);
+  };
+
+  const updatePost = (id: string, post: Post) => {
+    setPosts(prev => prev.map(p => p.id === id ? post : p));
+    syncPost(post);
+  };
+
+  const deletePost = async (id: string) => {
+    setPosts(prev => prev.filter(p => p.id !== id));
+    try {
+      const { syncToDatabase } = await import('../lib/supabase');
+      syncToDatabase.deletePost(id);
     } catch { /* ignore */ }
   };
 
@@ -517,6 +601,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       bikes,
       bookings,
       pages,
+      posts,
       siteSettings,
       mediaItems,
       loading,
@@ -535,6 +620,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       addPage,
       updatePage,
       deletePage,
+      addPost,
+      updatePost,
+      deletePost,
       updateSiteSettings,
       addMediaItem,
       deleteMediaItem,

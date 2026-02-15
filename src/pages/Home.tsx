@@ -10,9 +10,9 @@ import { ExternalLink } from 'lucide-react';
 function EditButton({ section, label }: { section: string; label?: string }) {
   const { isAdmin } = useApp();
   const navigate = useNavigate();
-  
+
   if (!isAdmin) return null;
-  
+
   return (
     <button
       onClick={() => navigate(`/admin?tab=homepage&section=${section}`)}
@@ -29,9 +29,9 @@ function EditButton({ section, label }: { section: string; label?: string }) {
 function HomepageEditPanel() {
   const { isAdmin } = useApp();
   const navigate = useNavigate();
-  
+
   if (!isAdmin) return null;
-  
+
   return (
     <div className="fixed top-24 right-4 z-50 bg-white rounded-xl shadow-2xl border border-gray-200 p-4 w-64">
       <div className="flex items-center gap-2 mb-4 pb-3 border-b">
@@ -104,12 +104,12 @@ function HomepageEditPanel() {
 
 function TourCard({ tour }: { tour: Tour }) {
   if (!tour) return null;
-  
+
   const countries = tour?.countries || [];
   const duration = tour?.duration || '';
   const groupSize = tour?.groupSize || '';
   const price = tour?.price || 0;
-  
+
   return (
     <Link to={`/tours/${tour?.slug || ''}`} className="group bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
       <div className="relative h-64 overflow-hidden">
@@ -120,12 +120,11 @@ function TourCard({ tour }: { tour: Tour }) {
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
         <div className="absolute top-4 left-4 flex gap-2">
-          <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-            tour?.difficulty === 'Expert' ? 'bg-red-500' :
+          <span className={`px-3 py-1 rounded-full text-xs font-semibold ${tour?.difficulty === 'Expert' ? 'bg-red-500' :
             tour?.difficulty === 'Challenging' ? 'bg-orange-500' :
-            tour?.difficulty === 'Moderate' ? 'bg-yellow-500' :
-            'bg-green-500'
-          } text-white`}>
+              tour?.difficulty === 'Moderate' ? 'bg-yellow-500' :
+                'bg-green-500'
+            } text-white`}>
             {tour?.difficulty || 'Moderate'}
           </span>
           {tour?.featured && (
@@ -176,12 +175,12 @@ function TourCard({ tour }: { tour: Tour }) {
 
 function DestinationCard({ destination }: { destination: Destination }) {
   if (!destination) return null;
-  
+
   const terrain = destination?.terrain || [];
-  
+
   return (
-    <Link 
-      to={`/destinations/${destination?.slug || ''}`} 
+    <Link
+      to={`/destinations/${destination?.slug || ''}`}
       className="group relative overflow-hidden rounded-2xl h-80"
     >
       <img
@@ -216,7 +215,7 @@ function DestinationCard({ destination }: { destination: Destination }) {
 
 function TourOfTheMonth({ tour }: { tour: Tour }) {
   if (!tour) return null;
-  
+
   return (
     <section className="py-20 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
       <div className="max-w-7xl mx-auto px-4">
@@ -225,7 +224,7 @@ function TourOfTheMonth({ tour }: { tour: Tour }) {
             <div className="absolute -top-4 -left-4 w-24 h-24 bg-amber-500 rounded-2xl flex items-center justify-center z-10">
               <div className="text-center">
                 <Trophy size={28} className="text-white mx-auto" />
-                <span className="text-white text-xs font-bold">TOUR OF<br/>THE MONTH</span>
+                <span className="text-white text-xs font-bold">TOUR OF<br />THE MONTH</span>
               </div>
             </div>
             <div className="rounded-2xl overflow-hidden shadow-2xl">
@@ -250,7 +249,7 @@ function TourOfTheMonth({ tour }: { tour: Tour }) {
             </span>
             <h2 className="text-4xl font-bold mb-4">{tour?.title || 'Featured Tour'}</h2>
             <p className="text-gray-400 text-lg mb-6">{tour?.subtitle || tour?.shortDescription || ''}</p>
-            
+
             <div className="grid grid-cols-2 gap-4 mb-8">
               <div className="bg-white/10 backdrop-blur rounded-xl p-4">
                 <Calendar className="text-amber-500 mb-2" size={24} />
@@ -300,7 +299,7 @@ function TourOfTheMonth({ tour }: { tour: Tour }) {
 
 function UpcomingDepartures({ tours }: { tours: Tour[] }) {
   if (!tours || tours.length === 0) return null;
-  
+
   const toursWithDates = (tours || [])
     .filter(t => t?.departureDates && t.departureDates.length > 0)
     .flatMap(t => (t?.departureDates || []).map(date => ({ ...t, departureDate: date })))
@@ -327,7 +326,7 @@ function UpcomingDepartures({ tours }: { tours: Tour[] }) {
             const countries = tour?.countries || [];
             return (
               <Link
-                key={`${tour?.id || i}-${i}`}
+                key={`${tour?.id || i} -${i} `}
                 to={`/tours/${tour?.slug || ''}`}
                 className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl hover:bg-amber-50 hover:shadow-lg transition group"
               >
@@ -372,7 +371,7 @@ function InstagramSection({ data }: { data: any }) {
         <h2 className="text-3xl font-bold mb-2">{data.title}</h2>
         <a href={`https://instagram.com/${data.username}`} target="_blank" className="text-amber-600 font-medium hover:underline mb-8 block flex items-center justify-center gap-2">
           @{data.username} <ExternalLink size={14} />
-        </a>
+        </a >
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
           {data.posts?.map((post: any) => (
             <a key={post.id} href={post.link} target="_blank" className="group relative aspect-square overflow-hidden block rounded-lg">
@@ -383,8 +382,8 @@ function InstagramSection({ data }: { data: any }) {
             </a>
           ))}
         </div>
-      </div>
-    </section>
+      </div >
+    </section >
   );
 }
 
@@ -399,18 +398,22 @@ function BlogSection({ data }: { data: any }) {
         </div>
         <div className="grid md:grid-cols-3 gap-8">
           {data.posts?.map((post: any) => (
-            <article key={post.id} className="bg-white rounded-2xl shadow-sm hover:shadow-xl transition overflow-hidden group border border-gray-100">
-              <div className="h-48 overflow-hidden relative">
+            <article key={post.id} className="bg-white rounded-2xl shadow-sm hover:shadow-xl transition overflow-hidden group border border-gray-100 flex flex-col h-full">
+              <Link to={post.link} className="h-48 overflow-hidden relative block">
                 <img src={post.imageUrl} className="w-full h-full object-cover transition-transform group-hover:scale-105" alt={post.title} />
                 <span className="absolute top-4 left-4 bg-amber-500 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">{post.category}</span>
-              </div>
-              <div className="p-6">
+              </Link>
+              <div className="p-6 flex flex-col flex-grow">
                 <div className="flex justify-between items-center text-xs text-gray-400 mb-3">
                   <span>{post.date}</span>
                 </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-amber-600 transition leading-tight">{post.title}</h3>
-                <p className="text-gray-600 text-sm line-clamp-3 mb-4">{post.excerpt}</p>
-                <button className="text-sm font-semibold text-amber-600 group-hover:text-amber-700 flex items-center gap-1">Read Article <ArrowRight size={14} /></button>
+                <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-amber-600 transition leading-tight">
+                  <Link to={post.link}>{post.title}</Link>
+                </h3>
+                <p className="text-gray-600 text-sm line-clamp-3 mb-4 flex-grow">{post.excerpt}</p>
+                <Link to={post.link} className="text-sm font-semibold text-amber-600 group-hover:text-amber-700 flex items-center gap-1 mt-auto">
+                  Read Article <ArrowRight size={14} />
+                </Link>
               </div>
             </article>
           ))}
@@ -437,11 +440,11 @@ function VideoSection() {
           Watch Our Story
         </span>
         <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
-          Experience the Thrill of<br/>
+          Experience the Thrill of<br />
           <span className="text-amber-500">Himalayan Riding</span>
         </h2>
         <p className="text-gray-300 text-lg mb-8 max-w-2xl mx-auto">
-          Join us on an unforgettable journey through the world's highest motorable roads, 
+          Join us on an unforgettable journey through the world's highest motorable roads,
           ancient monasteries, and breathtaking landscapes.
         </p>
         <button className="inline-flex items-center gap-3 bg-white text-gray-900 px-8 py-4 rounded-full font-semibold hover:bg-amber-500 hover:text-white transition group">
@@ -458,7 +461,7 @@ function VideoSection() {
 function BikesSection() {
   const appContext = useApp();
   if (!appContext) return null;
-  
+
   const bikes = appContext.bikes || [];
   const availableBikes = bikes.filter(b => b.available).slice(0, 4);
 
@@ -577,22 +580,22 @@ function Partners() {
 
 export function Home() {
   const appContext = useApp();
-  
+
   // Safety check
   if (!appContext) {
     return <Layout><div className="min-h-screen flex items-center justify-center">Loading...</div></Layout>;
   }
-  
-  const { tours = [], destinations = [], siteSettings } = appContext;
+
+  const { tours = [], destinations = [], posts = [], siteSettings } = appContext;
   const featuredTours = tours.filter(t => t.featured && t.status === 'published');
   const allPublishedTours = tours.filter(t => t.status === 'published');
   const publishedDestinations = destinations.filter(d => d.status === 'published');
   const featuredDestinations = publishedDestinations.filter(d => d.featured).slice(0, 4);
-  const sections = siteSettings?.homepageSections || {};
-  
+  const sections = siteSettings?.homepage || {};
+
   // Tour of the month - first featured tour or most expensive
   const tourOfMonth = featuredTours[0] || allPublishedTours.sort((a, b) => b.price - a.price)[0];
-  
+
   // Safe defaults for homepage settings
   const defaultHomepage = {
     hero: {
@@ -611,42 +614,54 @@ export function Home() {
     testimonials: { enabled: true, title: 'What Our Riders Say', items: [] },
     ctaSection: { enabled: true, title: 'Ready for Adventure?', subtitle: '', backgroundImage: '', ctaText: 'Book Now', ctaLink: '/tours' }
   };
-  
+
   // Merge with defaults to ensure all properties exist
- const homepage = {
-  hero: { ...defaultHomepage.hero, ...(siteSettings?.homepage?.hero || {}) },
-  stats: { ...defaultHomepage.stats, ...(siteSettings?.homepage?.stats || {}) },
-  featuredSection: { ...defaultHomepage.featuredSection, ...(siteSettings?.homepage?.featuredSection || {}) },
-  whyChooseUs: { ...defaultHomepage.whyChooseUs, ...(siteSettings?.homepage?.whyChooseUs || {}) },
-  testimonials: { ...defaultHomepage.testimonials, ...(siteSettings?.homepage?.testimonials || {}) },
-  ctaSection: { ...defaultHomepage.ctaSection, ...(siteSettings?.homepage?.ctaSection || {}) },
+  const homepage = {
+    hero: { ...defaultHomepage.hero, ...(siteSettings?.homepage?.hero || {}) },
+    stats: { ...defaultHomepage.stats, ...(siteSettings?.homepage?.stats || {}) },
+    featuredSection: { ...defaultHomepage.featuredSection, ...(siteSettings?.homepage?.featuredSection || {}) },
+    whyChooseUs: { ...defaultHomepage.whyChooseUs, ...(siteSettings?.homepage?.whyChooseUs || {}) },
+    testimonials: { ...defaultHomepage.testimonials, ...(siteSettings?.homepage?.testimonials || {}) },
+    ctaSection: { ...defaultHomepage.ctaSection, ...(siteSettings?.homepage?.ctaSection || {}) },
 
-  // ✅ ADD THESE TWO LINES
-  blogSection: siteSettings?.homepage?.blogSection || {
-    enabled: true,
-    title: 'From Our Blog',
-    subtitle: '',
-    posts: []
-  },
 
-  instagramSection: siteSettings?.homepage?.instagramSection || {
-    enabled: true,
-    title: 'Follow Our Journey',
-    username: 'brmexpeditions',
-    posts: []
-  }
-};
-  
+
+    // ... (in Home component)
+
+    // ✅ ADD THESE TWO LINES
+    blogSection: siteSettings?.homepage?.blogSection || {
+      enabled: true,
+      title: 'From Our Blog',
+      subtitle: 'Latest stories, tips, and guides from the road',
+      posts: posts.filter(p => p.status === 'published').slice(0, 3).map(post => ({
+        id: post.id,
+        title: post.title,
+        excerpt: post.excerpt,
+        imageUrl: post.image,
+        date: post.date,
+        category: post.category,
+        link: `/blog/${post.slug}`
+      }))
+    },
+
+    instagramSection: siteSettings?.homepage?.instagramSection || {
+      enabled: true,
+      title: 'Follow Our Journey',
+      username: 'brmexpeditions',
+      posts: []
+    }
+  };
+
   // Safe access to featuredSection properties
   const maxItems = homepage.featuredSection?.maxItems || 6;
   const showFeaturedOnly = homepage.featuredSection?.showFeaturedOnly ?? true;
-  
+
   // Display only featured tours when showFeaturedOnly is true
   // Otherwise show all published tours
-  const displayTours = showFeaturedOnly 
+  const displayTours = showFeaturedOnly
     ? featuredTours.slice(0, maxItems)
     : allPublishedTours.slice(0, maxItems);
-  
+
   const getIcon = (iconName: string) => {
     const icons: Record<string, React.ComponentType<{ className?: string; size?: number }>> = { Shield, Award, Compass, Star };
     return icons[iconName] || Star;
@@ -660,10 +675,10 @@ export function Home() {
         keywords={siteSettings?.seo?.keywords || []}
         structuredData={organizationStructuredData}
       />
-      
+
       {/* Floating Edit Panel for Admin */}
       <HomepageEditPanel />
-      
+
       {/* Hero Section */}
       <section className="relative h-[90vh] -mt-28 flex items-center group/hero">
         <div className="absolute inset-0">
@@ -672,8 +687,8 @@ export function Home() {
             alt="Motorcycle adventure"
             className="w-full h-full object-cover"
           />
-          <div 
-            className="absolute inset-0 bg-gradient-to-r from-black via-black/50 to-transparent" 
+          <div
+            className="absolute inset-0 bg-gradient-to-r from-black via-black/50 to-transparent"
             style={{ opacity: homepage.hero.overlayOpacity / 100 }}
           />
         </div>
@@ -893,7 +908,7 @@ export function Home() {
           </div>
         </section>
       )}
- {/* BLOG SECTION */}
+      {/* BLOG SECTION */}
       {homepage.blogSection?.enabled && (
         <BlogSection data={homepage.blogSection} />
       )}

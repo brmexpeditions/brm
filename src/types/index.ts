@@ -98,6 +98,30 @@ export interface Page {
   updatedAt: string;
 }
 
+// Blog Post type
+export interface Post {
+  id: string;
+  slug: string;
+  title: string;
+  excerpt: string;
+  content: string; // Rich text HTML content
+  image: string; // Hero/featured image
+  author: string;
+  date: string; // Display date (can be different from createdAt)
+  readTime: string;
+  category: string;
+  tags: string[];
+  featured: boolean;
+  status: 'published' | 'draft';
+  seo: {
+    metaTitle: string;
+    metaDescription: string;
+    keywords: string[];
+  };
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface UpgradeOption {
   id: string;
   name: string;
@@ -183,6 +207,16 @@ export interface HomepageSettings {
     ctaText: string;
     ctaLink: string;
   };
+  blogSection?: {
+    enabled: boolean;
+    title: string;
+    subtitle: string;
+  };
+  instagramSection?: {
+    enabled: boolean;
+    title: string;
+    username: string;
+  };
 }
 
 // Header Settings
@@ -265,6 +299,7 @@ export interface SiteSettings {
   contact: ContactSettings;
   seo: SEOSettings;
   menus: NavigationMenu[];
+  homepageSections?: any;
 }
 
 export interface TourSEO {

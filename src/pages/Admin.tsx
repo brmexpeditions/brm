@@ -2,14 +2,14 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, Map, Calendar, Plus, Edit, Trash2,
-  Eye, ChevronLeft, ChevronRight, Save, X, Menu, BarChart3, Image, Search,
+  Eye, ChevronLeft, ChevronRight, Save, X, Menu, BarChart3, Image, Search, List,
   Globe, Palette, FileText, Bell, ChevronDown,
   ExternalLink, Check, AlertCircle,
   Monitor, Smartphone, Home, Layout, Mail, Maximize2,
   MapPin, File, Star, Clock, Mountain, Camera, Bike as BikeIcon
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
-import { Tour, ItineraryDay, UpgradeOption, ItineraryImage, Destination, Bike, Page } from '../types';
+import { Tour, ItineraryDay, UpgradeOption, ItineraryImage, Destination, Bike, Page, Post } from '../types';
 import { RichTextEditor, HighlightsEditor } from '../components/SmartEditors';
 
 // Sidebar Component - Cleaner Design
@@ -26,6 +26,7 @@ function Sidebar({ activeTab, setActiveTab, isOpen, setIsOpen }: {
     { id: 'bikes', label: 'Bikes / Fleet', icon: BikeIcon },
     { id: 'bookings', label: 'Bookings', icon: Calendar },
     { id: 'divider1', type: 'divider' },
+    { id: 'blog', label: 'Blog', icon: FileText },
     { id: 'pages', label: 'Pages', icon: File },
     { id: 'menus', label: 'Menu Builder', icon: Menu },
     { id: 'theme', label: 'Theme Customizer', icon: Palette },
@@ -66,11 +67,10 @@ function Sidebar({ activeTab, setActiveTab, isOpen, setIsOpen }: {
               <button
                 key={item.id}
                 onClick={() => { setActiveTab(item.id); setIsOpen(false); }}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all mb-1 ${
-                  activeTab === item.id
-                    ? 'bg-amber-50 text-amber-700 border border-amber-200'
-                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                }`}
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all mb-1 ${activeTab === item.id
+                  ? 'bg-amber-50 text-amber-700 border border-amber-200'
+                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  }`}
               >
                 {item.icon && <item.icon size={18} />}
                 {item.label}
@@ -102,7 +102,7 @@ function TopHeader({ setSidebarOpen, onLogout, onRefresh }: { setSidebarOpen: (o
       setTimeout(() => setIsRefreshing(false), 1000);
     }
   };
-  
+
   return (
     <header className="bg-white border-b border-gray-100 px-6 py-3 sticky top-0 z-30">
       <div className="flex items-center justify-between">
@@ -111,20 +111,19 @@ function TopHeader({ setSidebarOpen, onLogout, onRefresh }: { setSidebarOpen: (o
         </button>
         <div className="flex items-center gap-3">
           {/* Refresh from Database Button */}
-          <button 
+          <button
             onClick={handleRefresh}
             disabled={isRefreshing}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition ${
-              isRefreshing 
-                ? 'bg-green-100 text-green-700' 
-                : 'bg-blue-50 text-blue-600 hover:bg-blue-100'
-            }`}
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition ${isRefreshing
+              ? 'bg-green-100 text-green-700'
+              : 'bg-blue-50 text-blue-600 hover:bg-blue-100'
+              }`}
             title="Refresh data from database"
           >
-            <svg 
-              className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} 
-              fill="none" 
-              stroke="currentColor" 
+            <svg
+              className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`}
+              fill="none"
+              stroke="currentColor"
               viewBox="0 0 24 24"
             >
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -138,7 +137,7 @@ function TopHeader({ setSidebarOpen, onLogout, onRefresh }: { setSidebarOpen: (o
             <Bell size={18} className="text-gray-500" />
           </button>
           <div className="relative">
-            <button 
+            <button
               onClick={() => setShowUserMenu(!showUserMenu)}
               className="w-8 h-8 bg-amber-500 rounded-full flex items-center justify-center hover:bg-amber-600 transition"
             >
@@ -297,20 +296,18 @@ function Dashboard() {
                       <div className="w-12 h-12 bg-gradient-to-br from-amber-400 to-orange-500 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-md">
                         {booking.customerName.charAt(0).toUpperCase()}
                       </div>
-                      <div className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white ${
-                        booking.status === 'confirmed' ? 'bg-green-500' :
+                      <div className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white ${booking.status === 'confirmed' ? 'bg-green-500' :
                         booking.status === 'pending' ? 'bg-amber-500' :
-                        'bg-red-500'
-                      }`} />
+                          'bg-red-500'
+                        }`} />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
                         <p className="font-semibold text-gray-900 truncate">{booking.customerName}</p>
-                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                          booking.status === 'confirmed' ? 'bg-green-100 text-green-700' :
+                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${booking.status === 'confirmed' ? 'bg-green-100 text-green-700' :
                           booking.status === 'pending' ? 'bg-amber-100 text-amber-700' :
-                          'bg-red-100 text-red-700'
-                        }`}>
+                            'bg-red-100 text-red-700'
+                          }`}>
                           {booking.status}
                         </span>
                       </div>
@@ -345,21 +342,21 @@ function Dashboard() {
               Quick Actions
             </h3>
             <div className="space-y-3">
-              <button 
+              <button
                 onClick={() => window.location.hash = '#/admin?tab=tours'}
                 className="w-full flex items-center gap-3 p-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-medium hover:from-amber-600 hover:to-orange-600 transition shadow-lg shadow-amber-500/25"
               >
                 <Plus size={18} />
                 Create New Tour
               </button>
-              <button 
+              <button
                 onClick={() => window.location.hash = '#/admin?tab=destinations'}
                 className="w-full flex items-center gap-3 p-3 rounded-xl border border-gray-200 text-gray-700 font-medium hover:bg-gray-50 transition"
               >
                 <MapPin size={18} />
                 Add Destination
               </button>
-              <button 
+              <button
                 onClick={() => window.location.hash = '#/admin?tab=bikes'}
                 className="w-full flex items-center gap-3 p-3 rounded-xl border border-gray-200 text-gray-700 font-medium hover:bg-gray-50 transition"
               >
@@ -433,7 +430,7 @@ function DestinationsManager({ onEditDestination }: { onEditDestination: (destin
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
 
-  const filteredDestinations = destinations.filter(d => 
+  const filteredDestinations = destinations.filter(d =>
     d.name.toLowerCase().includes(search.toLowerCase()) ||
     d.country.toLowerCase().includes(search.toLowerCase())
   );
@@ -474,9 +471,8 @@ function DestinationsManager({ onEditDestination }: { onEditDestination: (destin
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <h3 className="font-medium text-gray-900 truncate">{destination.name}</h3>
-                  <span className={`text-xs px-2 py-0.5 rounded-full ${
-                    destination.status === 'published' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
-                  }`}>
+                  <span className={`text-xs px-2 py-0.5 rounded-full ${destination.status === 'published' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
+                    }`}>
                     {destination.status}
                   </span>
                   {destination.featured && (
@@ -599,9 +595,8 @@ function DestinationEditor({ destination, onSave, onCancel }: {
         <div className="flex gap-2">
           <button
             onClick={() => setFormData({ ...formData, status: formData.status === 'published' ? 'draft' : 'published' })}
-            className={`px-3 py-1.5 rounded-lg text-sm font-medium ${
-              formData.status === 'published' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
-            }`}
+            className={`px-3 py-1.5 rounded-lg text-sm font-medium ${formData.status === 'published' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
+              }`}
           >
             {formData.status === 'published' ? 'Published' : 'Draft'}
           </button>
@@ -619,9 +614,8 @@ function DestinationEditor({ destination, onSave, onCancel }: {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 -mb-px transition ${
-                activeTab === tab.id ? 'border-amber-500 text-amber-600' : 'border-transparent text-gray-500 hover:text-gray-700'
-              }`}
+              className={`px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 -mb-px transition ${activeTab === tab.id ? 'border-amber-500 text-amber-600' : 'border-transparent text-gray-500 hover:text-gray-700'
+                }`}
             >
               {tab.label}
             </button>
@@ -1010,7 +1004,7 @@ function ThemeCustomizer() {
               This is a Subheading
             </h2>
             <p className="text-base" style={{ fontSize: typography.baseFontSize, lineHeight: typography.lineHeight, color: colors.text }}>
-              This is body text that shows how your content will look. The quick brown fox jumps over the lazy dog. 
+              This is body text that shows how your content will look. The quick brown fox jumps over the lazy dog.
               Lorem ipsum dolor sit amet, consectetur adipiscing elit.
             </p>
             <div className="flex gap-3 pt-2">
@@ -1031,7 +1025,7 @@ function ThemeCustomizer() {
 // Homepage Editor
 function HomepageEditor() {
   const { siteSettings, updateSiteSettings } = useApp();
-  
+
   // Default values for all homepage sections
   const defaultHero = {
     title: 'Adventure Awaits',
@@ -1043,7 +1037,7 @@ function HomepageEditor() {
     secondaryCtaText: 'Learn More',
     secondaryCtaLink: '/about'
   };
-  
+
   const defaultStats = {
     enabled: true,
     items: [
@@ -1052,7 +1046,7 @@ function HomepageEditor() {
       { value: '10+', label: 'Years Experience' }
     ]
   };
-  
+
   const defaultFeatured = {
     enabled: true,
     title: 'Featured Tours',
@@ -1060,19 +1054,19 @@ function HomepageEditor() {
     maxItems: 6,
     showFeaturedOnly: false
   };
-  
+
   const defaultWhyUs = {
     enabled: true,
     title: 'Why Choose Us',
     items: []
   };
-  
+
   const defaultTestimonials = {
     enabled: true,
     title: 'What Our Riders Say',
     items: []
   };
-  
+
   const defaultCta = {
     enabled: true,
     title: 'Ready for Adventure?',
@@ -1081,7 +1075,7 @@ function HomepageEditor() {
     ctaText: 'Browse Tours',
     ctaLink: '/tours'
   };
-  
+
   const [hero, setHero] = useState(siteSettings?.homepage?.hero || defaultHero);
   const [stats, setStats] = useState(siteSettings?.homepage?.stats || defaultStats);
   const [featured, setFeatured] = useState(siteSettings?.homepage?.featuredSection || defaultFeatured);
@@ -1125,11 +1119,10 @@ function HomepageEditor() {
               <button
                 key={section.id}
                 onClick={() => setActiveSection(section.id)}
-                className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition mb-1 ${
-                  activeSection === section.id
-                    ? 'bg-amber-50 text-amber-700'
-                    : 'text-gray-600 hover:bg-gray-50'
-                }`}
+                className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition mb-1 ${activeSection === section.id
+                  ? 'bg-amber-50 text-amber-700'
+                  : 'text-gray-600 hover:bg-gray-50'
+                  }`}
               >
                 <section.icon size={16} />
                 {section.label}
@@ -1215,8 +1208,8 @@ function HomepageEditor() {
 
           {/* Stats Section */}
           {activeSection === 'stats' && (
-            <SectionCard 
-              title="Statistics Section" 
+            <SectionCard
+              title="Statistics Section"
               description="Show key numbers and achievements"
               actions={
                 <label className="flex items-center gap-2 cursor-pointer">
@@ -1275,8 +1268,8 @@ function HomepageEditor() {
 
           {/* Featured Section */}
           {activeSection === 'featured' && (
-            <SectionCard 
-              title="Featured Tours Section" 
+            <SectionCard
+              title="Featured Tours Section"
               actions={
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
@@ -1335,7 +1328,7 @@ function HomepageEditor() {
 
           {/* Why Choose Us */}
           {activeSection === 'whyus' && (
-            <SectionCard 
+            <SectionCard
               title="Why Choose Us Section"
               actions={
                 <label className="flex items-center gap-2 cursor-pointer">
@@ -1407,7 +1400,7 @@ function HomepageEditor() {
 
           {/* Testimonials */}
           {activeSection === 'testimonials' && (
-            <SectionCard 
+            <SectionCard
               title="Testimonials Section"
               actions={
                 <label className="flex items-center gap-2 cursor-pointer">
@@ -1507,7 +1500,7 @@ function HomepageEditor() {
 
           {/* CTA Section */}
           {activeSection === 'cta' && (
-            <SectionCard 
+            <SectionCard
               title="Call to Action Section"
               actions={
                 <label className="flex items-center gap-2 cursor-pointer">
@@ -1596,11 +1589,10 @@ function HeaderFooterEditor() {
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`px-4 py-2 font-medium text-sm border-b-2 transition -mb-px ${
-              activeTab === tab
-                ? 'border-amber-500 text-amber-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700'
-            }`}
+            className={`px-4 py-2 font-medium text-sm border-b-2 transition -mb-px ${activeTab === tab
+              ? 'border-amber-500 text-amber-600'
+              : 'border-transparent text-gray-500 hover:text-gray-700'
+              }`}
           >
             {tab.charAt(0).toUpperCase() + tab.slice(1)}
           </button>
@@ -1847,7 +1839,7 @@ function HeaderFooterEditor() {
 // SEO Settings
 function SEOSettingsEditor() {
   const { siteSettings, updateSiteSettings } = useApp();
-  
+
   // Default SEO values
   const defaultSeo = {
     siteTitle: '',
@@ -1858,7 +1850,7 @@ function SEOSettingsEditor() {
     googleAnalyticsId: '',
     facebookPixelId: ''
   };
-  
+
   const [seo, setSeo] = useState(siteSettings?.seo || defaultSeo);
 
   useEffect(() => {
@@ -1899,7 +1891,7 @@ function SEOSettingsEditor() {
               <input
                 type="text"
                 value={(seo.keywords || []).join(', ')}
-                  onChange={(e) => setSeo({ ...seo, keywords: e.target.value.split(',').map(k => k.trim()).filter(k => k) })}
+                onChange={(e) => setSeo({ ...seo, keywords: e.target.value.split(',').map(k => k.trim()).filter(k => k) })}
                 className="w-full px-3 py-2 border border-gray-200 rounded-lg"
               />
             </FormField>
@@ -2131,9 +2123,8 @@ function ToursManager({ onEditTour }: { onEditTour: (tour: Tour | 'new') => void
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <h3 className="font-medium text-gray-900 truncate">{tour.title}</h3>
-                  <span className={`text-xs px-2 py-0.5 rounded-full ${
-                    tour.status === 'published' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
-                  }`}>
+                  <span className={`text-xs px-2 py-0.5 rounded-full ${tour.status === 'published' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
+                    }`}>
                     {tour.status}
                   </span>
                   {tour.featured && (
@@ -2217,11 +2208,10 @@ function BookingsManager() {
                     <select
                       value={booking.status}
                       onChange={(e) => updateBooking(booking.id, { status: e.target.value as any })}
-                      className={`text-sm px-2 py-1 rounded-lg border-0 ${
-                        booking.status === 'confirmed' ? 'bg-green-100 text-green-700' :
+                      className={`text-sm px-2 py-1 rounded-lg border-0 ${booking.status === 'confirmed' ? 'bg-green-100 text-green-700' :
                         booking.status === 'pending' ? 'bg-amber-100 text-amber-700' :
-                        'bg-red-100 text-red-700'
-                      }`}
+                          'bg-red-100 text-red-700'
+                        }`}
                     >
                       <option value="pending">Pending</option>
                       <option value="confirmed">Confirmed</option>
@@ -2245,7 +2235,7 @@ function BookingsManager() {
 
 // Media Library with Upload Instructions and Image Management
 function MediaLibrary() {
-  const [images, setImages] = useState<Array<{id: string; url: string; name: string; category: string; uploadedAt: string}>>(() => {
+  const [images, setImages] = useState<Array<{ id: string; url: string; name: string; category: string; uploadedAt: string }>>(() => {
     const saved = localStorage.getItem('brm_media_library');
     return saved ? JSON.parse(saved) : [];
   });
@@ -2255,6 +2245,9 @@ function MediaLibrary() {
   const [filter, setFilter] = useState('all');
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [showBulkModal, setShowBulkModal] = useState(false);
+  const [bulkUrls, setBulkUrls] = useState('');
+  const [bulkCategory, setBulkCategory] = useState('general');
 
   const categories = ['general', 'tours', 'destinations', 'bikes', 'team', 'gallery', 'heroes'];
 
@@ -2275,6 +2268,36 @@ function MediaLibrary() {
     saveImages([image, ...images]);
     setNewImage({ url: '', name: '', category: 'general' });
     setShowAddModal(false);
+  };
+
+  const handleBulkImport = () => {
+    const urls = bulkUrls.split(/[\n,]/).map(u => u.trim()).filter(u => u.startsWith('http'));
+    if (urls.length === 0) return;
+
+    const newMediaItems = urls.map(url => {
+      // Try to extract a name from the URL
+      let name = 'Untitled';
+      try {
+        const urlObj = new URL(url);
+        const fileName = urlObj.pathname.split('/').pop();
+        if (fileName && fileName.includes('.')) {
+          name = fileName.split('.')[0].replace(/[-_]/g, ' ');
+          name = name.charAt(0).toUpperCase() + name.slice(1);
+        }
+      } catch { /* ignore */ }
+
+      return {
+        id: (Date.now() + Math.random()).toString(),
+        url,
+        name,
+        category: bulkCategory,
+        uploadedAt: new Date().toISOString()
+      };
+    });
+
+    saveImages([...newMediaItems, ...images]);
+    setBulkUrls('');
+    setShowBulkModal(false);
   };
 
   const handleDelete = (id: string) => {
@@ -2306,6 +2329,13 @@ function MediaLibrary() {
           >
             <AlertCircle size={18} />
             How to Upload
+          </button>
+          <button
+            onClick={() => setShowBulkModal(true)}
+            className="px-4 py-2 border border-amber-500 text-amber-600 rounded-lg hover:bg-amber-50 flex items-center gap-2"
+          >
+            <List size={18} />
+            Bulk URL Import
           </button>
           <button
             onClick={() => setShowAddModal(true)}
@@ -2426,9 +2456,9 @@ function MediaLibrary() {
               </FormField>
               {newImage.url && (
                 <div className="border border-gray-200 rounded-lg p-2">
-                  <img 
-                    src={newImage.url} 
-                    alt="Preview" 
+                  <img
+                    src={newImage.url}
+                    alt="Preview"
                     className="w-full h-40 object-cover rounded"
                     onError={(e) => (e.target as HTMLImageElement).src = 'https://via.placeholder.com/400x200?text=Invalid+URL'}
                   />
@@ -2468,6 +2498,96 @@ function MediaLibrary() {
                 className="px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 disabled:opacity-50"
               >
                 Add to Library
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Bulk URL Import Modal */}
+      {showBulkModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] p-4 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl max-w-2xl w-full flex flex-col max-h-[90vh] shadow-2xl overflow-hidden border border-gray-100">
+            <div className="p-6 border-b border-gray-200 flex items-center justify-between bg-gray-50/50">
+              <div>
+                <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                  <List className="text-amber-500" size={24} />
+                  Bulk URL Import
+                </h3>
+                <p className="text-sm text-gray-500">Paste multiple image URLs to add them to your library in one go</p>
+              </div>
+              <button onClick={() => setShowBulkModal(false)} className="p-2 hover:bg-white hover:text-amber-500 rounded-xl transition-all shadow-sm">
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-6 overflow-y-auto">
+              <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex gap-4">
+                <div className="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center shrink-0">
+                  <AlertCircle size={20} className="text-amber-600" />
+                </div>
+                <p className="text-sm text-amber-800 leading-relaxed">
+                  Paste URLs separated by <strong>new lines</strong> or <strong>commas</strong>. <br />
+                  <span className="opacity-75 italic text-xs">Example: https://site.com/photo1.jpg, https://site.com/photo2.png</span>
+                </p>
+              </div>
+
+              <div className="space-y-3">
+                <label className="block text-sm font-bold text-gray-700 uppercase tracking-widest">Image URLs</label>
+                <textarea
+                  value={bulkUrls}
+                  onChange={(e) => setBulkUrls(e.target.value)}
+                  placeholder="https://images.unsplash.com/photo-1...&#10;https://images.unsplash.com/photo-2..."
+                  rows={10}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 font-mono text-sm transition-all bg-gray-50 hover:bg-white"
+                />
+              </div>
+
+              <div className="space-y-3">
+                <label className="block text-sm font-bold text-gray-700 uppercase tracking-widest">Collection Category</label>
+                <select
+                  value={bulkCategory}
+                  onChange={(e) => setBulkCategory(e.target.value)}
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-2xl focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 transition-all cursor-pointer font-medium"
+                >
+                  {categories.map(cat => (
+                    <option key={cat} value={cat}>{cat.charAt(0).toUpperCase() + cat.slice(1)} Collection</option>
+                  ))}
+                </select>
+              </div>
+
+              {bulkUrls.split(/[\n,]/).filter(u => u.trim().startsWith('http')).length > 0 && (
+                <div className="p-4 bg-gray-900 rounded-2xl border border-gray-800 shadow-inner">
+                  <p className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] mb-3">Sync Status</p>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="relative">
+                        <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                        <div className="absolute inset-0 w-3 h-3 rounded-full bg-green-500 animate-ping opacity-75"></div>
+                      </div>
+                      <span className="text-sm text-white font-bold tracking-wide">
+                        {bulkUrls.split(/[\n,]/).filter(u => u.trim().startsWith('http')).length} IMAGES PARSED
+                      </span>
+                    </div>
+                    <span className="text-[10px] font-bold text-green-400 bg-green-400/10 px-2 py-1 rounded-lg">READY</span>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="p-6 border-t border-gray-200 flex gap-3 justify-end bg-gray-50/80 backdrop-blur-sm rounded-b-2xl">
+              <button
+                onClick={() => setShowBulkModal(false)}
+                className="px-6 py-3 border border-gray-300 rounded-2xl hover:bg-white hover:border-amber-500 hover:text-amber-500 bg-white font-bold transition-all"
+              >
+                Discard
+              </button>
+              <button
+                onClick={handleBulkImport}
+                disabled={!bulkUrls.trim() || bulkUrls.split(/[\n,]/).filter(u => u.trim().startsWith('http')).length === 0}
+                className="px-10 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-2xl hover:from-amber-600 hover:to-orange-600 disabled:opacity-50 disabled:from-gray-400 disabled:to-gray-400 font-black shadow-xl shadow-amber-500/20 transition-all active:scale-95"
+              >
+                IMPORT {bulkUrls.split(/[\n,]/).filter(u => u.trim().startsWith('http')).length > 0 ? bulkUrls.split(/[\n,]/).filter(u => u.trim().startsWith('http')).length : ''} IMAGES
               </button>
             </div>
           </div>
@@ -2536,13 +2656,13 @@ function MediaLibrary() {
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
           {filteredImages.map(image => (
             <div key={image.id} className="group bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow">
-              <div 
+              <div
                 className="aspect-square relative cursor-pointer overflow-hidden"
                 onClick={() => setSelectedImage(image.url)}
               >
-                <img 
-                  src={image.url} 
-                  alt={image.name} 
+                <img
+                  src={image.url}
+                  alt={image.name}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   onError={(e) => (e.target as HTMLImageElement).src = 'https://via.placeholder.com/400x400?text=Error'}
                 />
@@ -2627,15 +2747,14 @@ function PageEditor({ page, onSave, onCancel }: {
         <div className="flex gap-2">
           <button
             onClick={() => setFormData({ ...formData, status: formData.status === 'published' ? 'draft' : 'published' })}
-            className={`px-3 py-1.5 rounded-lg text-sm font-medium ${
-              formData.status === 'published' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
-            }`}
+            className={`px-3 py-1.5 rounded-lg text-sm font-medium ${formData.status === 'published' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
+              }`}
           >
             {formData.status === 'published' ? 'Published' : 'Draft'}
           </button>
           <button onClick={onCancel} className="px-3 py-1.5 border border-gray-200 rounded-lg text-sm">Cancel</button>
-          <button 
-            onClick={handleSave} 
+          <button
+            onClick={handleSave}
             className="px-4 py-1.5 bg-amber-500 text-white rounded-lg text-sm font-medium flex items-center gap-1"
           >
             <Save size={16} /> Save Page
@@ -2650,9 +2769,8 @@ function PageEditor({ page, onSave, onCancel }: {
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`px-4 py-3 text-sm font-medium capitalize border-b-2 -mb-px transition ${
-                activeTab === tab ? 'border-amber-500 text-amber-600' : 'border-transparent text-gray-500'
-              }`}
+              className={`px-4 py-3 text-sm font-medium capitalize border-b-2 -mb-px transition ${activeTab === tab ? 'border-amber-500 text-amber-600' : 'border-transparent text-gray-500'
+                }`}
             >
               {tab}
             </button>
@@ -2809,6 +2927,409 @@ function PageEditor({ page, onSave, onCancel }: {
 }
 
 // Pages Manager
+// Blog Manager Component
+function BlogManager() {
+  const { posts, addPost, updatePost, deletePost } = useApp();
+  const [editingPost, setEditingPost] = useState<Post | 'new' | null>(null);
+  const [search, setSearch] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('all');
+
+  const filteredPosts = posts.filter(p => {
+    const matchesSearch = p.title.toLowerCase().includes(search.toLowerCase()) ||
+      p.excerpt.toLowerCase().includes(search.toLowerCase());
+    const matchesCategory = selectedCategory === 'all' || p.category === selectedCategory;
+    return matchesSearch && matchesCategory;
+  });
+
+  const categories = ['all', ...Array.from(new Set(posts.map(p => p.category)))];
+
+  const handleDelete = (id: string) => {
+    if (confirm('Delete this post?')) {
+      deletePost(id);
+    }
+  };
+
+  if (editingPost) {
+    return (
+      <div className="max-w-5xl">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-bold text-gray-900">
+              {editingPost === 'new' ? 'New Blog Post' : 'Edit Blog Post'}
+            </h2 >
+            <button
+              onClick={() => setEditingPost(null)}
+              className="text-gray-400 hover:text-gray-600"
+            >
+              <X size={20} />
+            </button>
+          </div>
+          <BlogPostEditor
+            post={editingPost === 'new' ? null : editingPost}
+            onSave={(post) => {
+              if (editingPost === 'new') {
+                addPost(post);
+              } else {
+                updatePost(post.id, post);
+              }
+              setEditingPost(null);
+            }}
+            onCancel={() => setEditingPost(null)}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-7xl">
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Blog Posts</h1>
+          <p className="text-gray-500">Manage your blog content</p>
+        </div>
+        <button
+          onClick={() => setEditingPost('new')}
+          className="flex items-center gap-2 bg-amber-500 text-white px-4 py-2.5 rounded-lg font-medium hover:bg-amber-600 transition shadow-sm"
+        >
+          <Plus size={18} />
+          New Post
+        </button>
+      </div>
+
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100">
+        <div className="p-4 border-b border-gray-100 flex flex-wrap gap-3">
+          <div className="flex-1 min-w-[200px]">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+              <input
+                type="text"
+                placeholder="Search posts..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+              />
+            </div>
+          </div>
+          <select
+            value={selectedCategory}
+            onChange={(e) => setSelectedCategory(e.target.value)}
+            className="px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-amber-500"
+          >
+            {categories.map(cat => (
+              <option key={cat} value={cat}>
+                {cat === 'all' ? 'All Categories' : cat}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {filteredPosts.length === 0 ? (
+          <div className="p-12 text-center">
+            <FileText size={48} className="mx-auto text-gray-300 mb-4" />
+            <p className="text-gray-500">No posts found</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50 border-b border-gray-100">
+                <tr>
+                  <th className="text-left px-6 py-3 text-xs font-semibold text-gray-600 uppercase">Post</th>
+                  <th className="text-left px-6 py-3 text-xs font-semibold text-gray-600 uppercase">Category</th>
+                  <th className="text-left px-6 py-3 text-xs font-semibold text-gray-600 uppercase">Status</th>
+                  <th className="text-left px-6 py-3 text-xs font-semibold text-gray-600 uppercase">Date</th>
+                  <th className="text-right px-6 py-3 text-xs font-semibold text-gray-600 uppercase">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {filteredPosts.map(post => (
+                  <tr key={post.id} className="hover:bg-gray-50 transition">
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <img src={post.image} alt="" className="w-16 h-16 object-cover rounded-lg" />
+                        <div>
+                          <p className="font-medium text-gray-900">{post.title}</p>
+                          <p className="text-sm text-gray-500 line-clamp-1">{post.excerpt}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className="px-2 py-1 bg-amber-100 text-amber-700 text-xs font-medium rounded">
+                        {post.category}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className={`px-2 py-1 text-xs font-medium rounded ${post.status === 'published'
+                        ? 'bg-green-100 text-green-700'
+                        : 'bg-gray-100 text-gray-700'
+                        }`}>
+                        {post.status}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-600">{post.date}</td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center justify-end gap-2">
+                        <Link
+                          to={`/blog/${post.slug}`}
+                          target="_blank"
+                          className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition"
+                          title="View post"
+                        >
+                          <Eye size={16} />
+                        </Link>
+                        <button
+                          onClick={() => setEditingPost(post)}
+                          className="p-2 text-gray-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition"
+                        >
+                          <Edit size={16} />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(post.id)}
+                          className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// Blog Post Editor Component
+function BlogPostEditor({ post, onSave, onCancel }: {
+  post: Post | null;
+  onSave: (post: Post) => void;
+  onCancel: () => void;
+}) {
+  const [formData, setFormData] = useState<Post>(post || {
+    id: `post-${Date.now()}`,
+    slug: '',
+    title: '',
+    excerpt: '',
+    content: '',
+    image: 'https://images.unsplash.com/photo-1558981806-ec527fa84f3d?w=1200&h=600&fit=crop',
+    author: 'Admin',
+    date: new Date().toISOString().split('T')[0],
+    readTime: '5 min read',
+    category: 'Adventure',
+    tags: [],
+    featured: false,
+    status: 'draft',
+    seo: { metaTitle: '', metaDescription: '', keywords: [] },
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  });
+
+  const [newTag, setNewTag] = useState('');
+
+  const generateSlug = (title: string) => {
+    return title
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSave({
+      ...formData,
+      slug: formData.slug || generateSlug(formData.title),
+      updatedAt: new Date().toISOString()
+    });
+  };
+
+  const addTag = () => {
+    if (newTag.trim()) {
+      setFormData({ ...formData, tags: [...formData.tags, newTag.trim()] });
+      setNewTag('');
+    }
+  };
+
+  const removeTag = (index: number) => {
+    setFormData({
+      ...formData, tags: formData.tags.filter((_, i) => i !== index)
+    });
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="grid md:grid-cols-2 gap-6">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Title *</label>
+          <input
+            type="text"
+            required
+            value={formData.title}
+            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+            className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-amber-500"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Slug</label>
+          <input
+            type="text"
+            value={formData.slug}
+            onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
+            placeholder={generateSlug(formData.title)}
+            className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-amber-500"
+          />
+        </div>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">Excerpt *</label>
+        <textarea
+          required
+          value={formData.excerpt}
+          onChange={(e) => setFormData({ ...formData, excerpt: e.target.value })}
+          rows={3}
+          className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-amber-500"
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">Content</label>
+        <RichTextEditor
+          value={formData.content}
+          onChange={(content) => setFormData({ ...formData, content })}
+          placeholder="Write your blog post content here..."
+          minHeight={500}
+        />
+      </div>
+
+      <div className="grid md:grid-cols-3 gap-6">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
+          <input
+            type="text"
+            value={formData.category}
+            onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+            className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-amber-500"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Read Time</label>
+          <input
+            type="text"
+            value={formData.readTime}
+            onChange={(e) => setFormData({ ...formData, readTime: e.target.value })}
+            className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-amber-500"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Author</label>
+          <input
+            type="text"
+            value={formData.author}
+            onChange={(e) => setFormData({ ...formData, author: e.target.value })}
+            className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-amber-500"
+          />
+        </div>
+      </div>
+
+      <div className="grid md:grid-cols-2 gap-6">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Featured Image URL</label>
+          <input
+            type="url"
+            value={formData.image}
+            onChange={(e) => setFormData({ ...formData, image: e.target.value })}
+            className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-amber-500"
+          />
+          {formData.image && (
+            <img src={formData.image} alt="Preview" className="mt-2 w-full h-32 object-cover rounded-lg" />
+          )}
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Date</label>
+          <input
+            type="date"
+            value={formData.date}
+            onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+            className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-amber-500"
+          />
+        </div>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">Tags</label>
+        <div className="flex gap-2 mb-2">
+          <input
+            type="text"
+            value={newTag}
+            onChange={(e) => setNewTag(e.target.value)}
+            onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
+            placeholder="Add tag..."
+            className="flex-1 px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-amber-500"
+          />
+          <button
+            type="button"
+            onClick={addTag}
+            className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
+          >
+            Add
+          </button>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {formData.tags.map((tag, i) => (
+            <span key={i} className="px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-sm flex items-center gap-2">
+              {tag}
+              <button type="button" onClick={() => removeTag(i)} className="hover:text-amber-900">
+                <X size={14} />
+              </button>
+            </span>
+          ))}
+        </div>
+      </div>
+
+      <div className="flex items-center gap-6">
+        <label className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            checked={formData.featured}
+            onChange={(e) => setFormData({ ...formData, featured: e.target.checked })}
+            className="w-4 h-4 text-amber-600 border-gray-300 rounded focus:ring-amber-500"
+          />
+          <span className="text-sm text-gray-700">Featured Post</span>
+        </label>
+        <label className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            checked={formData.status === 'published'}
+            onChange={(e) => setFormData({ ...formData, status: e.target.checked ? 'published' : 'draft' })}
+            className="w-4 h-4 text-amber-600 border-gray-300 rounded focus:ring-amber-500"
+          />
+          <span className="text-sm text-gray-700">Publish</span>
+        </label>
+      </div>
+
+      <div className="flex items-center gap-3 pt-4 border-t border-gray-100">
+        <button
+          type="submit"
+          className="flex items-center gap-2 bg-amber-500 text-white px-6 py-2.5 rounded-lg font-medium hover:bg-amber-600 transition"
+        >
+          <Save size={18} />
+          Save Post
+        </button>
+        <button
+          type="button"
+          onClick={onCancel}
+          className="px-6 py-2.5 border border-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition"
+        >
+          Cancel
+        </button>
+      </div>
+    </form>
+  );
+}
+
 function PagesManager() {
   const [pages, setPages] = useState<Page[]>(() => {
     const saved = localStorage.getItem('brm-pages');
@@ -2850,7 +3371,7 @@ function PagesManager() {
     localStorage.setItem('brm-pages', JSON.stringify(pages));
   }, [pages]);
 
-  const filteredPages = pages.filter(p => 
+  const filteredPages = pages.filter(p =>
     p.title.toLowerCase().includes(search.toLowerCase()) ||
     p.slug.toLowerCase().includes(search.toLowerCase())
   );
@@ -2935,9 +3456,8 @@ function PagesManager() {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <h3 className="font-medium text-gray-900 truncate">{page.title}</h3>
-                  <span className={`text-xs px-2 py-0.5 rounded-full ${
-                    page.status === 'published' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
-                  }`}>
+                  <span className={`text-xs px-2 py-0.5 rounded-full ${page.status === 'published' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
+                    }`}>
                     {page.status}
                   </span>
                   {page.showInMenu && (
@@ -2993,7 +3513,7 @@ function BikesManager() {
   const [editingBike, setEditingBike] = useState<Bike | 'new' | null>(null);
   const [search, setSearch] = useState('');
 
-  const filteredBikes = bikes.filter(b => 
+  const filteredBikes = bikes.filter(b =>
     b.name.toLowerCase().includes(search.toLowerCase()) ||
     b.brand.toLowerCase().includes(search.toLowerCase())
   );
@@ -3026,7 +3546,7 @@ function BikesManager() {
 
   if (editingBike) {
     const bike = editingBike === 'new' ? { ...emptyBike, id: Date.now().toString() } : editingBike;
-    
+
     return (
       <div className="space-y-6">
         {/* Header */}
@@ -3046,7 +3566,7 @@ function BikesManager() {
             <button onClick={() => setEditingBike(null)} className="px-3 py-1.5 border border-gray-200 rounded-lg text-sm">
               Cancel
             </button>
-            <button 
+            <button
               onClick={async () => {
                 if (editingBike === 'new') {
                   await addBike(bike);
@@ -3054,7 +3574,7 @@ function BikesManager() {
                   await updateBike(bike.id, bike);
                 }
                 setEditingBike(null);
-              }} 
+              }}
               className="px-4 py-1.5 bg-amber-500 text-white rounded-lg text-sm font-medium flex items-center gap-1"
             >
               <Save size={16} /> Save Bike
@@ -3412,7 +3932,7 @@ function MenuBuilder() {
 
   const addMenuItem = (menuId: string) => {
     if (!newItemLabel.trim()) return;
-    
+
     const newItem = {
       id: `menu-${Date.now()}`,
       label: newItemLabel,
@@ -3422,8 +3942,8 @@ function MenuBuilder() {
       order: (menus.find(m => m.id === menuId)?.items.length || 0) + 1
     };
 
-    setMenus(menus.map(m => 
-      m.id === menuId 
+    setMenus(menus.map(m =>
+      m.id === menuId
         ? { ...m, items: [...m.items, newItem] }
         : m
     ));
@@ -3432,16 +3952,16 @@ function MenuBuilder() {
   };
 
   const removeMenuItem = (menuId: string, itemId: string) => {
-    setMenus(menus.map(m => 
-      m.id === menuId 
+    setMenus(menus.map(m =>
+      m.id === menuId
         ? { ...m, items: m.items.filter(i => i.id !== itemId) }
         : m
     ));
   };
 
   const updateMenuItem = (menuId: string, itemId: string, updates: Partial<typeof menus[0]['items'][0]>) => {
-    setMenus(menus.map(m => 
-      m.id === menuId 
+    setMenus(menus.map(m =>
+      m.id === menuId
         ? { ...m, items: m.items.map(i => i.id === itemId ? { ...i, ...updates } : i) }
         : m
     ));
@@ -3450,17 +3970,17 @@ function MenuBuilder() {
   const moveItem = (menuId: string, itemId: string, direction: 'up' | 'down') => {
     const menu = menus.find(m => m.id === menuId);
     if (!menu) return;
-    
+
     const index = menu.items.findIndex(i => i.id === itemId);
     if (index === -1) return;
     if (direction === 'up' && index === 0) return;
     if (direction === 'down' && index === menu.items.length - 1) return;
-    
+
     const newItems = [...menu.items];
     const newIndex = direction === 'up' ? index - 1 : index + 1;
     [newItems[index], newItems[newIndex]] = [newItems[newIndex], newItems[index]];
     newItems.forEach((item, i) => item.order = i + 1);
-    
+
     setMenus(menus.map(m => m.id === menuId ? { ...m, items: newItems } : m));
   };
 
@@ -3501,7 +4021,7 @@ function MenuBuilder() {
         <div className="space-y-4">
           {menus.map(menu => (
             <div key={menu.id} className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-              <div 
+              <div
                 className="p-4 border-b border-gray-100 flex items-center justify-between cursor-pointer hover:bg-gray-50"
                 onClick={() => setEditingMenu(editingMenu === menu.id ? null : menu.id)}
               >
@@ -3516,9 +4036,9 @@ function MenuBuilder() {
                   >
                     <Trash2 size={16} />
                   </button>
-                  <ChevronDown 
-                    className={`text-gray-400 transition ${editingMenu === menu.id ? 'rotate-180' : ''}`} 
-                    size={20} 
+                  <ChevronDown
+                    className={`text-gray-400 transition ${editingMenu === menu.id ? 'rotate-180' : ''}`}
+                    size={20}
                   />
                 </div>
               </div>
@@ -3529,14 +4049,14 @@ function MenuBuilder() {
                   {menu.items.sort((a, b) => a.order - b.order).map((item, index) => (
                     <div key={item.id} className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg group">
                       <div className="flex flex-col gap-1">
-                        <button 
+                        <button
                           onClick={() => moveItem(menu.id, item.id, 'up')}
                           disabled={index === 0}
                           className="text-gray-400 hover:text-gray-600 disabled:opacity-30"
                         >
                           <ChevronLeft size={14} className="rotate-90" />
                         </button>
-                        <button 
+                        <button
                           onClick={() => moveItem(menu.id, item.id, 'down')}
                           disabled={index === menu.items.length - 1}
                           className="text-gray-400 hover:text-gray-600 disabled:opacity-30"
@@ -3774,9 +4294,9 @@ function ImageSettings() {
 
             {/* Preview */}
             <div className="bg-gray-100 rounded-lg overflow-hidden">
-              <div 
+              <div
                 className="bg-gradient-to-r from-amber-500 to-orange-500 flex items-center justify-center text-white font-medium"
-                style={{ 
+                style={{
                   aspectRatio: images.heroAspectRatio.replace(':', '/'),
                   maxHeight: '200px'
                 }}
@@ -3818,7 +4338,7 @@ function ImageSettings() {
             {/* Preview */}
             <div className="grid grid-cols-3 gap-2">
               {[1, 2, 3].map(i => (
-                <div 
+                <div
                   key={i}
                   className="bg-gradient-to-br from-gray-300 to-gray-400 rounded-lg flex items-center justify-center text-white text-xs font-medium"
                   style={{ aspectRatio: images.cardAspectRatio.replace(':', '/') }}
@@ -3920,14 +4440,13 @@ function BikesTabContent({ selectedBikes, onUpdate }: { selectedBikes: string[],
           {bikes.map(bike => {
             const isSelected = selectedBikes.includes(bike.id);
             return (
-              <div 
-                key={bike.id} 
+              <div
+                key={bike.id}
                 onClick={() => toggleBike(bike.id)}
-                className={`border-2 rounded-xl overflow-hidden cursor-pointer transition ${
-                  isSelected 
-                    ? 'border-amber-500 bg-amber-50' 
-                    : 'border-gray-200 hover:border-gray-300'
-                }`}
+                className={`border-2 rounded-xl overflow-hidden cursor-pointer transition ${isSelected
+                  ? 'border-amber-500 bg-amber-50'
+                  : 'border-gray-200 hover:border-gray-300'
+                  }`}
               >
                 <div className="relative h-32">
                   <img src={bike.image} alt={bike.name} className="w-full h-full object-cover" />
@@ -4092,9 +4611,8 @@ function TourEditor({ tour, onSave, onCancel }: {
         <div className="flex gap-2">
           <button
             onClick={() => setFormData({ ...formData, status: formData.status === 'published' ? 'draft' : 'published' })}
-            className={`px-3 py-1.5 rounded-lg text-sm font-medium ${
-              formData.status === 'published' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
-            }`}
+            className={`px-3 py-1.5 rounded-lg text-sm font-medium ${formData.status === 'published' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
+              }`}
           >
             {formData.status === 'published' ? 'Published' : 'Draft'}
           </button>
@@ -4112,9 +4630,8 @@ function TourEditor({ tour, onSave, onCancel }: {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 -mb-px transition ${
-                activeTab === tab.id ? 'border-amber-500 text-amber-600' : 'border-transparent text-gray-500 hover:text-gray-700'
-              }`}
+              className={`px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 -mb-px transition ${activeTab === tab.id ? 'border-amber-500 text-amber-600' : 'border-transparent text-gray-500 hover:text-gray-700'
+                }`}
             >
               {tab.label}
             </button>
@@ -4214,11 +4731,11 @@ function TourEditor({ tour, onSave, onCancel }: {
                       <input
                         type="number"
                         value={formData.pricing?.riderPrice || formData.price}
-                        onChange={(e) => setFormData({ 
-                          ...formData, 
-                          pricing: { 
-                            ...formData.pricing!, 
-                            riderPrice: parseInt(e.target.value) || 0 
+                        onChange={(e) => setFormData({
+                          ...formData,
+                          pricing: {
+                            ...formData.pricing!,
+                            riderPrice: parseInt(e.target.value) || 0
                           },
                           price: parseInt(e.target.value) || 0
                         })}
@@ -4229,11 +4746,11 @@ function TourEditor({ tour, onSave, onCancel }: {
                       <input
                         type="number"
                         value={formData.pricing?.pillionPrice || Math.round((formData.pricing?.riderPrice || formData.price) * 0.7)}
-                        onChange={(e) => setFormData({ 
-                          ...formData, 
-                          pricing: { 
-                            ...formData.pricing!, 
-                            pillionPrice: parseInt(e.target.value) || 0 
+                        onChange={(e) => setFormData({
+                          ...formData,
+                          pricing: {
+                            ...formData.pricing!,
+                            pillionPrice: parseInt(e.target.value) || 0
                           }
                         })}
                         className="w-full px-3 py-2 border border-gray-200 rounded-lg text-lg font-semibold"
@@ -4243,11 +4760,11 @@ function TourEditor({ tour, onSave, onCancel }: {
                       <input
                         type="number"
                         value={formData.pricing?.singleRoomSupplement || 0}
-                        onChange={(e) => setFormData({ 
-                          ...formData, 
-                          pricing: { 
-                            ...formData.pricing!, 
-                            singleRoomSupplement: parseInt(e.target.value) || 0 
+                        onChange={(e) => setFormData({
+                          ...formData,
+                          pricing: {
+                            ...formData.pricing!,
+                            singleRoomSupplement: parseInt(e.target.value) || 0
                           }
                         })}
                         className="w-full px-3 py-2 border border-gray-200 rounded-lg"
@@ -4294,11 +4811,11 @@ function TourEditor({ tour, onSave, onCancel }: {
                       <input
                         type="number"
                         value={formData.pricing?.deposit || 0}
-                        onChange={(e) => setFormData({ 
-                          ...formData, 
-                          pricing: { 
-                            ...formData.pricing!, 
-                            deposit: parseInt(e.target.value) || 0 
+                        onChange={(e) => setFormData({
+                          ...formData,
+                          pricing: {
+                            ...formData.pricing!,
+                            deposit: parseInt(e.target.value) || 0
                           }
                         })}
                         className="w-full px-3 py-2 border border-gray-200 rounded-lg"
@@ -4307,11 +4824,11 @@ function TourEditor({ tour, onSave, onCancel }: {
                     <FormField label="Deposit Type">
                       <select
                         value={formData.pricing?.depositType || 'percentage'}
-                        onChange={(e) => setFormData({ 
-                          ...formData, 
-                          pricing: { 
-                            ...formData.pricing!, 
-                            depositType: e.target.value as 'percentage' | 'fixed' 
+                        onChange={(e) => setFormData({
+                          ...formData,
+                          pricing: {
+                            ...formData.pricing!,
+                            depositType: e.target.value as 'percentage' | 'fixed'
                           }
                         })}
                         className="w-full px-3 py-2 border border-gray-200 rounded-lg"
@@ -4322,8 +4839,8 @@ function TourEditor({ tour, onSave, onCancel }: {
                     </FormField>
                   </div>
                   <p className="text-sm text-gray-500">
-                    {formData.pricing?.depositType === 'percentage' 
-                      ? `Customers will pay ${formData.pricing?.deposit || 0}% as deposit to confirm booking` 
+                    {formData.pricing?.depositType === 'percentage'
+                      ? `Customers will pay ${formData.pricing?.deposit || 0}% as deposit to confirm booking`
                       : `Customers will pay $${formData.pricing?.deposit || 0} as deposit to confirm booking`}
                   </p>
                 </div>
@@ -4343,13 +4860,13 @@ function TourEditor({ tour, onSave, onCancel }: {
                         <input
                           type="checkbox"
                           checked={formData.pricing?.earlyBirdDiscount?.enabled || false}
-                          onChange={(e) => setFormData({ 
-                            ...formData, 
-                            pricing: { 
-                              ...formData.pricing!, 
-                              earlyBirdDiscount: { 
+                          onChange={(e) => setFormData({
+                            ...formData,
+                            pricing: {
+                              ...formData.pricing!,
+                              earlyBirdDiscount: {
                                 ...(formData.pricing?.earlyBirdDiscount || { percentage: 10, deadlineDays: 60 }),
-                                enabled: e.target.checked 
+                                enabled: e.target.checked
                               }
                             }
                           })}
@@ -4358,20 +4875,20 @@ function TourEditor({ tour, onSave, onCancel }: {
                         <span className="text-sm font-medium text-green-700">Enable</span>
                       </label>
                     </div>
-                    
+
                     {formData.pricing?.earlyBirdDiscount?.enabled && (
                       <div className="grid grid-cols-2 gap-4">
                         <FormField label="Discount Percentage">
                           <input
                             type="number"
                             value={formData.pricing?.earlyBirdDiscount?.percentage || 10}
-                            onChange={(e) => setFormData({ 
-                              ...formData, 
-                              pricing: { 
-                                ...formData.pricing!, 
-                                earlyBirdDiscount: { 
+                            onChange={(e) => setFormData({
+                              ...formData,
+                              pricing: {
+                                ...formData.pricing!,
+                                earlyBirdDiscount: {
                                   ...formData.pricing?.earlyBirdDiscount!,
-                                  percentage: parseInt(e.target.value) || 0 
+                                  percentage: parseInt(e.target.value) || 0
                                 }
                               }
                             })}
@@ -4384,13 +4901,13 @@ function TourEditor({ tour, onSave, onCancel }: {
                           <input
                             type="number"
                             value={formData.pricing?.earlyBirdDiscount?.deadlineDays || 60}
-                            onChange={(e) => setFormData({ 
-                              ...formData, 
-                              pricing: { 
-                                ...formData.pricing!, 
-                                earlyBirdDiscount: { 
+                            onChange={(e) => setFormData({
+                              ...formData,
+                              pricing: {
+                                ...formData.pricing!,
+                                earlyBirdDiscount: {
                                   ...formData.pricing?.earlyBirdDiscount!,
-                                  deadlineDays: parseInt(e.target.value) || 0 
+                                  deadlineDays: parseInt(e.target.value) || 0
                                 }
                               }
                             })}
@@ -4412,13 +4929,13 @@ function TourEditor({ tour, onSave, onCancel }: {
                         <input
                           type="checkbox"
                           checked={formData.pricing?.groupDiscount?.enabled || false}
-                          onChange={(e) => setFormData({ 
-                            ...formData, 
-                            pricing: { 
-                              ...formData.pricing!, 
-                              groupDiscount: { 
+                          onChange={(e) => setFormData({
+                            ...formData,
+                            pricing: {
+                              ...formData.pricing!,
+                              groupDiscount: {
                                 ...(formData.pricing?.groupDiscount || { minRiders: 4, percentage: 5 }),
-                                enabled: e.target.checked 
+                                enabled: e.target.checked
                               }
                             }
                           })}
@@ -4427,20 +4944,20 @@ function TourEditor({ tour, onSave, onCancel }: {
                         <span className="text-sm font-medium text-blue-700">Enable</span>
                       </label>
                     </div>
-                    
+
                     {formData.pricing?.groupDiscount?.enabled && (
                       <div className="grid grid-cols-2 gap-4">
                         <FormField label="Minimum Riders">
                           <input
                             type="number"
                             value={formData.pricing?.groupDiscount?.minRiders || 4}
-                            onChange={(e) => setFormData({ 
-                              ...formData, 
-                              pricing: { 
-                                ...formData.pricing!, 
-                                groupDiscount: { 
+                            onChange={(e) => setFormData({
+                              ...formData,
+                              pricing: {
+                                ...formData.pricing!,
+                                groupDiscount: {
                                   ...formData.pricing?.groupDiscount!,
-                                  minRiders: parseInt(e.target.value) || 0 
+                                  minRiders: parseInt(e.target.value) || 0
                                 }
                               }
                             })}
@@ -4452,13 +4969,13 @@ function TourEditor({ tour, onSave, onCancel }: {
                           <input
                             type="number"
                             value={formData.pricing?.groupDiscount?.percentage || 5}
-                            onChange={(e) => setFormData({ 
-                              ...formData, 
-                              pricing: { 
-                                ...formData.pricing!, 
-                                groupDiscount: { 
+                            onChange={(e) => setFormData({
+                              ...formData,
+                              pricing: {
+                                ...formData.pricing!,
+                                groupDiscount: {
                                   ...formData.pricing?.groupDiscount!,
-                                  percentage: parseInt(e.target.value) || 0 
+                                  percentage: parseInt(e.target.value) || 0
                                 }
                               }
                             })}
@@ -4653,7 +5170,7 @@ function TourEditor({ tour, onSave, onCancel }: {
                       {/* Basic Info Section */}
                       <div className="bg-gray-50 rounded-xl p-4 space-y-4">
                         <h4 className="font-semibold text-gray-900 text-sm uppercase tracking-wide">Basic Information</h4>
-                        
+
                         <FormField label="Day Title" required>
                           <input
                             type="text"
@@ -4816,8 +5333,8 @@ function TourEditor({ tour, onSave, onCancel }: {
               <FormField label="What's Included (one per line)">
                 <textarea
                   value={formData.inclusions.included.join('\n')}
-                  onChange={(e) => setFormData({ 
-                    ...formData, 
+                  onChange={(e) => setFormData({
+                    ...formData,
                     inclusions: { ...formData.inclusions, included: e.target.value.split('\n').filter(i => i.trim()) }
                   })}
                   rows={12}
@@ -4827,8 +5344,8 @@ function TourEditor({ tour, onSave, onCancel }: {
               <FormField label="Not Included (one per line)">
                 <textarea
                   value={formData.inclusions.notIncluded.join('\n')}
-                  onChange={(e) => setFormData({ 
-                    ...formData, 
+                  onChange={(e) => setFormData({
+                    ...formData,
                     inclusions: { ...formData.inclusions, notIncluded: e.target.value.split('\n').filter(i => i.trim()) }
                   })}
                   rows={12}
@@ -4930,9 +5447,9 @@ function TourEditor({ tour, onSave, onCancel }: {
                       const url = prompt('Enter image URL:');
                       if (!url) return;
                       const alt = prompt('Enter image description/alt text:') || '';
-                      setFormData({ 
-                        ...formData, 
-                        gallery: [...formData.gallery, { url, alt, isHero: false }] 
+                      setFormData({
+                        ...formData,
+                        gallery: [...formData.gallery, { url, alt, isHero: false }]
                       });
                     }}
                     className="text-sm text-amber-600 font-medium flex items-center gap-1 hover:text-amber-700"
@@ -4977,14 +5494,14 @@ function TourEditor({ tour, onSave, onCancel }: {
                   <div className="text-center py-12 bg-gray-50 rounded-xl border border-dashed border-gray-200">
                     <Image size={40} className="mx-auto text-gray-300 mb-3" />
                     <p className="text-gray-500 mb-2">No gallery images added</p>
-                    <button 
+                    <button
                       onClick={() => {
                         const url = prompt('Enter image URL:');
                         if (!url) return;
                         const alt = prompt('Enter image description:') || '';
-                        setFormData({ 
-                          ...formData, 
-                          gallery: [...formData.gallery, { url, alt, isHero: false }] 
+                        setFormData({
+                          ...formData,
+                          gallery: [...formData.gallery, { url, alt, isHero: false }]
                         });
                       }}
                       className="text-amber-600 font-medium text-sm"
@@ -5045,9 +5562,9 @@ function TourEditor({ tour, onSave, onCancel }: {
 
           {/* Bikes */}
           {activeTab === 'bikes' && (
-            <BikesTabContent 
-              selectedBikes={formData.availableBikes} 
-              onUpdate={(bikes) => setFormData({ ...formData, availableBikes: bikes })} 
+            <BikesTabContent
+              selectedBikes={formData.availableBikes}
+              onUpdate={(bikes) => setFormData({ ...formData, availableBikes: bikes })}
             />
           )}
 
@@ -5188,6 +5705,7 @@ export function Admin() {
           {activeTab === 'destinations' && <DestinationsManager onEditDestination={setEditingDestination} />}
           {activeTab === 'bookings' && <BookingsManager />}
           {activeTab === 'pages' && <PagesManager />}
+          {activeTab === 'blog' && <BlogManager />}
           {activeTab === 'menus' && <MenuBuilder />}
           {activeTab === 'theme' && <ThemeCustomizer />}
           {activeTab === 'homepage' && <HomepageEditor />}
@@ -5232,13 +5750,13 @@ function DatabaseStatus() {
 
   const checkDatabase = async () => {
     setStatus(prev => ({ ...prev, checking: true }));
-    
+
     const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
     const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-    
+
     const urlSet = !!supabaseUrl && supabaseUrl !== 'your-supabase-url';
     const keySet = !!supabaseKey && supabaseKey !== 'your-supabase-anon-key';
-    
+
     if (!urlSet || !keySet) {
       setStatus({
         checking: false,
@@ -5256,16 +5774,16 @@ function DatabaseStatus() {
     try {
       const { createClient } = await import('@supabase/supabase-js');
       const supabase = createClient(supabaseUrl, supabaseKey);
-      
+
       const tableNames = ['tours', 'destinations', 'bikes', 'bookings', 'pages', 'site_settings', 'media'];
       const tableResults: { name: string; count: number; status: 'ok' | 'error' | 'checking' }[] = [];
-      
+
       for (const tableName of tableNames) {
         try {
           const { error, count } = await supabase
             .from(tableName)
             .select('*', { count: 'exact', head: true });
-          
+
           if (error) {
             tableResults.push({ name: tableName, count: 0, status: 'error' });
           } else {
@@ -5275,9 +5793,9 @@ function DatabaseStatus() {
           tableResults.push({ name: tableName, count: 0, status: 'error' });
         }
       }
-      
+
       const allTablesOk = tableResults.every(t => t.status === 'ok');
-      
+
       setStatus({
         checking: false,
         connected: allTablesOk,
@@ -5334,13 +5852,12 @@ function DatabaseStatus() {
       </div>
 
       {/* Connection Status Card */}
-      <div className={`p-6 rounded-xl border-2 ${
-        status.checking 
-          ? 'bg-gray-50 border-gray-200' 
-          : status.connected 
-            ? 'bg-green-50 border-green-200' 
-            : 'bg-red-50 border-red-200'
-      }`}>
+      <div className={`p-6 rounded-xl border-2 ${status.checking
+        ? 'bg-gray-50 border-gray-200'
+        : status.connected
+          ? 'bg-green-50 border-green-200'
+          : 'bg-red-50 border-red-200'
+        }`}>
         <div className="flex items-center gap-4">
           {status.checking ? (
             <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center">
@@ -5363,18 +5880,16 @@ function DatabaseStatus() {
             </div>
           )}
           <div>
-            <h3 className={`text-xl font-bold ${
-              status.checking ? 'text-gray-600' : status.connected ? 'text-green-700' : 'text-red-700'
-            }`}>
+            <h3 className={`text-xl font-bold ${status.checking ? 'text-gray-600' : status.connected ? 'text-green-700' : 'text-red-700'
+              }`}>
               {status.checking ? 'Checking Connection...' : status.connected ? 'Connected to Supabase!' : 'Not Connected'}
             </h3>
-            <p className={`${
-              status.checking ? 'text-gray-500' : status.connected ? 'text-green-600' : 'text-red-600'
-            }`}>
-              {status.checking 
-                ? 'Please wait while we verify your database connection...' 
-                : status.connected 
-                  ? 'Your database is set up correctly and all tables are accessible.' 
+            <p className={`${status.checking ? 'text-gray-500' : status.connected ? 'text-green-600' : 'text-red-600'
+              }`}>
+              {status.checking
+                ? 'Please wait while we verify your database connection...'
+                : status.connected
+                  ? 'Your database is set up correctly and all tables are accessible.'
                   : status.error || 'Unable to connect to database.'
               }
             </p>
@@ -5396,9 +5911,8 @@ function DatabaseStatus() {
               <p className="font-medium">VITE_SUPABASE_URL</p>
               <p className="text-sm text-gray-500">Your Supabase project URL</p>
             </div>
-            <div className={`px-3 py-1 rounded-full text-sm font-medium ${
-              status.details.urlSet ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-            }`}>
+            <div className={`px-3 py-1 rounded-full text-sm font-medium ${status.details.urlSet ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+              }`}>
               {status.details.urlSet ? '✓ Set' : '✗ Not Set'}
             </div>
           </div>
@@ -5407,9 +5921,8 @@ function DatabaseStatus() {
               <p className="font-medium">VITE_SUPABASE_ANON_KEY</p>
               <p className="text-sm text-gray-500">Your Supabase anon public key</p>
             </div>
-            <div className={`px-3 py-1 rounded-full text-sm font-medium ${
-              status.details.keySet ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-            }`}>
+            <div className={`px-3 py-1 rounded-full text-sm font-medium ${status.details.keySet ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+              }`}>
               {status.details.keySet ? '✓ Set' : '✗ Not Set'}
             </div>
           </div>
@@ -5427,15 +5940,14 @@ function DatabaseStatus() {
           </h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {status.details.tables.map((table) => (
-              <div 
+              <div
                 key={table.name}
-                className={`p-4 rounded-lg border-2 ${
-                  table.status === 'ok' 
-                    ? 'bg-green-50 border-green-200' 
-                    : table.status === 'checking'
-                      ? 'bg-gray-50 border-gray-200'
-                      : 'bg-red-50 border-red-200'
-                }`}
+                className={`p-4 rounded-lg border-2 ${table.status === 'ok'
+                  ? 'bg-green-50 border-green-200'
+                  : table.status === 'checking'
+                    ? 'bg-gray-50 border-gray-200'
+                    : 'bg-red-50 border-red-200'
+                  }`}
               >
                 <div className="flex items-center justify-between mb-2">
                   <span className="font-medium capitalize">{table.name}</span>
@@ -5472,7 +5984,7 @@ function DatabaseStatus() {
             </svg>
             Setup Instructions
           </h3>
-          
+
           {!status.details.urlSet || !status.details.keySet ? (
             <div className="space-y-4">
               <p className="text-amber-700">Environment variables are not configured. Follow these steps:</p>
