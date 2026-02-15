@@ -5775,7 +5775,7 @@ function DatabaseStatus() {
       const { createClient } = await import('@supabase/supabase-js');
       const supabase = createClient(supabaseUrl, supabaseKey);
 
-      const tableNames = ['tours', 'destinations', 'bikes', 'bookings', 'pages', 'site_settings', 'media'];
+      const tableNames = ['tours', 'destinations', 'bikes', 'bookings', 'pages', 'posts', 'site_settings', 'media'];
       const tableResults: { name: string; count: number; status: 'ok' | 'error' | 'checking' }[] = [];
 
       for (const tableName of tableNames) {
@@ -5850,6 +5850,28 @@ function DatabaseStatus() {
           )}
         </button>
       </div>
+
+      {!status.checking && !status.connected && (
+        <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 mb-2">
+          <div className="flex gap-4">
+            <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center shrink-0 text-blue-600">
+              <AlertCircle size={24} />
+            </div>
+            <div>
+              <h4 className="font-bold text-blue-900 mb-1">Troubleshooting Visibility</h4>
+              <p className="text-sm text-blue-800 mb-4">
+                If your blog posts aren't appearing on the live site, ensure:
+              </p>
+              <ul className="text-sm text-blue-800 space-y-2 list-disc pl-5">
+                <li>The <strong>posts</strong> table exists in your Supabase database.</li>
+                <li>You have run the provided <strong>supabase_schema.sql</strong> script in your SQL Editor.</li>
+                <li>Posts are marked as <strong>"published"</strong> (drafts are hidden on the live site).</li>
+                <li>Your environment variables (URL/Anon Key) are correctly set on your hosting platform (like Vercel/Netlify).</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Connection Status Card */}
       <div className={`p-6 rounded-xl border-2 ${status.checking
