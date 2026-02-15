@@ -1029,7 +1029,7 @@ function ThemeCustomizer() {
 
 // Homepage Editor
 function HomepageEditor() {
-  const { siteSettings, updateSiteSettings } = useApp();
+  const { siteSettings, updateSiteSettings, tours } = useApp();
 
   // Default values for all homepage sections
   const defaultHero = {
@@ -1081,6 +1081,14 @@ function HomepageEditor() {
     ctaLink: '/tours'
   };
 
+  const defaultDestinations = { enabled: true, title: 'Popular Destinations', subtitle: 'Discover breathtaking landscapes' };
+  const defaultTourOfMonth = { enabled: true, title: 'Tour of the Month', subtitle: 'Our top recommendation', tourId: '' };
+  const defaultDepartures = { enabled: true, title: 'Next Departures', subtitle: 'Join our upcoming expeditions' };
+  const defaultVideo = { enabled: true, title: 'Experience the Thrill', subtitle: 'Watch our story', videoUrl: '', backgroundImage: 'https://images.unsplash.com/photo-1568772585407-9361bd37ec91?w=1600' };
+  const defaultBikes = { enabled: true, title: 'Our Fleet', subtitle: 'Ride the best adventure motorcycles' };
+  const defaultNewsletter = { enabled: true, title: 'Get the Guide', subtitle: 'Join 5,000+ riders' };
+  const defaultPartners = { enabled: true, title: 'Trusted By Industry Leaders', items: [] };
+
   const [hero, setHero] = useState(siteSettings?.homepage?.hero || defaultHero);
   const [stats, setStats] = useState(siteSettings?.homepage?.stats || defaultStats);
   const [featured, setFeatured] = useState(siteSettings?.homepage?.featuredSection || defaultFeatured);
@@ -1089,6 +1097,13 @@ function HomepageEditor() {
   const [cta, setCta] = useState(siteSettings?.homepage?.ctaSection || defaultCta);
   const [blogSection, setBlogSection] = useState(siteSettings?.homepage?.blogSection || { enabled: true, title: 'From Our Blog', subtitle: '' });
   const [instagramSection, setInstagramSection] = useState(siteSettings?.homepage?.instagramSection || { enabled: true, title: 'Follow Us', username: '' });
+  const [destinationsSection, setDestinationsSection] = useState(siteSettings?.homepage?.destinationsSection || defaultDestinations);
+  const [tourOfMonthSection, setTourOfMonthSection] = useState(siteSettings?.homepage?.tourOfMonthSection || defaultTourOfMonth);
+  const [departuresSection, setDeparturesSection] = useState(siteSettings?.homepage?.departuresSection || defaultDepartures);
+  const [videoSection, setVideoSection] = useState(siteSettings?.homepage?.videoSection || defaultVideo);
+  const [bikesSection, setBikesSection] = useState(siteSettings?.homepage?.bikesSection || defaultBikes);
+  const [newsletterSection, setNewsletterSection] = useState(siteSettings?.homepage?.newsletterSection || defaultNewsletter);
+  const [partnersSection, setPartnersSection] = useState(siteSettings?.homepage?.partnersSection || defaultPartners);
   const [sectionOrder, setSectionOrder] = useState<string[]>(siteSettings?.homepage?.sectionOrder || [
     'hero', 'stats', 'whyus', 'destinations', 'tourOfMonth', 'featured', 'departures', 'video', 'bikes', 'testimonials', 'blog', 'newsletter', 'instagram', 'partners', 'cta'
   ]);
@@ -1113,6 +1128,13 @@ function HomepageEditor() {
         ctaSection: cta,
         blogSection,
         instagramSection,
+        destinationsSection,
+        tourOfMonthSection,
+        departuresSection,
+        videoSection,
+        bikesSection,
+        newsletterSection,
+        partnersSection,
         sectionOrder
       }
     });
@@ -1120,7 +1142,11 @@ function HomepageEditor() {
 
   useEffect(() => {
     saveChanges();
-  }, [hero, stats, featured, whyUs, testimonials, cta, blogSection, instagramSection, sectionOrder]);
+  }, [
+    hero, stats, featured, whyUs, testimonials, cta, blogSection, instagramSection,
+    destinationsSection, tourOfMonthSection, departuresSection, videoSection,
+    bikesSection, newsletterSection, partnersSection, sectionOrder
+  ]);
 
   const sections = [
     { id: 'layout', label: 'Layout / Order', icon: LayoutGrid },
@@ -1292,6 +1318,55 @@ function HomepageEditor() {
             </SectionCard>
           )}
 
+          {/* Tour of the Month */}
+          {activeSection === 'tourOfMonth' && (
+            <SectionCard
+              title="Tour of the Month"
+              actions={
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={tourOfMonthSection.enabled}
+                    onChange={(e) => setTourOfMonthSection({ ...tourOfMonthSection, enabled: e.target.checked })}
+                    className="w-4 h-4 rounded border-gray-300 text-amber-500"
+                  />
+                  <span className="text-sm">Enabled</span>
+                </label>
+              }
+            >
+              <div className="space-y-4">
+                <FormField label="Section Title">
+                  <input
+                    type="text"
+                    value={tourOfMonthSection.title}
+                    onChange={(e) => setTourOfMonthSection({ ...tourOfMonthSection, title: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg"
+                  />
+                </FormField>
+                <FormField label="Subtitle">
+                  <textarea
+                    value={tourOfMonthSection.subtitle}
+                    onChange={(e) => setTourOfMonthSection({ ...tourOfMonthSection, subtitle: e.target.value })}
+                    rows={2}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg"
+                  />
+                </FormField>
+                <FormField label="Select Tour" hint="Choose the tour to highlight this month">
+                  <select
+                    value={tourOfMonthSection.tourId}
+                    onChange={(e) => setTourOfMonthSection({ ...tourOfMonthSection, tourId: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg"
+                  >
+                    <option value="">Select a tour...</option>
+                    {tours.map(tour => (
+                      <option key={tour.id} value={tour.id}>{tour.title}</option>
+                    ))}
+                  </select>
+                </FormField>
+              </div>
+            </SectionCard>
+          )}
+
           {/* Stats Section */}
           {activeSection === 'stats' && (
             <SectionCard
@@ -1352,6 +1427,43 @@ function HomepageEditor() {
             </SectionCard>
           )}
 
+          {/* Destinations Section */}
+          {activeSection === 'destinations' && (
+            <SectionCard
+              title="Destinations Section"
+              actions={
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={destinationsSection.enabled}
+                    onChange={(e) => setDestinationsSection({ ...destinationsSection, enabled: e.target.checked })}
+                    className="w-4 h-4 rounded border-gray-300 text-amber-500"
+                  />
+                  <span className="text-sm">Enabled</span>
+                </label>
+              }
+            >
+              <div className="space-y-4">
+                <FormField label="Section Title">
+                  <input
+                    type="text"
+                    value={destinationsSection.title}
+                    onChange={(e) => setDestinationsSection({ ...destinationsSection, title: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg"
+                  />
+                </FormField>
+                <FormField label="Subtitle">
+                  <textarea
+                    value={destinationsSection.subtitle}
+                    onChange={(e) => setDestinationsSection({ ...destinationsSection, subtitle: e.target.value })}
+                    rows={2}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg"
+                  />
+                </FormField>
+              </div>
+            </SectionCard>
+          )}
+
           {/* Featured Section */}
           {activeSection === 'featured' && (
             <SectionCard
@@ -1408,6 +1520,43 @@ function HomepageEditor() {
                     </label>
                   </FormField>
                 </div>
+              </div>
+            </SectionCard>
+          )}
+
+          {/* Upcoming Departures */}
+          {activeSection === 'departures' && (
+            <SectionCard
+              title="Upcoming Departures Section"
+              actions={
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={departuresSection.enabled}
+                    onChange={(e) => setDeparturesSection({ ...departuresSection, enabled: e.target.checked })}
+                    className="w-4 h-4 rounded border-gray-300 text-amber-500"
+                  />
+                  <span className="text-sm">Enabled</span>
+                </label>
+              }
+            >
+              <div className="space-y-4">
+                <FormField label="Section Title">
+                  <input
+                    type="text"
+                    value={departuresSection.title}
+                    onChange={(e) => setDeparturesSection({ ...departuresSection, title: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg"
+                  />
+                </FormField>
+                <FormField label="Subtitle">
+                  <textarea
+                    value={departuresSection.subtitle}
+                    onChange={(e) => setDeparturesSection({ ...departuresSection, subtitle: e.target.value })}
+                    rows={2}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg"
+                  />
+                </FormField>
               </div>
             </SectionCard>
           )}
@@ -1663,6 +1812,209 @@ function HomepageEditor() {
                     />
                   </div>
                 </FormField>
+              </div>
+            </SectionCard>
+          )}
+
+          {/* Video Section */}
+          {activeSection === 'video' && (
+            <SectionCard
+              title="Video Section"
+              actions={
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={videoSection.enabled}
+                    onChange={(e) => setVideoSection({ ...videoSection, enabled: e.target.checked })}
+                    className="w-4 h-4 rounded border-gray-300 text-amber-500"
+                  />
+                  <span className="text-sm">Enabled</span>
+                </label>
+              }
+            >
+              <div className="space-y-4">
+                <FormField label="Section Title">
+                  <input
+                    type="text"
+                    value={videoSection.title}
+                    onChange={(e) => setVideoSection({ ...videoSection, title: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg"
+                  />
+                </FormField>
+                <FormField label="Subtitle">
+                  <textarea
+                    value={videoSection.subtitle}
+                    onChange={(e) => setVideoSection({ ...videoSection, subtitle: e.target.value })}
+                    rows={2}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg"
+                  />
+                </FormField>
+                <FormField label="Video URL" hint="Direct link to video or YouTube/Vimeo embed">
+                  <input
+                    type="text"
+                    value={videoSection.videoUrl}
+                    onChange={(e) => setVideoSection({ ...videoSection, videoUrl: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg"
+                  />
+                </FormField>
+                <FormField label="Background Image URL">
+                  <input
+                    type="url"
+                    value={videoSection.backgroundImage}
+                    onChange={(e) => setVideoSection({ ...videoSection, backgroundImage: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg"
+                  />
+                </FormField>
+              </div>
+            </SectionCard>
+          )}
+
+          {/* Fleet Section */}
+          {activeSection === 'bikes' && (
+            <SectionCard
+              title="Fleet Section"
+              actions={
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={bikesSection.enabled}
+                    onChange={(e) => setBikesSection({ ...bikesSection, enabled: e.target.checked })}
+                    className="w-4 h-4 rounded border-gray-300 text-amber-500"
+                  />
+                  <span className="text-sm">Enabled</span>
+                </label>
+              }
+            >
+              <div className="space-y-4">
+                <FormField label="Section Title">
+                  <input
+                    type="text"
+                    value={bikesSection.title}
+                    onChange={(e) => setBikesSection({ ...bikesSection, title: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg"
+                  />
+                </FormField>
+                <FormField label="Subtitle">
+                  <textarea
+                    value={bikesSection.subtitle}
+                    onChange={(e) => setBikesSection({ ...bikesSection, subtitle: e.target.value })}
+                    rows={2}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg"
+                  />
+                </FormField>
+              </div>
+            </SectionCard>
+          )}
+
+          {/* Newsletter Section */}
+          {activeSection === 'newsletter' && (
+            <SectionCard
+              title="Newsletter Section"
+              actions={
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={newsletterSection.enabled}
+                    onChange={(e) => setNewsletterSection({ ...newsletterSection, enabled: e.target.checked })}
+                    className="w-4 h-4 rounded border-gray-300 text-amber-500"
+                  />
+                  <span className="text-sm">Enabled</span>
+                </label>
+              }
+            >
+              <div className="space-y-4">
+                <FormField label="Section Title">
+                  <input
+                    type="text"
+                    value={newsletterSection.title}
+                    onChange={(e) => setNewsletterSection({ ...newsletterSection, title: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg"
+                  />
+                </FormField>
+                <FormField label="Subtitle">
+                  <textarea
+                    value={newsletterSection.subtitle}
+                    onChange={(e) => setNewsletterSection({ ...newsletterSection, subtitle: e.target.value })}
+                    rows={2}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg"
+                  />
+                </FormField>
+              </div>
+            </SectionCard>
+          )}
+
+          {/* Partners Section */}
+          {activeSection === 'partners' && (
+            <SectionCard
+              title="Partners Section"
+              actions={
+                <div className="flex items-center gap-4">
+                  <button
+                    onClick={() => setPartnersSection({ ...partnersSection, items: [...partnersSection.items, { name: '', logo: '' }] })}
+                    className="text-sm text-amber-600 font-medium flex items-center gap-1"
+                  >
+                    <Plus size={16} /> Add Partner
+                  </button>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={partnersSection.enabled}
+                      onChange={(e) => setPartnersSection({ ...partnersSection, enabled: e.target.checked })}
+                      className="w-4 h-4 rounded border-gray-300 text-amber-500"
+                    />
+                    <span className="text-sm">Enabled</span>
+                  </label>
+                </div>
+              }
+            >
+              <div className="space-y-4">
+                <FormField label="Section Title">
+                  <input
+                    type="text"
+                    value={partnersSection.title}
+                    onChange={(e) => setPartnersSection({ ...partnersSection, title: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg"
+                  />
+                </FormField>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {partnersSection.items.map((partner, index) => (
+                    <div key={index} className="p-4 border border-gray-200 rounded-lg space-y-3 relative group">
+                      <button
+                        onClick={() => setPartnersSection({ ...partnersSection, items: partnersSection.items.filter((_, i) => i !== index) })}
+                        className="absolute top-2 right-2 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                      <input
+                        type="text"
+                        value={partner.name}
+                        onChange={(e) => {
+                          const newItems = [...partnersSection.items];
+                          newItems[index].name = e.target.value;
+                          setPartnersSection({ ...partnersSection, items: newItems });
+                        }}
+                        className="w-full px-3 py-1 border-b border-gray-200 focus:border-amber-500 outline-none"
+                        placeholder="Partner Name"
+                      />
+                      <input
+                        type="url"
+                        value={partner.logo}
+                        onChange={(e) => {
+                          const newItems = [...partnersSection.items];
+                          newItems[index].logo = e.target.value;
+                          setPartnersSection({ ...partnersSection, items: newItems });
+                        }}
+                        className="w-full px-3 py-1 border-b border-gray-200 focus:border-amber-500 outline-none text-sm"
+                        placeholder="Logo URL"
+                      />
+                      {partner.logo && (
+                        <div className="h-12 w-full flex items-center justify-center bg-gray-50 rounded">
+                          <img src={partner.logo} alt="Preview" className="max-h-full max-w-full object-contain" />
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
               </div>
             </SectionCard>
           )}

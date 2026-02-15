@@ -267,8 +267,8 @@ function FeaturedToursSection({ data, displayTours }: { data: any, displayTours:
   );
 }
 
-function DestinationsSection({ destinations }: { destinations: Destination[] }) {
-  if (destinations.length === 0) return null;
+function DestinationsSection({ data, destinations }: { data: any, destinations: Destination[] }) {
+  if (!data?.enabled || destinations.length === 0) return null;
   const featuredDestinations = destinations.filter(d => d.featured).slice(0, 4);
   const displayDestinations = featuredDestinations.length > 0 ? featuredDestinations : destinations.slice(0, 4);
 
@@ -278,9 +278,9 @@ function DestinationsSection({ destinations }: { destinations: Destination[] }) 
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-12">
           <div>
             <span className="text-amber-500 font-semibold">EXPLORE</span>
-            <h2 className="text-4xl font-bold text-white mt-2 mb-4">Popular Destinations</h2>
+            <h2 className="text-4xl font-bold text-white mt-2 mb-4">{data.title}</h2>
             <p className="text-gray-400 max-w-xl">
-              Discover the world's most spectacular motorcycle routes through breathtaking landscapes
+              {data.subtitle}
             </p>
           </div>
           <Link
@@ -371,8 +371,18 @@ function MainCTASection({ data }: { data: any }) {
   );
 }
 
-function ExperienceSection() {
-  const experiences = [
+function ExperienceSection({ data }: { data: any }) {
+  if (!data?.enabled) return null;
+
+  const iconMap: { [key: string]: any } = {
+    Shield, Award, Mountain, Zap, Calendar, MapPin, Users, Star, Globe, Trophy, Clock, Search, CheckCircle2
+  };
+
+  const experiences = (data.items && data.items.length > 0) ? data.items.map((item: any) => ({
+    icon: iconMap[item.icon] || Shield,
+    title: item.title,
+    desc: item.description
+  })) : [
     {
       icon: Shield,
       title: "Safety First",
@@ -401,11 +411,11 @@ function ExperienceSection() {
       <div className="relative max-w-7xl mx-auto px-4">
         <div className="text-center mb-16">
           <span className="text-amber-500 font-bold tracking-[0.2em] text-sm uppercase mb-4 block animate-fade-in">The BRM Advantage</span>
-          <h2 className="text-4xl md:text-5xl font-bold text-white mb-6" data-editor-id="experience-headline">Built for the <span className="text-amber-500">True Rider</span></h2>
+          <h2 className="text-4xl md:text-5xl font-bold text-white mb-6" data-editor-id="experience-headline">{data.title || "Built for the True Rider"}</h2>
           <div className="w-24 h-1 bg-amber-500 mx-auto rounded-full" />
         </div>
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {experiences.map((exp, i) => (
+          {experiences.map((exp: any, i: number) => (
             <div key={i} className="glass-dark p-8 rounded-3xl group hover:border-amber-500/50 transition-all duration-500 hover:-translate-y-2 text-center">
               <div className="w-16 h-16 bg-amber-500/10 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-amber-500 transition-colors duration-500 mx-auto">
                 <exp.icon className="text-amber-500 group-hover:text-white transition-colors duration-500" size={32} />
@@ -420,8 +430,8 @@ function ExperienceSection() {
   );
 }
 
-function TourOfTheMonth({ tour }: { tour: Tour }) {
-  if (!tour) return null;
+function TourOfTheMonth({ data, tour }: { data: any, tour: Tour }) {
+  if (!data?.enabled || !tour) return null;
 
   return (
     <section className="py-20 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
@@ -452,9 +462,9 @@ function TourOfTheMonth({ tour }: { tour: Tour }) {
           </div>
           <div className="text-white">
             <span className="inline-block bg-amber-500/20 text-amber-400 px-4 py-1 rounded-full text-sm font-semibold mb-4">
-              ⭐ Highly Recommended
+              ⭐ {data.subtitle || "Highly Recommended"}
             </span>
-            <h2 className="text-4xl font-bold mb-4">{tour?.title || 'Featured Tour'}</h2>
+            <h2 className="text-4xl font-bold mb-4">{data.title || tour?.title}</h2>
             <p className="text-gray-400 text-lg mb-6">{tour?.subtitle || tour?.shortDescription || ''}</p>
 
             <div className="grid grid-cols-2 gap-4 mb-8">
@@ -504,8 +514,8 @@ function TourOfTheMonth({ tour }: { tour: Tour }) {
   );
 }
 
-function UpcomingDepartures({ tours }: { tours: Tour[] }) {
-  if (!tours || tours.length === 0) return null;
+function UpcomingDepartures({ data, tours }: { data: any, tours: Tour[] }) {
+  if (!data?.enabled || !tours || tours.length === 0) return null;
 
   const toursWithDates = (tours || [])
     .filter(t => t?.departureDates && t.departureDates.length > 0)
@@ -521,9 +531,9 @@ function UpcomingDepartures({ tours }: { tours: Tour[] }) {
       <div className="max-w-7xl mx-auto px-4">
         <div className="text-center mb-12">
           <span className="text-amber-600 font-semibold">UPCOMING ADVENTURES</span>
-          <h2 className="text-4xl font-bold text-gray-900 mt-2 mb-4">Next Departures</h2>
+          <h2 className="text-4xl font-bold text-gray-900 mt-2 mb-4">{data.title}</h2>
           <p className="text-gray-600 max-w-2xl mx-auto">
-            Join our upcoming expeditions and ride with fellow adventurers from around the world
+            {data.subtitle}
           </p>
         </div>
 
@@ -632,12 +642,13 @@ function BlogSection({ data }: { data: any }) {
 
 // 2. Add them to your main Home return
 
-function VideoSection() {
+function VideoSection({ data }: { data: any }) {
+  if (!data?.enabled) return null;
   return (
     <section className="py-20 bg-gray-900 relative overflow-hidden">
       <div className="absolute inset-0 opacity-30">
         <img
-          src="https://images.unsplash.com/photo-1568772585407-9361bd37ec91?w=1600&h=900&fit=crop"
+          src={data.backgroundImage || "https://images.unsplash.com/photo-1568772585407-9361bd37ec91?w=1600&h=900&fit=crop"}
           alt="Motorcycle adventure"
           className="w-full h-full object-cover"
         />
@@ -647,27 +658,30 @@ function VideoSection() {
           Watch Our Story
         </span>
         <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
-          Experience the Thrill of<br />
-          <span className="text-amber-500">Himalayan Riding</span>
+          {data.title}
         </h2>
         <p className="text-gray-300 text-lg mb-8 max-w-2xl mx-auto">
-          Join us on an unforgettable journey through the world's highest motorable roads,
-          ancient monasteries, and breathtaking landscapes.
+          {data.subtitle}
         </p>
-        <button className="inline-flex items-center gap-3 bg-white text-gray-900 px-8 py-4 rounded-full font-semibold hover:bg-amber-500 hover:text-white transition group">
+        <a
+          href={data.videoUrl || "#"}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-3 bg-white text-gray-900 px-8 py-4 rounded-full font-semibold hover:bg-amber-500 hover:text-white transition group"
+        >
           <div className="w-12 h-12 bg-amber-500 group-hover:bg-white rounded-full flex items-center justify-center transition">
             <Play className="text-white group-hover:text-amber-500 fill-current" size={20} />
           </div>
           Watch Video
-        </button>
+        </a>
       </div>
     </section>
   );
 }
 
-function BikesSection() {
+function BikesSection({ data }: { data: any }) {
   const appContext = useApp();
-  if (!appContext) return null;
+  if (!appContext || !data?.enabled) return null;
 
   const bikes = appContext.bikes || [];
   const availableBikes = bikes.filter(b => b.available).slice(0, 4);
@@ -679,9 +693,9 @@ function BikesSection() {
       <div className="max-w-7xl mx-auto px-4">
         <div className="text-center mb-12">
           <span className="text-amber-600 font-semibold">OUR FLEET</span>
-          <h2 className="text-4xl font-bold text-gray-900 mt-2 mb-4">Premium Motorcycles</h2>
+          <h2 className="text-4xl font-bold text-gray-900 mt-2 mb-4">{data.title}</h2>
           <p className="text-gray-600 max-w-2xl mx-auto">
-            Ride the best adventure motorcycles in the world, meticulously maintained for the toughest terrains
+            {data.subtitle}
           </p>
         </div>
 
@@ -759,9 +773,11 @@ function BikesSection() {
   );
 }
 
-function NewsletterSection() {
+function NewsletterSection({ data }: { data: any }) {
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState<'idle' | 'loading' | 'success'>('idle');
+
+  if (!data?.enabled) return null;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -775,8 +791,8 @@ function NewsletterSection() {
       <div className="max-w-7xl mx-auto px-4 relative z-10">
         <div className="glass-dark rounded-[3rem] p-8 md:p-16 flex flex-col lg:flex-row items-center gap-12 border border-white/10">
           <div className="flex-1 text-center lg:text-left">
-            <h2 className="text-3xl md:text-5xl font-bold text-white mb-6" data-editor-id="newsletter-headline">Get the <span className="text-amber-500">Himalayan Riding Guide</span></h2>
-            <p className="text-gray-400 text-lg mb-0">Join 5,000+ riders and get our exclusive route maps, gear checklists, and early access to tour dates.</p>
+            <h2 className="text-3xl md:text-5xl font-bold text-white mb-6" data-editor-id="newsletter-headline">{data.title}</h2>
+            <p className="text-gray-400 text-lg mb-0">{data.subtitle}</p>
           </div>
           <div className="w-full lg:w-[450px]">
             {status === 'success' ? (
@@ -813,8 +829,10 @@ function NewsletterSection() {
   );
 }
 
-function Partners() {
-  const partners = [
+function Partners({ data }: { data: any }) {
+  if (!data?.enabled) return null;
+
+  const partners = data.items?.length > 0 ? data.items : [
     { name: 'Royal Enfield', logo: 'https://seeklogo.com/images/R/royal-enfield-logo-5D12DE4D9C-seeklogo.com.png' },
     { name: 'BMW Motorrad', logo: 'https://seeklogo.com/images/B/bmw-motorrad-logo-66F5B5B5E5-seeklogo.com.png' },
     { name: 'Motul', logo: 'https://seeklogo.com/images/M/motul-logo-6B9E9CDE00-seeklogo.com.png' },
@@ -826,10 +844,10 @@ function Partners() {
     <section className="py-16 bg-white border-y border-gray-100">
       <div className="max-w-7xl mx-auto px-4">
         <div className="text-center mb-10">
-          <p className="text-gray-400 font-bold uppercase tracking-widest text-xs">Trusted By Industry Leaders</p>
+          <p className="text-gray-400 font-bold uppercase tracking-widest text-xs">{data.title || "Trusted By Industry Leaders"}</p>
         </div>
         <div className="flex flex-wrap items-center justify-center gap-12 md:gap-24 opacity-50 grayscale hover:grayscale-0 transition-all duration-700">
-          {partners.map((partner, i) => (
+          {partners.map((partner: any, i: number) => (
             <div key={i} className="h-12 w-32 flex items-center justify-center group">
               <img
                 src={partner.logo}
@@ -858,8 +876,9 @@ export function Home() {
   const publishedDestinations = destinations.filter(d => d.status === 'published');
 
 
-  // Tour of the month - first featured tour or most expensive
-  const tourOfMonth = featuredTours[0] || allPublishedTours.sort((a, b) => b.price - a.price)[0];
+  // Tour of the month - from settings or fallback to first featured/expensive
+  const configuredTourOfMonth = tours.find(t => t.id === siteSettings?.homepage?.tourOfMonthSection?.tourId);
+  const tourOfMonth = configuredTourOfMonth || featuredTours[0] || allPublishedTours.sort((a, b) => b.price - a.price)[0];
 
   // Safe defaults for homepage settings
   const defaultHomepage = {
@@ -877,7 +896,14 @@ export function Home() {
     featuredSection: { enabled: true, title: 'Featured Tours', subtitle: '', maxItems: 6, showFeaturedOnly: true },
     whyChooseUs: { enabled: true, title: 'Why Choose Us', items: [] },
     testimonials: { enabled: true, title: 'What Our Riders Say', items: [] },
-    ctaSection: { enabled: true, title: 'Ready for Adventure?', subtitle: '', backgroundImage: '', ctaText: 'Book Now', ctaLink: '/tours' }
+    ctaSection: { enabled: true, title: 'Ready for Adventure?', subtitle: '', backgroundImage: '', ctaText: 'Book Now', ctaLink: '/tours' },
+    destinationsSection: { enabled: true, title: 'Popular Destinations', subtitle: 'Discover the world\'s most spectacular motorcycle routes' },
+    tourOfMonthSection: { enabled: true, title: 'Tour of the Month', subtitle: 'Our highly recommended expedition' },
+    departuresSection: { enabled: true, title: 'Next Departures', subtitle: 'Join our upcoming expeditions' },
+    videoSection: { enabled: true, title: 'Experience the Thrill', subtitle: 'Watch our story', videoUrl: '', backgroundImage: 'https://images.unsplash.com/photo-1568772585407-9361bd37ec91?w=1600' },
+    bikesSection: { enabled: true, title: 'Our Fleet', subtitle: 'Ride the best adventure motorcycles' },
+    newsletterSection: { enabled: true, title: 'Get the Guide', subtitle: 'Join 5,000+ riders' },
+    partnersSection: { enabled: true, title: 'Trusted By Industry Leaders', items: [] }
   };
 
   // Merge with defaults to ensure all properties exist
@@ -888,12 +914,6 @@ export function Home() {
     whyChooseUs: { ...defaultHomepage.whyChooseUs, ...(siteSettings?.homepage?.whyChooseUs || {}) },
     testimonials: { ...defaultHomepage.testimonials, ...(siteSettings?.homepage?.testimonials || {}) },
     ctaSection: { ...defaultHomepage.ctaSection, ...(siteSettings?.homepage?.ctaSection || {}) },
-
-
-
-    // ... (in Home component)
-
-    // ✅ ADD THESE TWO LINES
     blogSection: siteSettings?.homepage?.blogSection || {
       enabled: true,
       title: 'From Our Blog',
@@ -908,13 +928,19 @@ export function Home() {
         link: `/blog/${post.slug}`
       }))
     },
-
     instagramSection: siteSettings?.homepage?.instagramSection || {
       enabled: true,
       title: 'Follow Our Journey',
       username: 'brmexpeditions',
       posts: []
-    }
+    },
+    destinationsSection: { ...defaultHomepage.destinationsSection, ...(siteSettings?.homepage?.destinationsSection || {}) },
+    tourOfMonthSection: { ...defaultHomepage.tourOfMonthSection, ...(siteSettings?.homepage?.tourOfMonthSection || {}) },
+    departuresSection: { ...defaultHomepage.departuresSection, ...(siteSettings?.homepage?.departuresSection || {}) },
+    videoSection: { ...defaultHomepage.videoSection, ...(siteSettings?.homepage?.videoSection || {}) },
+    bikesSection: { ...defaultHomepage.bikesSection, ...(siteSettings?.homepage?.bikesSection || {}) },
+    newsletterSection: { ...defaultHomepage.newsletterSection, ...(siteSettings?.homepage?.newsletterSection || {}) },
+    partnersSection: { ...defaultHomepage.partnersSection, ...(siteSettings?.homepage?.partnersSection || {}) }
   };
 
   // Safe access to featuredSection properties
@@ -936,18 +962,18 @@ export function Home() {
     switch (id) {
       case 'hero': return <HeroSection key={id} data={homepage.hero} />;
       case 'stats': return <StatsSection key={id} data={homepage.stats} />;
-      case 'whyus': return <ExperienceSection key={id} />;
-      case 'destinations': return <DestinationsSection key={id} destinations={publishedDestinations} />;
-      case 'tourOfMonth': return tourOfMonth && <TourOfTheMonth key={id} tour={tourOfMonth} />;
+      case 'whyus': return <ExperienceSection key={id} data={homepage.whyChooseUs} />;
+      case 'destinations': return <DestinationsSection key={id} data={homepage.destinationsSection} destinations={publishedDestinations} />;
+      case 'tourOfMonth': return tourOfMonth && <TourOfTheMonth key={id} data={homepage.tourOfMonthSection} tour={tourOfMonth} />;
       case 'featured': return <FeaturedToursSection key={id} data={homepage.featuredSection} displayTours={displayTours} />;
-      case 'departures': return <UpcomingDepartures key={id} tours={allPublishedTours} />;
-      case 'video': return <VideoSection key={id} />;
-      case 'bikes': return <BikesSection key={id} />;
+      case 'departures': return <UpcomingDepartures key={id} data={homepage.departuresSection} tours={allPublishedTours} />;
+      case 'video': return <VideoSection key={id} data={homepage.videoSection} />;
+      case 'bikes': return <BikesSection key={id} data={homepage.bikesSection} />;
       case 'testimonials': return <TestimonialsSection key={id} data={homepage.testimonials} />;
       case 'blog': return <BlogSection key={id} data={homepage.blogSection} />;
-      case 'newsletter': return <NewsletterSection key={id} />;
+      case 'newsletter': return <NewsletterSection key={id} data={homepage.newsletterSection} />;
       case 'instagram': return <InstagramSection key={id} data={homepage.instagramSection} />;
-      case 'partners': return <Partners key={id} />;
+      case 'partners': return <Partners key={id} data={homepage.partnersSection} />;
       case 'cta': return <MainCTASection key={id} data={homepage.ctaSection} />;
       default: return null;
     }

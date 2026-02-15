@@ -217,6 +217,44 @@ export interface HomepageSettings {
     title: string;
     username: string;
   };
+  destinationsSection?: {
+    enabled: boolean;
+    title: string;
+    subtitle: string;
+  };
+  tourOfMonthSection?: {
+    enabled: boolean;
+    title: string;
+    subtitle: string;
+    tourId: string;
+  };
+  departuresSection?: {
+    enabled: boolean;
+    title: string;
+    subtitle: string;
+  };
+  videoSection?: {
+    enabled: boolean;
+    title: string;
+    subtitle: string;
+    videoUrl: string;
+    backgroundImage: string;
+  };
+  bikesSection?: {
+    enabled: boolean;
+    title: string;
+    subtitle: string;
+  };
+  newsletterSection?: {
+    enabled: boolean;
+    title: string;
+    subtitle: string;
+  };
+  partnersSection?: {
+    enabled: boolean;
+    title: string;
+    items: { name: string; logo: string }[];
+  };
   sectionOrder?: string[];
 }
 
