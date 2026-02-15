@@ -421,24 +421,6 @@ function BlogSection({ data }: { data: any }) {
 
 // 2. Add them to your main Home return
 
-export function Home() {
-  // ... existing setup ...
-  
-  // Get sections from settings
-  const sections = siteSettings?.homepageSections || {};
-
-  return (
-    <Layout>
-      {/* ... Hero, Stats ... */}
-      
-      {/* ADD THESE NEW SECTIONS */}
-      <InstagramSection data={sections.instagram} />
-      <BlogSection data={sections.blog} />
-      
-      {/* ... Rest of sections ... */}
-    </Layout>
-  );
-}
 function VideoSection() {
   return (
     <section className="py-20 bg-gray-900 relative overflow-hidden">
