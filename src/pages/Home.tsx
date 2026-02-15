@@ -1,5 +1,6 @@
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Calendar, MapPin, Users, Star, ChevronRight, Shield, Award, Compass, Play, ArrowRight, Mountain, Globe, Trophy, Clock, Edit, Settings } from 'lucide-react';
+import { Calendar, MapPin, Users, Star, ChevronRight, Shield, Award, Compass, Play, ArrowRight, Mountain, Globe, Trophy, Clock, Edit, Settings, Search, Zap, CheckCircle2 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { Layout } from '../components/Layout';
 import { SEOHead, organizationStructuredData } from '../components/SEOHead';
@@ -210,6 +211,101 @@ function DestinationCard({ destination }: { destination: Destination }) {
         </div>
       </div>
     </Link>
+  );
+}
+
+function TourSearch() {
+  const navigate = useNavigate();
+  const [query, setQuery] = useState({ destination: '', difficulty: '' });
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    const params = new URLSearchParams();
+    if (query.destination) params.append('search', query.destination);
+    if (query.difficulty) params.append('difficulty', query.difficulty);
+    navigate(`/tours?${params.toString()}`);
+  };
+
+  return (
+    <form onSubmit={handleSearch} className="glass rounded-2xl p-2 flex flex-col md:flex-row gap-2 max-w-4xl w-full translate-y-8 animate-fade-in shadow-2xl border border-white/20">
+      <div className="flex-1 relative group">
+        <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-amber-500 group-focus-within:scale-110 transition-transform" size={20} />
+        <input
+          type="text"
+          placeholder="Where do you want to ride?"
+          value={query.destination}
+          onChange={(e) => setQuery({ ...query, destination: e.target.value })}
+          className="w-full bg-white/10 text-white placeholder-gray-400 pl-12 pr-4 py-4 rounded-xl focus:outline-none focus:bg-white/20 transition-all border border-transparent focus:border-amber-500/50"
+        />
+      </div>
+      <div className="md:w-56 relative group">
+        <Mountain className="absolute left-4 top-1/2 -translate-y-1/2 text-amber-500 group-focus-within:scale-110 transition-transform" size={20} />
+        <select
+          value={query.difficulty}
+          onChange={(e) => setQuery({ ...query, difficulty: e.target.value })}
+          className="w-full bg-white/10 text-white pl-12 pr-4 py-4 rounded-xl focus:outline-none focus:bg-white/20 transition-all border border-transparent focus:border-amber-500/50 appearance-none"
+        >
+          <option value="" className="bg-gray-900">Any Difficulty</option>
+          <option value="Easy" className="bg-gray-900">Easy</option>
+          <option value="Moderate" className="bg-gray-900">Moderate</option>
+          <option value="Challenging" className="bg-gray-900">Challenging</option>
+          <option value="Expert" className="bg-gray-900">Expert</option>
+        </select>
+      </div>
+      <button type="submit" className="bg-amber-600 hover:bg-amber-500 text-white px-8 py-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-amber-600/20">
+        <Search size={20} />
+        FIND TOURS
+      </button>
+    </form>
+  );
+}
+
+function ExperienceSection() {
+  const experiences = [
+    {
+      icon: Shield,
+      title: "Safety First",
+      desc: "Backup vehicle and medic on every multi-day expedition."
+    },
+    {
+      icon: Award,
+      title: "Expert Guides",
+      desc: "Licensed local guides who know every twist and turn."
+    },
+    {
+      icon: Mountain,
+      title: "Premier Routes",
+      desc: "Meticulously scouted paths away from the tourist traps."
+    },
+    {
+      icon: Zap,
+      title: "Top-Tier Fleet",
+      desc: "Ride the latest Himalayan and BMW GS adventure bikes."
+    }
+  ];
+
+  return (
+    <section className="py-24 bg-mesh relative overflow-hidden">
+      <div className="absolute inset-0 bg-black/20" />
+      <div className="relative max-w-7xl mx-auto px-4">
+        <div className="text-center mb-16">
+          <span className="text-amber-500 font-bold tracking-[0.2em] text-sm uppercase mb-4 block animate-fade-in">The BRM Advantage</span>
+          <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">Built for the <span className="text-amber-500">True Rider</span></h2>
+          <div className="w-24 h-1 bg-amber-500 mx-auto rounded-full" />
+        </div>
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+          {experiences.map((exp, i) => (
+            <div key={i} className="glass-dark p-8 rounded-3xl group hover:border-amber-500/50 transition-all duration-500 hover:-translate-y-2 text-center">
+              <div className="w-16 h-16 bg-amber-500/10 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-amber-500 transition-colors duration-500 mx-auto">
+                <exp.icon className="text-amber-500 group-hover:text-white transition-colors duration-500" size={32} />
+              </div>
+              <h3 className="text-xl font-bold text-white mb-3">{exp.title}</h3>
+              <p className="text-gray-400 group-hover:text-gray-300 transition-colors leading-relaxed">{exp.desc}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
   );
 }
 
@@ -552,24 +648,83 @@ function BikesSection() {
   );
 }
 
+function NewsletterSection() {
+  const [email, setEmail] = useState('');
+  const [status, setStatus] = useState<'idle' | 'loading' | 'success'>('idle');
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setStatus('loading');
+    setTimeout(() => setStatus('success'), 1500);
+  };
+
+  return (
+    <section className="py-24 bg-gray-900 relative overflow-hidden">
+      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-amber-500 to-transparent opacity-50" />
+      <div className="max-w-7xl mx-auto px-4 relative z-10">
+        <div className="glass-dark rounded-[3rem] p-8 md:p-16 flex flex-col lg:flex-row items-center gap-12 border border-white/10">
+          <div className="flex-1 text-center lg:text-left">
+            <h2 className="text-3xl md:text-5xl font-bold text-white mb-6">Get the <span className="text-amber-500">Himalayan Riding Guide</span></h2>
+            <p className="text-gray-400 text-lg mb-0">Join 5,000+ riders and get our exclusive route maps, gear checklists, and early access to tour dates.</p>
+          </div>
+          <div className="w-full lg:w-[450px]">
+            {status === 'success' ? (
+              <div className="bg-green-500/10 border border-green-500/50 rounded-2xl p-6 text-center animate-fade-in">
+                <CheckCircle2 className="text-green-500 mx-auto mb-3" size={40} />
+                <h3 className="text-xl font-bold text-white mb-1">You're on the list!</h3>
+                <p className="text-green-400 text-sm">Check your inbox for your guide.</p>
+              </div>
+            ) : (
+              <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+                <div className="relative group">
+                  <input
+                    type="email"
+                    required
+                    placeholder="Enter your email address"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full bg-white/5 border border-white/10 text-white px-6 py-4 rounded-2xl focus:outline-none focus:border-amber-500 focus:bg-white/10 transition-all text-lg"
+                  />
+                </div>
+                <button
+                  disabled={status === 'loading'}
+                  className="bg-amber-600 hover:bg-amber-500 text-white px-8 py-4 rounded-2xl font-bold text-lg transition-all transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:scale-100 shadow-xl shadow-amber-600/20"
+                >
+                  {status === 'loading' ? 'Sending...' : 'SEND ME THE GUIDE'}
+                </button>
+                <p className="text-gray-500 text-xs text-center mt-2">We respect your privacy. Unsubscribe at any time.</p>
+              </form>
+            )}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function Partners() {
   const partners = [
-    { name: 'Royal Enfield', logo: '🏍️' },
-    { name: 'BMW Motorrad', logo: '🏍️' },
-    { name: 'KTM', logo: '🏍️' },
-    { name: 'Triumph', logo: '🏍️' },
-    { name: 'Himalayan', logo: '🏔️' },
+    { name: 'Royal Enfield', logo: 'https://seeklogo.com/images/R/royal-enfield-logo-5D12DE4D9C-seeklogo.com.png' },
+    { name: 'BMW Motorrad', logo: 'https://seeklogo.com/images/B/bmw-motorrad-logo-66F5B5B5E5-seeklogo.com.png' },
+    { name: 'Motul', logo: 'https://seeklogo.com/images/M/motul-logo-6B9E9CDE00-seeklogo.com.png' },
+    { name: 'Garmin', logo: 'https://seeklogo.com/images/G/garmin-logo-3B45F5E4D4-seeklogo.com.png' },
+    { name: 'Sena', logo: 'https://seeklogo.com/images/S/sena-logo-2B6A6B4A6B-seeklogo.com.png' }
   ];
 
   return (
-    <section className="py-12 bg-gray-100">
+    <section className="py-16 bg-white border-y border-gray-100">
       <div className="max-w-7xl mx-auto px-4">
-        <div className="flex flex-wrap items-center justify-center gap-8 md:gap-16">
-          <span className="text-gray-400 font-semibold uppercase tracking-wider text-sm">Our Partners:</span>
+        <div className="text-center mb-10">
+          <p className="text-gray-400 font-bold uppercase tracking-widest text-xs">Trusted By Industry Leaders</p>
+        </div>
+        <div className="flex flex-wrap items-center justify-center gap-12 md:gap-24 opacity-50 grayscale hover:grayscale-0 transition-all duration-700">
           {partners.map((partner, i) => (
-            <div key={i} className="flex items-center gap-2 text-gray-400 hover:text-gray-600 transition">
-              <span className="text-2xl">{partner.logo}</span>
-              <span className="font-semibold">{partner.name}</span>
+            <div key={i} className="h-12 w-32 flex items-center justify-center group">
+              <img
+                src={partner.logo}
+                alt={partner.name}
+                className="max-h-full max-w-full object-contain filter brightness-0 transition-all group-hover:brightness-100"
+              />
             </div>
           ))}
         </div>
@@ -662,10 +817,6 @@ export function Home() {
     ? featuredTours.slice(0, maxItems)
     : allPublishedTours.slice(0, maxItems);
 
-  const getIcon = (iconName: string) => {
-    const icons: Record<string, React.ComponentType<{ className?: string; size?: number }>> = { Shield, Award, Compass, Star };
-    return icons[iconName] || Star;
-  };
 
   return (
     <Layout>
@@ -711,39 +862,44 @@ export function Home() {
             <p className="text-xl text-gray-300 mb-8">
               {homepage.hero.subtitle}
             </p>
-            <div className="flex flex-wrap gap-4">
+            <div className="flex flex-wrap gap-4 mb-12">
               <Link
                 to={homepage.hero.ctaLink}
-                className="bg-amber-600 text-white px-8 py-4 rounded-full font-semibold hover:bg-amber-700 transition text-lg flex items-center gap-2"
+                className="bg-amber-600 text-white px-8 py-4 rounded-full font-bold hover:bg-amber-700 transition text-lg flex items-center gap-2 transform hover:scale-105"
               >
                 {homepage.hero.ctaText} <ChevronRight />
               </Link>
               <a
                 href={homepage.hero.secondaryCtaLink}
-                className="border-2 border-white text-white px-8 py-4 rounded-full font-semibold hover:bg-white hover:text-gray-900 transition text-lg"
+                className="glass text-white px-8 py-4 rounded-full font-bold hover:bg-white/20 transition text-lg backdrop-blur-md"
               >
                 {homepage.hero.secondaryCtaText}
               </a>
             </div>
+
+            <TourSearch />
           </div>
         </div>
       </section>
 
       {/* Stats Section */}
       {homepage.stats.enabled && (
-        <section className="bg-amber-600 py-8">
-          <div className="max-w-7xl mx-auto px-4">
+        <section className="bg-amber-600 py-12 relative overflow-hidden">
+          <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white via-transparent to-transparent" />
+          <div className="max-w-7xl mx-auto px-4 relative">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center text-white">
               {homepage.stats.items.map((stat, i) => (
-                <div key={i}>
-                  <div className="text-4xl font-bold mb-1">{stat.value}</div>
-                  <div className="text-amber-200">{stat.label}</div>
+                <div key={i} className="animate-fade-in" style={{ animationDelay: `${i * 100}ms` }}>
+                  <div className="text-5xl font-black mb-1 drop-shadow-lg tracking-tight">{stat.value}</div>
+                  <div className="text-amber-100 font-bold uppercase tracking-widest text-xs">{stat.label}</div>
                 </div>
               ))}
             </div>
           </div>
         </section>
       )}
+
+      <ExperienceSection />
 
       {/* Destinations Section */}
       {publishedDestinations.length > 0 && (
@@ -779,13 +935,13 @@ export function Home() {
 
       {/* Featured Tours */}
       {homepage.featuredSection.enabled && (
-        <section id="featured" className="py-20 bg-gray-50">
+        <section id="featured" className="py-24 bg-gray-50 border-t border-gray-100">
           <div className="max-w-7xl mx-auto px-4">
-            <div className="text-center mb-12">
-              <span className="text-amber-600 font-semibold">OUR ADVENTURES</span>
+            <div className="text-center mb-16">
+              <span className="text-amber-600 font-bold tracking-widest text-xs uppercase">Our Top Expeditions</span>
               <h2 className="text-4xl font-bold text-gray-900 mt-2 mb-4">{homepage.featuredSection.title}</h2>
-              <p className="text-gray-600 max-w-2xl mx-auto">
-                {homepage.featuredSection.subtitle}
+              <p className="text-gray-600 max-w-2xl mx-auto text-lg leading-relaxed">
+                {homepage.featuredSection.subtitle || "Hand-picked adventures designed for maximum thrill and cultural immersion."}
               </p>
             </div>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -793,10 +949,10 @@ export function Home() {
                 <TourCard key={tour.id} tour={tour} />
               ))}
             </div>
-            <div className="text-center mt-12">
+            <div className="text-center mt-16">
               <Link
                 to="/tours"
-                className="inline-flex items-center gap-2 bg-gray-900 text-white px-8 py-4 rounded-full font-semibold hover:bg-gray-800 transition"
+                className="inline-flex items-center gap-2 bg-gray-900 text-white px-10 py-5 rounded-full font-bold hover:bg-gray-800 transition shadow-xl"
               >
                 View All Tours <ChevronRight />
               </Link>
@@ -811,95 +967,36 @@ export function Home() {
       {/* Video Section */}
       <VideoSection />
 
-      {/* Why Choose Us */}
-      {homepage.whyChooseUs.enabled && (
-        <section className="py-20 bg-white">
-          <div className="max-w-7xl mx-auto px-4">
-            <div className="text-center mb-12">
-              <span className="text-amber-600 font-semibold">WHY BRM EXPEDITIONS</span>
-              <h2 className="text-4xl font-bold text-gray-900 mt-2 mb-4">{homepage.whyChooseUs.title}</h2>
-            </div>
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-              {homepage.whyChooseUs.items.map((item, i) => {
-                const IconComponent = getIcon(item.icon);
-                return (
-                  <div key={i} className="text-center p-6 rounded-2xl hover:bg-gray-50 transition">
-                    <div className="w-16 h-16 bg-amber-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                      <IconComponent className="text-amber-600" size={32} />
-                    </div>
-                    <h3 className="text-xl font-bold text-gray-900 mb-2">{item.title}</h3>
-                    <p className="text-gray-600">{item.description}</p>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </section>
-      )}
-
       {/* Our Fleet - Bikes Section */}
       <BikesSection />
 
-      {/* Partners */}
-      <Partners />
-
-      {/* CTA Section */}
-      {homepage.ctaSection.enabled && (
-        <section className="py-20 bg-gray-900 relative overflow-hidden">
-          <div className="absolute inset-0 opacity-20">
-            <img
-              src={homepage.ctaSection.backgroundImage}
-              alt="Background"
-              className="w-full h-full object-cover"
-            />
-          </div>
-          <div className="relative max-w-4xl mx-auto px-4 text-center">
-            <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">{homepage.ctaSection.title}</h2>
-            <p className="text-xl text-gray-300 mb-8">
-              {homepage.ctaSection.subtitle}
-            </p>
-            <div className="flex flex-wrap justify-center gap-4">
-              <Link
-                to={homepage.ctaSection.ctaLink}
-                className="bg-amber-600 text-white px-8 py-4 rounded-full font-semibold hover:bg-amber-700 transition text-lg"
-              >
-                {homepage.ctaSection.ctaText}
-              </Link>
-              <Link
-                to="/contact"
-                className="border-2 border-amber-600 text-amber-500 px-8 py-4 rounded-full font-semibold hover:bg-amber-600 hover:text-white transition text-lg"
-              >
-                Contact Us
-              </Link>
-            </div>
-          </div>
-        </section>
-      )}
-
       {/* Testimonials */}
       {homepage.testimonials.enabled && (
-        <section className="py-20 bg-gray-50">
+        <section className="py-24 bg-gray-50">
           <div className="max-w-7xl mx-auto px-4">
-            <div className="text-center mb-12">
-              <span className="text-amber-600 font-semibold">TESTIMONIALS</span>
+            <div className="text-center mb-16">
+              <span className="text-amber-600 font-bold tracking-widest text-xs uppercase">Rider Reviews</span>
               <h2 className="text-4xl font-bold text-gray-900 mt-2 mb-4">{homepage.testimonials.title}</h2>
             </div>
             <div className="grid md:grid-cols-3 gap-8">
               {homepage.testimonials.items.map((review, i) => (
-                <div key={i} className="bg-white p-8 rounded-2xl shadow-lg">
-                  <div className="flex gap-1 mb-4">
+                <div key={i} className="bg-white p-10 rounded-[2rem] shadow-sm hover:shadow-xl transition-shadow border border-gray-100 relative">
+                  <div className="absolute top-8 right-8 text-gray-100">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="currentColor"><path d="M14.017 21L14.017 18C14.017 16.8954 14.9124 16 16.017 16H19.017C20.1216 16 21.017 16.8954 21.017 18V21C21.017 22.1046 20.1216 23 19.017 23H16.017C14.9124 23 14.017 22.1046 14.017 21ZM14.017 11V8C14.017 6.89543 14.9124 6 16.017 6H19.017C20.1216 6 21.017 6.89543 21.017 8V11C21.017 12.1046 20.1216 13 19.017 13H16.017C14.9124 13 14.017 12.1046 14.017 11ZM3.01705 21L3.01705 18C3.01705 16.8954 3.91248 16 5.01705 16H8.01705C9.12162 16 10.0171 16.8954 10.0171 18V21C10.0171 22.1046 9.12162 23 8.01705 23H5.01705C3.91248 23 3.01705 22.1046 3.01705 21ZM3.01705 11V8C3.01705 6.89543 3.91248 6 5.01705 6H8.01705C9.12162 6 10.0171 6.89543 10.0171 8V11C10.0171 12.1046 9.12162 13 8.01705 13H5.01705C3.91248 13 3.01705 12.1046 3.01705 11Z"></path></svg>
+                  </div>
+                  <div className="flex gap-1 mb-6">
                     {[...Array(review.rating)].map((_, j) => (
-                      <Star key={j} size={20} className="fill-amber-500 text-amber-500" />
+                      <Star key={j} size={18} className="fill-amber-500 text-amber-500" />
                     ))}
                   </div>
-                  <p className="text-gray-600 mb-6 italic">"{review.text}"</p>
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center">
-                      <span className="text-amber-600 font-semibold">{review.name.charAt(0)}</span>
+                  <p className="text-gray-600 mb-8 italic text-lg leading-relaxed">"{review.text}"</p>
+                  <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 bg-gradient-to-br from-amber-500 to-orange-600 rounded-full flex items-center justify-center text-white font-bold text-xl shadow-lg ring-4 ring-white">
+                      {review.name.charAt(0)}
                     </div>
                     <div>
-                      <p className="font-semibold text-gray-900">{review.name}</p>
-                      <p className="text-sm text-gray-500">{review.country}</p>
+                      <p className="font-bold text-gray-900 text-lg">{review.name}</p>
+                      <p className="text-sm text-amber-600 font-semibold">{review.country}</p>
                     </div>
                   </div>
                 </div>
@@ -908,14 +1005,48 @@ export function Home() {
           </div>
         </section>
       )}
+
       {/* BLOG SECTION */}
       {homepage.blogSection?.enabled && (
         <BlogSection data={homepage.blogSection} />
       )}
 
+      {/* Newsletter Lead Magnet */}
+      <NewsletterSection />
+
       {/* INSTAGRAM SECTION */}
       {homepage.instagramSection?.enabled && (
         <InstagramSection data={homepage.instagramSection} />
+      )}
+
+      {/* Partners */}
+      <Partners />
+
+      {/* Final CTA Section */}
+      {homepage.ctaSection.enabled && (
+        <section className="py-32 bg-mesh relative overflow-hidden text-center">
+          <div className="absolute inset-0 bg-black/40" />
+          <div className="relative max-w-4xl mx-auto px-4">
+            <h2 className="text-5xl md:text-7xl font-black text-white mb-8 tracking-tight">{homepage.ctaSection.title}</h2>
+            <p className="text-2xl text-gray-300 mb-12 max-w-2xl mx-auto font-medium">
+              {homepage.ctaSection.subtitle || "The mountains are calling. Don't wait for another year to cross this off your bucket list."}
+            </p>
+            <div className="flex flex-wrap justify-center gap-6">
+              <Link
+                to={homepage.ctaSection.ctaLink}
+                className="bg-amber-600 text-white px-12 py-5 rounded-2xl font-black text-xl hover:bg-amber-500 transition-all transform hover:scale-105 shadow-2xl shadow-amber-600/40"
+              >
+                {homepage.ctaSection.ctaText}
+              </Link>
+              <Link
+                to="/contact"
+                className="glass text-white px-12 py-5 rounded-2xl font-black text-xl hover:bg-white/10 transition-all backdrop-blur-xl border-white/20"
+              >
+                REQUEST ITINERARY
+              </Link>
+            </div>
+          </div>
+        </section>
       )}
     </Layout>
   );
