@@ -217,6 +217,7 @@ export interface HomepageSettings {
     title: string;
     username: string;
   };
+  sectionOrder?: string[];
 }
 
 // Header Settings
@@ -454,6 +455,7 @@ export interface ElementStyleConfig {
   // Background
   backgroundColor: string;
   backgroundGradient: string;
+  backgroundImage: string;
   // Border
   borderWidth: string;
   borderStyle: 'none' | 'solid' | 'dashed' | 'dotted';

@@ -96,13 +96,23 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [posts, setPosts] = useState<Post[]>(() => safeLocalStorage.get('brm_posts', []));
   const [siteSettings, setSiteSettings] = useState<SiteSettings>(() => safeLocalStorage.get('brm_settings', defaultSiteSettings));
   const [mediaItems, setMediaItems] = useState<MediaItem[]>(() => safeLocalStorage.get('brm_media', []));
-  const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(false);
   const [isUsingDatabase] = useState(true);
   const [hasLoadedFromDb, setHasLoadedFromDb] = useState(false);
 
   // Authentication
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
+    try {
+      const session = localStorage.getItem('brm_session');
+      if (session) {
+        const data = JSON.parse(session);
+        return data?.expiry > Date.now();
+      }
+    } catch { /* ignore */ }
+    return false;
+  });
+
+  const [isAdmin, setIsAdmin] = useState<boolean>(() => {
     try {
       const session = localStorage.getItem('brm_session');
       if (session) {
@@ -349,8 +359,23 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         const { data: settingsData } = await supabase.from('site_settings').select('*').eq('id', 'main').single();
         if (settingsData?.settings) {
           console.log('📦 Found site settings');
-          setSiteSettings(settingsData.settings as SiteSettings);
-          safeLocalStorage.set('brm_settings', settingsData.settings);
+          const dbSettings = settingsData.settings as any;
+
+          // Deep merge for safety (at least one level deep for each major category)
+          const mergedSettings: SiteSettings = {
+            ...defaultSiteSettings,
+            ...dbSettings,
+            general: { ...defaultSiteSettings.general, ...(dbSettings.general || {}) },
+            typography: { ...defaultSiteSettings.typography, ...(dbSettings.typography || {}) },
+            colors: { ...defaultSiteSettings.colors, ...(dbSettings.colors || {}) },
+            header: { ...defaultSiteSettings.header, ...(dbSettings.header || {}) },
+            footer: { ...defaultSiteSettings.footer, ...(dbSettings.footer || {}) },
+            contact: { ...defaultSiteSettings.contact, ...(dbSettings.contact || {}) },
+            homepage: { ...defaultSiteSettings.homepage, ...(dbSettings.homepage || {}) },
+          };
+
+          setSiteSettings(mergedSettings);
+          safeLocalStorage.set('brm_settings', mergedSettings);
         }
       } catch (e) { console.log('⚠️ Settings load error:', e); }
 

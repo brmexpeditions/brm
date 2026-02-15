@@ -13,7 +13,6 @@ import { Blog } from './pages/Blog';
 import { BlogPost } from './pages/BlogPost';
 import { Admin } from './pages/Admin';
 import Login from './pages/Login';
-import { FrontendEditor } from './components/FrontendEditor';
 
 // Scroll to top component
 function ScrollToTop() {
@@ -29,7 +28,6 @@ function ScrollToTop() {
 
   return null;
 }
-
 export function App() {
   return (
     <AppProvider>
@@ -51,7 +49,6 @@ export function App() {
           {/* Catch all route for 404 */}
           <Route path="*" element={<Home />} />
         </Routes>
-        <FrontendEditor />
       </BrowserRouter>
     </AppProvider>
   );

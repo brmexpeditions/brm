@@ -12,15 +12,15 @@ export function DestinationDetail() {
   const { slug } = useParams();
   const { destinations, tours } = useApp();
   const destination = destinations.find((d: { slug: string }) => d.slug === slug);
-  
+
   const [showGallery, setShowGallery] = useState(false);
   const [galleryIndex, setGalleryIndex] = useState(0);
 
   // Get tours for this destination
-  const destinationTours = tours.filter(t => 
-    t.status === 'published' && 
+  const destinationTours = tours.filter(t =>
+    t.status === 'published' &&
     (t.countries.some(c => c.toLowerCase() === destination?.country.toLowerCase()) ||
-     t.title.toLowerCase().includes(destination?.name.toLowerCase() || ''))
+      t.title.toLowerCase().includes(destination?.name.toLowerCase() || ''))
   );
 
   if (!destination) {
@@ -60,7 +60,7 @@ export function DestinationDetail() {
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
         </div>
-        
+
         <div className="relative h-full flex flex-col justify-end pb-20">
           <div className="max-w-7xl mx-auto px-4 w-full">
             {/* Breadcrumb */}
@@ -73,25 +73,24 @@ export function DestinationDetail() {
                 <span className="text-amber-400">{destination.name}</span>
               </div>
             </nav>
-            
+
             {/* Destination Title */}
             <div className="flex items-center gap-3 mb-4">
               <span className="px-3 py-1 bg-white/20 backdrop-blur-sm text-white text-sm font-semibold rounded-full">
                 {destination.country}
               </span>
-              <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
-                destination.difficulty === 'Expert' ? 'bg-red-500' :
-                destination.difficulty === 'Challenging' ? 'bg-orange-500' :
-                destination.difficulty === 'Moderate' ? 'bg-yellow-500' :
-                'bg-green-500'
-              } text-white`}>
+              <span className={`px-3 py-1 rounded-full text-sm font-semibold ${destination.difficulty === 'Expert' ? 'bg-red-500' :
+                  destination.difficulty === 'Challenging' ? 'bg-orange-500' :
+                    destination.difficulty === 'Moderate' ? 'bg-yellow-500' :
+                      'bg-green-500'
+                } text-white`}>
                 {destination.difficulty}
               </span>
             </div>
-            
+
             <h1 className="text-6xl md:text-8xl font-bold text-white mb-4">{destination.name}</h1>
             <p className="text-2xl md:text-3xl text-amber-400 font-medium mb-8">{destination.tagline}</p>
-            
+
             {/* Quick Stats */}
             <div className="flex flex-wrap gap-6 mb-8">
               <div className="flex items-center gap-2 text-white">
@@ -122,7 +121,7 @@ export function DestinationDetail() {
                 </div>
               </div>
             </div>
-            
+
             {/* CTA Buttons */}
             <div className="flex flex-wrap gap-4">
               <Link
@@ -140,7 +139,7 @@ export function DestinationDetail() {
             </div>
           </div>
         </div>
-        
+
         {/* Scroll Indicator */}
         <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce">
           <div className="w-8 h-12 border-2 border-white/50 rounded-full flex items-start justify-center pt-2">
@@ -157,10 +156,11 @@ export function DestinationDetail() {
             <div className="lg:col-span-2">
               <span className="text-amber-600 font-semibold tracking-widest">ABOUT</span>
               <h2 className="text-4xl font-bold text-gray-900 mt-2 mb-8">Discover {destination.name}</h2>
-              <div className="prose prose-lg max-w-none text-gray-600 whitespace-pre-line">
-                {destination.description}
-              </div>
-              
+              <div
+                className="prose prose-lg max-w-none text-gray-600"
+                dangerouslySetInnerHTML={{ __html: destination.description }}
+              />
+
               {/* Highlights */}
               <div className="mt-12">
                 <h3 className="text-2xl font-bold text-gray-900 mb-6">Highlights</h3>
@@ -176,13 +176,13 @@ export function DestinationDetail() {
                 </div>
               </div>
             </div>
-            
+
             {/* Sidebar */}
             <div>
               {/* Quick Info Card */}
               <div className="bg-gray-900 rounded-2xl p-6 text-white sticky top-32">
                 <h3 className="text-xl font-bold mb-6">Quick Info</h3>
-                
+
                 <div className="space-y-4">
                   <div className="flex items-center gap-3 pb-4 border-b border-gray-700">
                     <Calendar className="text-amber-400" size={20} />
@@ -191,7 +191,7 @@ export function DestinationDetail() {
                       <p className="font-semibold">{destination.bestTimeToVisit}</p>
                     </div>
                   </div>
-                  
+
                   <div className="flex items-center gap-3 pb-4 border-b border-gray-700">
                     <Thermometer className="text-amber-400" size={20} />
                     <div>
@@ -199,7 +199,7 @@ export function DestinationDetail() {
                       <p className="font-medium text-sm">{destination.climate}</p>
                     </div>
                   </div>
-                  
+
                   <div className="flex items-center gap-3 pb-4 border-b border-gray-700">
                     <Mountain className="text-amber-400" size={20} />
                     <div>
@@ -207,22 +207,21 @@ export function DestinationDetail() {
                       <p className="font-semibold">{destination.averageAltitude}</p>
                     </div>
                   </div>
-                  
+
                   <div className="flex items-center gap-3 pb-4 border-b border-gray-700">
                     <Route className="text-amber-400" size={20} />
                     <div>
                       <p className="text-gray-400 text-sm">Difficulty</p>
-                      <p className={`font-semibold ${
-                        destination.difficulty === 'Expert' ? 'text-red-400' :
-                        destination.difficulty === 'Challenging' ? 'text-orange-400' :
-                        destination.difficulty === 'Moderate' ? 'text-yellow-400' :
-                        'text-green-400'
-                      }`}>
+                      <p className={`font-semibold ${destination.difficulty === 'Expert' ? 'text-red-400' :
+                          destination.difficulty === 'Challenging' ? 'text-orange-400' :
+                            destination.difficulty === 'Moderate' ? 'text-yellow-400' :
+                              'text-green-400'
+                        }`}>
                         {destination.difficulty}
                       </p>
                     </div>
                   </div>
-                  
+
                   <div className="pt-2">
                     <p className="text-gray-400 text-sm mb-2">Terrain Types</p>
                     <div className="flex flex-wrap gap-2">
@@ -234,7 +233,7 @@ export function DestinationDetail() {
                     </div>
                   </div>
                 </div>
-                
+
                 <Link
                   to="/tours"
                   className="block w-full mt-6 bg-amber-500 text-white text-center py-3 rounded-lg font-semibold hover:bg-amber-600 transition"
@@ -254,7 +253,7 @@ export function DestinationDetail() {
             <span className="text-amber-600 font-semibold tracking-widest">ROUTES</span>
             <h2 className="text-4xl font-bold text-gray-900 mt-2">Popular Routes in {destination.name}</h2>
           </div>
-          
+
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {destination.popularRoutes.map((route, i) => (
               <div key={i} className="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl transition">
@@ -280,7 +279,7 @@ export function DestinationDetail() {
             <span className="text-amber-200 font-semibold tracking-widest">TIPS</span>
             <h2 className="text-4xl font-bold text-white mt-2">Things to Know Before You Go</h2>
           </div>
-          
+
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {destination.thingsToKnow.map((tip, i) => (
               <div key={i} className="bg-white/10 backdrop-blur-sm rounded-xl p-6 flex items-start gap-4">
@@ -302,7 +301,7 @@ export function DestinationDetail() {
               <span className="text-amber-600 font-semibold tracking-widest">TOURS</span>
               <h2 className="text-4xl font-bold text-gray-900 mt-2">Tours in {destination.name}</h2>
             </div>
-            
+
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
               {destinationTours.map((tour) => (
                 <Link
@@ -324,12 +323,11 @@ export function DestinationDetail() {
                   <div className="p-5">
                     <div className="flex items-center justify-between mb-4">
                       <span className="text-gray-500 text-sm">{tour.duration}</span>
-                      <span className={`px-2 py-1 rounded text-xs font-semibold ${
-                        tour.difficulty === 'Expert' ? 'bg-red-100 text-red-700' :
-                        tour.difficulty === 'Challenging' ? 'bg-orange-100 text-orange-700' :
-                        tour.difficulty === 'Moderate' ? 'bg-yellow-100 text-yellow-700' :
-                        'bg-green-100 text-green-700'
-                      }`}>
+                      <span className={`px-2 py-1 rounded text-xs font-semibold ${tour.difficulty === 'Expert' ? 'bg-red-100 text-red-700' :
+                          tour.difficulty === 'Challenging' ? 'bg-orange-100 text-orange-700' :
+                            tour.difficulty === 'Moderate' ? 'bg-yellow-100 text-yellow-700' :
+                              'bg-green-100 text-green-700'
+                        }`}>
                         {tour.difficulty}
                       </span>
                     </div>
@@ -358,15 +356,14 @@ export function DestinationDetail() {
               <span className="text-amber-500 font-semibold tracking-widest">GALLERY</span>
               <h2 className="text-4xl font-bold text-white mt-2">{destination.name} in Pictures</h2>
             </div>
-            
+
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {destination.gallery.map((img, i) => (
                 <button
                   key={i}
                   onClick={() => { setGalleryIndex(i); setShowGallery(true); }}
-                  className={`relative group rounded-xl overflow-hidden ${
-                    i === 0 ? 'col-span-2 row-span-2' : ''
-                  } aspect-square`}
+                  className={`relative group rounded-xl overflow-hidden ${i === 0 ? 'col-span-2 row-span-2' : ''
+                    } aspect-square`}
                 >
                   <img
                     src={img.url}
@@ -394,7 +391,7 @@ export function DestinationDetail() {
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-gray-900">Explore Other Destinations</h2>
           </div>
-          
+
           <div className="flex justify-center gap-4">
             <Link
               to="/destinations"

@@ -93,6 +93,23 @@ export const defaultSiteSettings: SiteSettings = {
       ctaText: 'Browse Tours',
       ctaLink: '/tours',
     },
+    sectionOrder: [
+      'hero',
+      'stats',
+      'whyus',
+      'destinations',
+      'tourOfMonth',
+      'featured',
+      'departures',
+      'video',
+      'bikes',
+      'testimonials',
+      'blog',
+      'newsletter',
+      'instagram',
+      'partners',
+      'cta'
+    ],
   },
   header: {
     style: 'transparent',

@@ -6,10 +6,12 @@ import {
   Globe, Palette, FileText, Bell, ChevronDown,
   ExternalLink, Check, AlertCircle,
   Monitor, Smartphone, Home, Layout, Mail, Maximize2,
-  MapPin, File, Star, Clock, Mountain, Camera, Bike as BikeIcon
+  MapPin, File, Star, Clock, Mountain, Camera, Bike as BikeIcon,
+  LayoutGrid, MessageSquare, Instagram, ArrowUp, ArrowDown, Sparkles
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { Tour, ItineraryDay, UpgradeOption, ItineraryImage, Destination, Bike, Page, Post } from '../types';
+import { defaultSiteSettings } from '../data/siteSettings';
 import { RichTextEditor, HighlightsEditor } from '../components/SmartEditors';
 
 // Sidebar Component - Cleaner Design
@@ -27,10 +29,12 @@ function Sidebar({ activeTab, setActiveTab, isOpen, setIsOpen }: {
     { id: 'bookings', label: 'Bookings', icon: Calendar },
     { id: 'divider1', type: 'divider' },
     { id: 'blog', label: 'Blog', icon: FileText },
+    { id: 'reviews', label: 'Review Manager', icon: MessageSquare },
     { id: 'pages', label: 'Pages', icon: File },
     { id: 'menus', label: 'Menu Builder', icon: Menu },
     { id: 'theme', label: 'Theme Customizer', icon: Palette },
     { id: 'homepage', label: 'Homepage', icon: Home },
+    { id: 'brand', label: 'Brand & Assets', icon: Sparkles },
     { id: 'header-footer', label: 'Header & Footer', icon: Layout },
     { id: 'images', label: 'Image Settings', icon: Image },
     { id: 'divider2', type: 'divider' },
@@ -656,14 +660,15 @@ function DestinationEditor({ destination, onSave, onCancel }: {
                 />
               </FormField>
 
-              <FormField label="Description">
-                <textarea
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700">Description</label>
+                <RichTextEditor
                   value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  rows={6}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg"
+                  onChange={(description) => setFormData({ ...formData, description })}
+                  placeholder="Describe this destination..."
+                  minHeight={300}
                 />
-              </FormField>
+              </div>
 
               <FormField label="Hero Image URL" hint="Recommended: 1920x1080px">
                 <input
@@ -740,7 +745,7 @@ function DestinationEditor({ destination, onSave, onCancel }: {
               <FormField label="Terrain Types (one per line)">
                 <textarea
                   value={formData.terrain.join('\n')}
-                  onChange={(e) => setFormData({ ...formData, terrain: e.target.value.split('\n').filter(t => t.trim()) })}
+                  onChange={(e) => setFormData({ ...formData, terrain: e.target.value.split('\n') })}
                   rows={4}
                   className="w-full px-3 py-2 border border-gray-200 rounded-lg"
                   placeholder="Mountain passes&#10;River crossings&#10;Gravel roads"
@@ -750,7 +755,7 @@ function DestinationEditor({ destination, onSave, onCancel }: {
               <FormField label="Highlights (one per line)">
                 <textarea
                   value={formData.highlights.join('\n')}
-                  onChange={(e) => setFormData({ ...formData, highlights: e.target.value.split('\n').filter(h => h.trim()) })}
+                  onChange={(e) => setFormData({ ...formData, highlights: e.target.value.split('\n') })}
                   rows={5}
                   className="w-full px-3 py-2 border border-gray-200 rounded-lg"
                   placeholder="Khardung La Pass&#10;Pangong Lake&#10;Nubra Valley"
@@ -760,7 +765,7 @@ function DestinationEditor({ destination, onSave, onCancel }: {
               <FormField label="Popular Routes (one per line)">
                 <textarea
                   value={formData.popularRoutes.join('\n')}
-                  onChange={(e) => setFormData({ ...formData, popularRoutes: e.target.value.split('\n').filter(r => r.trim()) })}
+                  onChange={(e) => setFormData({ ...formData, popularRoutes: e.target.value.split('\n') })}
                   rows={4}
                   className="w-full px-3 py-2 border border-gray-200 rounded-lg"
                   placeholder="Manali to Leh Highway&#10;Srinagar to Leh Road"
@@ -770,7 +775,7 @@ function DestinationEditor({ destination, onSave, onCancel }: {
               <FormField label="Things to Know (one per line)">
                 <textarea
                   value={formData.thingsToKnow.join('\n')}
-                  onChange={(e) => setFormData({ ...formData, thingsToKnow: e.target.value.split('\n').filter(t => t.trim()) })}
+                  onChange={(e) => setFormData({ ...formData, thingsToKnow: e.target.value.split('\n') })}
                   rows={5}
                   className="w-full px-3 py-2 border border-gray-200 rounded-lg"
                   placeholder="Permits required for certain areas&#10;Acclimatization important"
@@ -1082,24 +1087,57 @@ function HomepageEditor() {
   const [whyUs, setWhyUs] = useState(siteSettings?.homepage?.whyChooseUs || defaultWhyUs);
   const [testimonials, setTestimonials] = useState(siteSettings?.homepage?.testimonials || defaultTestimonials);
   const [cta, setCta] = useState(siteSettings?.homepage?.ctaSection || defaultCta);
+  const [blogSection, setBlogSection] = useState(siteSettings?.homepage?.blogSection || { enabled: true, title: 'From Our Blog', subtitle: '' });
+  const [instagramSection, setInstagramSection] = useState(siteSettings?.homepage?.instagramSection || { enabled: true, title: 'Follow Us', username: '' });
+  const [sectionOrder, setSectionOrder] = useState<string[]>(siteSettings?.homepage?.sectionOrder || [
+    'hero', 'stats', 'whyus', 'destinations', 'tourOfMonth', 'featured', 'departures', 'video', 'bikes', 'testimonials', 'blog', 'newsletter', 'instagram', 'partners', 'cta'
+  ]);
   const [activeSection, setActiveSection] = useState('hero');
+
+  const moveSection = (index: number, direction: number) => {
+    const newOrder = [...sectionOrder];
+    const targetIndex = index + direction;
+    if (targetIndex < 0 || targetIndex >= newOrder.length) return;
+    [newOrder[index], newOrder[targetIndex]] = [newOrder[targetIndex], newOrder[index]];
+    setSectionOrder(newOrder);
+  };
 
   const saveChanges = () => {
     updateSiteSettings({
-      homepage: { hero, stats, featuredSection: featured, whyChooseUs: whyUs, testimonials, ctaSection: cta }
+      homepage: {
+        hero,
+        stats,
+        featuredSection: featured,
+        whyChooseUs: whyUs,
+        testimonials,
+        ctaSection: cta,
+        blogSection,
+        instagramSection,
+        sectionOrder
+      }
     });
   };
 
   useEffect(() => {
     saveChanges();
-  }, [hero, stats, featured, whyUs, testimonials, cta]);
+  }, [hero, stats, featured, whyUs, testimonials, cta, blogSection, instagramSection, sectionOrder]);
 
   const sections = [
+    { id: 'layout', label: 'Layout / Order', icon: LayoutGrid },
     { id: 'hero', label: 'Hero Section', icon: Maximize2 },
     { id: 'stats', label: 'Statistics', icon: BarChart3 },
-    { id: 'featured', label: 'Featured Tours', icon: Map },
     { id: 'whyus', label: 'Why Choose Us', icon: Check },
+    { id: 'destinations', label: 'Destinations', icon: MapPin },
+    { id: 'tourOfMonth', label: 'Tour of the Month', icon: Star },
+    { id: 'featured', label: 'Featured Tours', icon: Map },
+    { id: 'departures', label: 'Upcoming Departures', icon: Calendar },
+    { id: 'video', label: 'Video Section', icon: Camera },
+    { id: 'bikes', label: 'Fleet Section', icon: BikeIcon },
     { id: 'testimonials', label: 'Testimonials', icon: FileText },
+    { id: 'blog', label: 'Blog Section', icon: MessageSquare },
+    { id: 'newsletter', label: 'Newsletter', icon: Mail },
+    { id: 'instagram', label: 'Instagram Feed', icon: Instagram },
+    { id: 'partners', label: 'Partners Section', icon: Globe },
     { id: 'cta', label: 'CTA Section', icon: ChevronRight },
   ];
 
@@ -1133,6 +1171,54 @@ function HomepageEditor() {
 
         {/* Section Content */}
         <div className="lg:col-span-3 space-y-6">
+          {/* Layout / Order Section */}
+          {activeSection === 'layout' && (
+            <SectionCard title="Homepage Layout" description="Drag sections to reorder or use arrows">
+              <div className="space-y-3">
+                {sectionOrder.map((sectionId, index) => {
+                  const section = sections.find(s => s.id === sectionId);
+                  if (!section) return null;
+                  return (
+                    <div key={sectionId} className="flex items-center justify-between p-4 bg-white border border-gray-200 rounded-xl shadow-sm group hover:border-amber-500/50 transition-colors">
+                      <div className="flex items-center gap-4">
+                        <div className="flex flex-col gap-1">
+                          <button
+                            onClick={() => moveSection(index, -1)}
+                            disabled={index === 0}
+                            className="p-1 hover:bg-gray-100 rounded-lg disabled:opacity-30 text-gray-500 hover:text-amber-600 transition"
+                          >
+                            <ArrowUp size={16} />
+                          </button>
+                          <button
+                            onClick={() => moveSection(index, 1)}
+                            disabled={index === sectionOrder.length - 1}
+                            className="p-1 hover:bg-gray-100 rounded-lg disabled:opacity-30 text-gray-500 hover:text-amber-600 transition"
+                          >
+                            <ArrowDown size={16} />
+                          </button>
+                        </div>
+                        <div className="w-12 h-12 bg-amber-50 rounded-xl flex items-center justify-center text-amber-600 shadow-sm">
+                          <section.icon size={24} />
+                        </div>
+                        <div>
+                          <span className="font-bold text-gray-900 block">{section.label}</span>
+                          <span className="text-xs text-gray-500 uppercase tracking-wider">ID: {sectionId}</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        {/* Status Badge */}
+                        <div className="flex items-center gap-2">
+                          <span className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]"></span>
+                          <span className="text-sm font-medium text-gray-600">Active</span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </SectionCard>
+          )}
+
           {/* Hero Section */}
           {activeSection === 'hero' && (
             <SectionCard title="Hero Section" description="Main banner on your homepage">
@@ -1147,15 +1233,15 @@ function HomepageEditor() {
                   />
                 </FormField>
 
-                <FormField label="Subtitle">
-                  <textarea
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">Subtitle</label>
+                  <RichTextEditor
                     value={hero.subtitle}
-                    onChange={(e) => setHero({ ...hero, subtitle: e.target.value })}
-                    rows={3}
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg"
+                    onChange={(subtitle) => setHero({ ...hero, subtitle })}
                     placeholder="Your adventure starts here..."
+                    minHeight={150}
                   />
-                </FormField>
+                </div>
 
                 <FormField label="Background Image URL" hint="Recommended size: 1920x1080px">
                   <input
@@ -1459,17 +1545,19 @@ function HomepageEditor() {
                         placeholder="Country"
                       />
                     </div>
-                    <textarea
-                      value={item.text}
-                      onChange={(e) => {
-                        const newItems = [...testimonials.items];
-                        newItems[index].text = e.target.value;
-                        setTestimonials({ ...testimonials, items: newItems });
-                      }}
-                      rows={2}
-                      className="w-full px-3 py-2 border border-gray-200 rounded-lg"
-                      placeholder="Testimonial text"
-                    />
+                    <div className="space-y-1">
+                      <label className="text-sm text-gray-500">Testimonial text</label>
+                      <RichTextEditor
+                        value={item.text}
+                        onChange={(text) => {
+                          const newItems = [...testimonials.items];
+                          newItems[index].text = text;
+                          setTestimonials({ ...testimonials, items: newItems });
+                        }}
+                        placeholder="Testimonial text"
+                        minHeight={100}
+                      />
+                    </div>
                     <div className="flex items-center gap-2">
                       <span className="text-sm text-gray-500">Rating:</span>
                       {[1, 2, 3, 4, 5].map(star => (
@@ -1494,6 +1582,87 @@ function HomepageEditor() {
                 >
                   <Plus size={16} /> Add Testimonial
                 </button>
+              </div>
+            </SectionCard>
+          )}
+
+          {/* Blog Section */}
+          {activeSection === 'blog' && (
+            <SectionCard
+              title="Blog Section"
+              description="Configure how recent posts are displayed"
+              actions={
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={blogSection.enabled}
+                    onChange={(e) => setBlogSection({ ...blogSection, enabled: e.target.checked })}
+                    className="w-4 h-4 rounded border-gray-300 text-amber-500"
+                  />
+                  <span className="text-sm">Enabled</span>
+                </label>
+              }
+            >
+              <div className="space-y-4">
+                <FormField label="Section Title">
+                  <input
+                    type="text"
+                    value={blogSection.title}
+                    onChange={(e) => setBlogSection({ ...blogSection, title: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg"
+                    placeholder="From Our Blog"
+                  />
+                </FormField>
+                <FormField label="Subtitle">
+                  <input
+                    type="text"
+                    value={blogSection.subtitle}
+                    onChange={(e) => setBlogSection({ ...blogSection, subtitle: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg"
+                    placeholder="Latest stories and tips..."
+                  />
+                </FormField>
+              </div>
+            </SectionCard>
+          )}
+
+          {/* Instagram Section */}
+          {activeSection === 'instagram' && (
+            <SectionCard
+              title="Instagram Section"
+              description="Connect your Instagram feed"
+              actions={
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={instagramSection.enabled}
+                    onChange={(e) => setInstagramSection({ ...instagramSection, enabled: e.target.checked })}
+                    className="w-4 h-4 rounded border-gray-300 text-amber-500"
+                  />
+                  <span className="text-sm">Enabled</span>
+                </label>
+              }
+            >
+              <div className="space-y-4">
+                <FormField label="Section Title">
+                  <input
+                    type="text"
+                    value={instagramSection.title}
+                    onChange={(e) => setInstagramSection({ ...instagramSection, title: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg"
+                  />
+                </FormField>
+                <FormField label="Instagram Username" hint="Example: brmexpeditions">
+                  <div className="flex items-center gap-2">
+                    <span className="text-gray-500 font-medium">@</span>
+                    <input
+                      type="text"
+                      value={instagramSection.username}
+                      onChange={(e) => setInstagramSection({ ...instagramSection, username: e.target.value })}
+                      className="flex-1 px-3 py-2 border border-gray-200 rounded-lg"
+                    />
+                  </div>
+                </FormField>
               </div>
             </SectionCard>
           )}
@@ -1569,8 +1738,8 @@ function HomepageEditor() {
 // Header & Footer Editor (keeping existing code structure)
 function HeaderFooterEditor() {
   const { siteSettings, updateSiteSettings } = useApp();
-  const [header, setHeader] = useState(siteSettings.header);
-  const [footer, setFooter] = useState(siteSettings.footer);
+  const [header, setHeader] = useState(siteSettings.header || defaultSiteSettings.header);
+  const [footer, setFooter] = useState(siteSettings.footer || defaultSiteSettings.footer);
   const [activeTab, setActiveTab] = useState('header');
 
   useEffect(() => {
@@ -1759,7 +1928,7 @@ function HeaderFooterEditor() {
             </button>
           }>
             <div className="space-y-4">
-              {footer.columns.map((col, colIndex) => (
+              {(footer.columns || []).map((col, colIndex) => (
                 <div key={colIndex} className="p-3 border border-gray-200 rounded-lg">
                   <div className="flex justify-between items-center mb-2">
                     <input
@@ -4670,14 +4839,15 @@ function TourEditor({ tour, onSave, onCancel }: {
                 />
               </FormField>
 
-              <FormField label="Full Description">
-                <textarea
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700">Full Description</label>
+                <RichTextEditor
                   value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  rows={6}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg"
+                  onChange={(description) => setFormData({ ...formData, description })}
+                  placeholder="Detailed tour description..."
+                  minHeight={300}
                 />
-              </FormField>
+              </div>
 
               <div className="grid grid-cols-3 gap-4">
                 <FormField label="Price (USD)" required>
@@ -5099,7 +5269,7 @@ function TourEditor({ tour, onSave, onCancel }: {
               <FormField label="Highlights (one per line)">
                 <textarea
                   value={formData.highlights.join('\n')}
-                  onChange={(e) => setFormData({ ...formData, highlights: e.target.value.split('\n').filter(h => h.trim()) })}
+                  onChange={(e) => setFormData({ ...formData, highlights: e.target.value.split('\n') })}
                   rows={5}
                   className="w-full px-3 py-2 border border-gray-200 rounded-lg"
                 />
@@ -5109,8 +5279,8 @@ function TourEditor({ tour, onSave, onCancel }: {
                 <textarea
                   value={formData.departureDates.join('\n')}
                   onChange={(e) => {
-                    const dates = e.target.value.split('\n').filter(d => d.trim());
-                    setFormData({ ...formData, departureDates: dates, nextDeparture: dates[0] || '' });
+                    const dates = e.target.value.split('\n');
+                    setFormData({ ...formData, departureDates: dates, nextDeparture: dates[0]?.trim() || '' });
                   }}
                   rows={4}
                   className="w-full px-3 py-2 border border-gray-200 rounded-lg"
@@ -5335,7 +5505,7 @@ function TourEditor({ tour, onSave, onCancel }: {
                   value={formData.inclusions.included.join('\n')}
                   onChange={(e) => setFormData({
                     ...formData,
-                    inclusions: { ...formData.inclusions, included: e.target.value.split('\n').filter(i => i.trim()) }
+                    inclusions: { ...formData.inclusions, included: e.target.value.split('\n') }
                   })}
                   rows={12}
                   className="w-full px-3 py-2 border border-gray-200 rounded-lg"
@@ -5346,7 +5516,7 @@ function TourEditor({ tour, onSave, onCancel }: {
                   value={formData.inclusions.notIncluded.join('\n')}
                   onChange={(e) => setFormData({
                     ...formData,
-                    inclusions: { ...formData.inclusions, notIncluded: e.target.value.split('\n').filter(i => i.trim()) }
+                    inclusions: { ...formData.inclusions, notIncluded: e.target.value.split('\n') }
                   })}
                   rows={12}
                   className="w-full px-3 py-2 border border-gray-200 rounded-lg"
@@ -5625,19 +5795,39 @@ export function Admin() {
   const navigate = useNavigate();
 
   const handleSaveTour = async (tour: Tour) => {
+    // Clean up arrays (filter out empty lines)
+    const cleanTour = {
+      ...tour,
+      highlights: tour.highlights.filter(h => h.trim()),
+      departureDates: tour.departureDates.filter(d => d.trim()),
+      inclusions: {
+        included: tour.inclusions.included.filter(i => i.trim()),
+        notIncluded: tour.inclusions.notIncluded.filter(i => i.trim())
+      }
+    };
+
     if (editingTour === 'new') {
-      await addTour(tour);
+      await addTour(cleanTour);
     } else {
-      await updateTour(tour.id, tour);
+      await updateTour(cleanTour.id, cleanTour);
     }
     setEditingTour(null);
   };
 
   const handleSaveDestination = async (destination: Destination) => {
+    // Clean up arrays
+    const cleanDestination = {
+      ...destination,
+      highlights: destination.highlights.filter(h => h.trim()),
+      terrain: destination.terrain.filter(t => t.trim()),
+      popularRoutes: destination.popularRoutes.filter(r => r.trim()),
+      thingsToKnow: destination.thingsToKnow.filter(t => t.trim())
+    };
+
     if (editingDestination === 'new') {
-      await addDestination(destination);
+      await addDestination(cleanDestination);
     } else {
-      await updateDestination(destination.id, destination);
+      await updateDestination(cleanDestination.id, cleanDestination);
     }
     setEditingDestination(null);
   };
@@ -5706,9 +5896,11 @@ export function Admin() {
           {activeTab === 'bookings' && <BookingsManager />}
           {activeTab === 'pages' && <PagesManager />}
           {activeTab === 'blog' && <BlogManager />}
+          {activeTab === 'reviews' && <ReviewManager />}
           {activeTab === 'menus' && <MenuBuilder />}
           {activeTab === 'theme' && <ThemeCustomizer />}
           {activeTab === 'homepage' && <HomepageEditor />}
+          {activeTab === 'brand' && <BrandAssetsEditor />}
           {activeTab === 'header-footer' && <HeaderFooterEditor />}
           {activeTab === 'images' && <ImageSettings />}
           {activeTab === 'seo' && <SEOSettingsEditor />}
@@ -6039,6 +6231,310 @@ function DatabaseStatus() {
             <strong>Current Mode:</strong> {status.connected ? 'Using Supabase Database' : 'Using Local Storage (data saved in browser only)'}
           </span>
         </p>
+      </div>
+    </div>
+  );
+}
+
+// Review Manager Component
+function ReviewManager() {
+  const { siteSettings, updateSiteSettings } = useApp();
+  const [items, setItems] = useState(siteSettings?.homepage?.testimonials?.items || []);
+
+  const saveReviews = () => {
+    updateSiteSettings({
+      homepage: {
+        ...siteSettings.homepage,
+        testimonials: {
+          ...siteSettings.homepage.testimonials,
+          items
+        }
+      }
+    });
+  };
+
+  const addReview = () => {
+    setItems([{ name: 'New Rider', country: 'Country', text: 'Great experience!', rating: 5 }, ...items]);
+  };
+
+  return (
+    <div className="space-y-6 animate-fade-in">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900">Review Manager</h2>
+          <p className="text-gray-500">Manage customer testimonials across your site</p>
+        </div>
+        <div className="flex gap-3">
+          <button
+            onClick={addReview}
+            className="flex items-center gap-2 bg-white border border-gray-300 px-4 py-2.5 rounded-xl text-sm font-bold text-gray-700 hover:bg-gray-50 transition-colors shadow-sm"
+          >
+            <Plus size={18} /> Add New Review
+          </button>
+          <button
+            onClick={saveReviews}
+            className="flex items-center gap-2 bg-amber-500 text-white px-6 py-2.5 rounded-xl text-sm font-bold hover:bg-amber-600 transition-all shadow-lg shadow-amber-500/30"
+          >
+            <Save size={18} /> Save All Changes
+          </button>
+        </div>
+      </div>
+
+      <div className="grid gap-4">
+        {items.map((item: any, index: number) => (
+          <div key={index} className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm hover:border-amber-200 transition-colors group">
+            <div className="flex flex-col lg:flex-row items-start justify-between gap-6">
+              <div className="space-y-6 flex-1 w-full">
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Rider Name</label>
+                    <input
+                      type="text"
+                      value={item.name}
+                      onChange={(e) => {
+                        const newItems = [...items];
+                        newItems[index].name = e.target.value;
+                        setItems(newItems);
+                      }}
+                      className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500/10 focus:border-amber-500/50 transition-all"
+                      placeholder="John Doe"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Country/Location</label>
+                    <input
+                      type="text"
+                      value={item.country}
+                      onChange={(e) => {
+                        const newItems = [...items];
+                        newItems[index].country = e.target.value;
+                        setItems(newItems);
+                      }}
+                      className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500/10 focus:border-amber-500/50 transition-all"
+                      placeholder="United Kingdom"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Testimonial Content</label>
+                  <RichTextEditor
+                    value={item.text}
+                    onChange={(text) => {
+                      const newItems = [...items];
+                      newItems[index].text = text;
+                      setItems(newItems);
+                    }}
+                    minHeight={120}
+                  />
+                </div>
+              </div>
+              <div className="flex flex-row lg:flex-col items-center justify-between lg:justify-start w-full lg:w-32 pt-6 lg:pt-0 border-t lg:border-t-0 border-gray-100 gap-6">
+                <div className="flex flex-col items-center gap-2">
+                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Rating</span>
+                  <div className="flex items-center gap-1">
+                    {[1, 2, 3, 4, 5].map(star => (
+                      <button
+                        key={star}
+                        onClick={() => {
+                          const newItems = [...items];
+                          newItems[index].rating = star;
+                          setItems(newItems);
+                        }}
+                        className={`hover:scale-120 transition-transform ${star <= item.rating ? 'text-amber-500' : 'text-gray-200'}`}
+                      >
+                        <Star size={20} fill={star <= item.rating ? "currentColor" : "none"} />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <button
+                  onClick={() => {
+                    if (confirm('Are you sure you want to delete this testimonial?')) {
+                      setItems(items.filter((_: any, i: number) => i !== index));
+                    }
+                  }}
+                  className="flex items-center gap-2 p-3 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all group-hover:bg-gray-50"
+                >
+                  <Trash2 size={20} />
+                  <span className="lg:hidden text-sm font-semibold">Delete Review</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        ))}
+
+        {items.length === 0 && (
+          <div className="bg-white rounded-3xl border-2 border-dashed border-gray-200 p-20 text-center">
+            <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6">
+              <MessageSquare size={32} className="text-gray-300" />
+            </div>
+            <h3 className="text-xl font-bold text-gray-900 mb-2">No Reviews Found</h3>
+            <p className="text-gray-500 max-w-sm mx-auto mb-8">You haven't added any rider testimonials yet. Add your first one to showcase customer experiences.</p>
+            <button
+              onClick={addReview}
+              className="bg-gray-900 text-white px-8 py-3 rounded-xl font-bold hover:bg-gray-800 transition shadow-lg"
+            >
+              Add First Review
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// Brand Assets Editor Component
+function BrandAssetsEditor() {
+  const { siteSettings, updateSiteSettings } = useApp();
+  const [general, setGeneral] = useState(siteSettings?.general || { siteName: '', siteTagline: '', logo: '', favicon: '' });
+  const colors = siteSettings?.colors || {};
+
+  const saveBrand = () => {
+    updateSiteSettings({ general, colors });
+  };
+
+  return (
+    <div className="space-y-8 animate-fade-in">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900">Brand & Visual Identity</h2>
+          <p className="text-gray-500">Manage logos, colors, and core brand assets</p>
+        </div>
+        <button onClick={saveBrand} className="flex items-center gap-2 bg-amber-500 text-white px-8 py-3 rounded-xl font-bold hover:bg-amber-600 transition-all shadow-lg shadow-amber-500/30">
+          <Save size={20} /> Save Visual Identity
+        </button>
+      </div>
+
+      <div className="grid lg:grid-cols-3 gap-8">
+        {/* Left Column: Logos */}
+        <div className="lg:col-span-2 space-y-6">
+          <SectionCard title="Official Logos" description="Upload and manage your brand mark assets">
+            <div className="space-y-6">
+              <div className="grid sm:grid-cols-2 gap-6">
+                <div className="space-y-3">
+                  <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Main Logo URL</label>
+                  <div className="space-y-3">
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={general.logo}
+                        onChange={(e) => setGeneral({ ...general, logo: e.target.value })}
+                        className="flex-1 px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500/20"
+                        placeholder="https://..."
+                      />
+                    </div>
+                    <div className="aspect-[3/1] bg-gray-900 rounded-2xl p-6 flex items-center justify-center border border-gray-800 shadow-inner group relative overflow-hidden">
+                      {general.logo ? (
+                        <img src={general.logo} alt="Site Logo" className="max-w-full max-h-full object-contain relative z-10" />
+                      ) : (
+                        <div className="text-center text-gray-600">
+                          <Image size={32} className="mx-auto mb-2 opacity-50" />
+                          <p className="text-sm font-medium">Dark Background Preview</p>
+                        </div>
+                      )}
+                      <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Site Favicon URL</label>
+                  <div className="space-y-3">
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={general.favicon}
+                        onChange={(e) => setGeneral({ ...general, favicon: e.target.value })}
+                        className="flex-1 px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500/20"
+                        placeholder="https://.../favicon.ico"
+                      />
+                    </div>
+                    <div className="aspect-[3/1] bg-white rounded-2xl p-6 flex items-center justify-center border border-gray-100 shadow-sm">
+                      {general.favicon ? (
+                        <div className="bg-gray-50 p-4 rounded-xl shadow-inner border border-gray-100">
+                          <img src={general.favicon} alt="Favicon" className="w-12 h-12 object-contain" />
+                        </div>
+                      ) : (
+                        <div className="text-center text-gray-400">
+                          <Star size={32} className="mx-auto mb-2 opacity-30" />
+                          <p className="text-sm font-medium">Icon Preview</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </SectionCard>
+
+          <SectionCard title="Brand Personality" description="Core naming and taglines">
+            <div className="grid sm:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Official Site Name</label>
+                <input
+                  type="text"
+                  value={general.siteName}
+                  onChange={(e) => setGeneral({ ...general, siteName: e.target.value })}
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500/20"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Global Site Tagline</label>
+                <input
+                  type="text"
+                  value={general.siteTagline}
+                  onChange={(e) => setGeneral({ ...general, siteTagline: e.target.value })}
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500/20"
+                />
+              </div>
+            </div>
+          </SectionCard>
+        </div>
+
+        {/* Right Column: Palette Preview */}
+        <div className="space-y-6">
+          <SectionCard title="Color Palette" description="Core brand colors used across the UI">
+            <div className="space-y-4">
+              {[
+                { id: 'primary', label: 'Primary Brand', color: colors.primary },
+                { id: 'secondary', label: 'Secondary Background', color: colors.secondary },
+                { id: 'accent', label: 'Accent Highlight', color: colors.accent },
+              ].map(swatch => (
+                <div key={swatch.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                  <div>
+                    <p className="font-bold text-gray-900">{swatch.label}</p>
+                    <p className="text-xs font-mono text-gray-500">{swatch.color}</p>
+                  </div>
+                  <div
+                    className="w-12 h-12 rounded-xl shadow-lg ring-4 ring-white"
+                    style={{ backgroundColor: swatch.color }}
+                  ></div>
+                </div>
+              ))}
+              <div className="pt-4">
+                <p className="text-xs text-center text-gray-400 font-medium">
+                  To update brand colors, please use the <br />
+                  <strong>Theme Customizer</strong> tab.
+                </p>
+              </div>
+            </div>
+          </SectionCard>
+
+          <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-3xl p-8 text-white shadow-xl relative overflow-hidden group">
+            <div className="absolute top-0 right-0 p-8 opacity-20 transform translate-x-4 -translate-y-4 group-hover:translate-x-0 group-hover:translate-y-0 transition-transform duration-700">
+              <Sparkles size={120} />
+            </div>
+            <div className="relative z-10">
+              <h4 className="text-xl font-bold mb-4">Pro Tip: Brand Cohesion</h4>
+              <p className="text-gray-400 text-sm leading-relaxed mb-6">
+                Consistency is key to a premium feel. Use high-resolution PNGs for your logo and ensure your favicon is visible at 16x16 size.
+              </p>
+              <div className="flex items-center gap-2 text-amber-500 font-bold text-sm">
+                LEARN BRANDING <ChevronRight size={16} />
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

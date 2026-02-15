@@ -24,17 +24,17 @@ export function TourDetail() {
   const [bookingSubmitted, setBookingSubmitted] = useState(false);
   const [formData, setFormData] = useState({ name: '', email: '', phone: '', notes: '' });
   const [showLightbox, setShowLightbox] = useState(false);
-  const [lightboxImages, setLightboxImages] = useState<{url: string; caption: string}[]>([]);
+  const [lightboxImages, setLightboxImages] = useState<{ url: string; caption: string }[]>([]);
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const [galleryFilter, setGalleryFilter] = useState<'all' | 'hero' | 'itinerary'>('all');
   const contentRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
-  
+
   // Scroll to top when route changes
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' });
   }, [location.pathname]);
-  
+
   // Function to handle tab change with scroll
   const handleTabChange = (tabId: string) => {
     setActiveTab(tabId);
@@ -48,12 +48,12 @@ export function TourDetail() {
       }
     }, 100);
   };
-  
+
   // Collect all images for gallery
   const allGalleryImages = [
     { url: tour?.heroImage || '', caption: 'Tour Hero Image', category: 'hero' },
     ...(tour?.gallery || []).map(g => ({ url: g.url, caption: g.alt, category: 'hero' })),
-    ...(tour?.itinerary || []).flatMap((day) => 
+    ...(tour?.itinerary || []).flatMap((day) =>
       (day.images || []).map(img => ({ url: img.url, caption: `Day ${day.day}: ${img.caption || day.title}`, category: 'itinerary' }))
     )
   ].filter(img => img.url);
@@ -61,7 +61,7 @@ export function TourDetail() {
   if (!tour) {
     return (
       <Layout>
-        <SEOHead 
+        <SEOHead
           title="Tour Not Found | BRM Expeditions"
           description="The tour you're looking for doesn't exist or has been removed."
         />
@@ -130,7 +130,7 @@ export function TourDetail() {
     }
   };
 
-  const openLightbox = (images: {url: string; caption: string}[], index: number) => {
+  const openLightbox = (images: { url: string; caption: string }[], index: number) => {
     setLightboxImages(images);
     setLightboxIndex(index);
     setShowLightbox(true);
@@ -170,14 +170,13 @@ export function TourDetail() {
               <span className="mx-2 text-gray-500">/</span>
               <span className="text-amber-500">{tour.title}</span>
             </nav>
-            
+
             <div className="flex gap-2 mb-4">
-              <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
-                tour.difficulty === 'Expert' ? 'bg-red-500' :
-                tour.difficulty === 'Challenging' ? 'bg-orange-500' :
-                tour.difficulty === 'Moderate' ? 'bg-yellow-500' :
-                'bg-green-500'
-              } text-white`}>
+              <span className={`px-3 py-1 rounded-full text-sm font-semibold ${tour.difficulty === 'Expert' ? 'bg-red-500' :
+                  tour.difficulty === 'Challenging' ? 'bg-orange-500' :
+                    tour.difficulty === 'Moderate' ? 'bg-yellow-500' :
+                      'bg-green-500'
+                } text-white`}>
                 {tour.difficulty}
               </span>
               <span className="px-3 py-1 rounded-full text-sm font-semibold bg-white/20 text-white backdrop-blur-sm">
@@ -189,10 +188,10 @@ export function TourDetail() {
                 </span>
               )}
             </div>
-            
+
             <h1 className="text-4xl md:text-6xl font-bold text-white mb-2">{tour.title}</h1>
             <p className="text-xl text-gray-300 mb-6 max-w-3xl">{tour.subtitle}</p>
-            
+
             <div className="flex flex-wrap gap-6 text-white">
               <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full">
                 <Clock className="text-amber-500" size={20} />
@@ -233,14 +232,14 @@ export function TourDetail() {
               {tour.gallery.map((img, i) => (
                 <button
                   key={i}
-                  onClick={() => openLightbox(tour.gallery.map(g => ({url: g.url, caption: g.alt})), i)}
+                  onClick={() => openLightbox(tour.gallery.map(g => ({ url: g.url, caption: g.alt })), i)}
                   className="flex-shrink-0 w-24 h-16 rounded-lg overflow-hidden border-2 transition border-transparent opacity-70 hover:opacity-100 hover:border-amber-500"
                 >
                   <img src={img.url} alt={img.alt} className="w-full h-full object-cover" />
                 </button>
               ))}
-              <button 
-                onClick={() => openLightbox(tour.gallery.map(g => ({url: g.url, caption: g.alt})), 0)}
+              <button
+                onClick={() => openLightbox(tour.gallery.map(g => ({ url: g.url, caption: g.alt })), 0)}
                 className="flex-shrink-0 w-24 h-16 rounded-lg bg-white/10 flex items-center justify-center text-white hover:bg-white/20 transition"
               >
                 <Camera size={20} className="mr-1" />
@@ -269,11 +268,10 @@ export function TourDetail() {
                 <button
                   key={tab.id}
                   onClick={() => handleTabChange(tab.id)}
-                  className={`group relative flex items-center gap-2 px-6 py-4 font-medium whitespace-nowrap transition-all duration-200 border-b-2 -mb-[2px] ${
-                    isActive
+                  className={`group relative flex items-center gap-2 px-6 py-4 font-medium whitespace-nowrap transition-all duration-200 border-b-2 -mb-[2px] ${isActive
                       ? 'text-gray-900 border-gray-900'
                       : 'text-gray-500 border-transparent hover:text-gray-700 hover:border-gray-300'
-                  }`}
+                    }`}
                 >
                   <Icon size={18} className={`transition-colors ${isActive ? 'text-gray-900' : 'text-gray-400 group-hover:text-gray-600'}`} />
                   <span className="text-sm font-medium">{tab.label}</span>
@@ -405,9 +403,10 @@ export function TourDetail() {
                       <div className="w-1.5 h-1 bg-amber-200 rounded-full"></div>
                     </div>
                   </div>
-                  <div className="prose max-w-none text-gray-600 whitespace-pre-line">
-                    {tour.description}
-                  </div>
+                  <div
+                    className="prose max-w-none text-gray-600"
+                    dangerouslySetInnerHTML={{ __html: tour.description }}
+                  />
                 </div>
 
                 {/* Tour Highlights - Clean Professional Design */}
@@ -550,7 +549,7 @@ export function TourDetail() {
                       </div>
                     </div>
                   </div>
-                  
+
                   {/* Journey Progress Bar */}
                   <div className="px-6 pb-6">
                     <div className="flex items-center gap-2">
@@ -570,13 +569,12 @@ export function TourDetail() {
                 {/* Day Cards */}
                 <div className="space-y-4">
                   {tour.itinerary.map((day, index) => (
-                    <div 
-                      key={day.day} 
-                      className={`bg-white rounded-2xl border overflow-hidden transition-all duration-300 ${
-                        expandedDays.includes(day.day) 
-                          ? 'border-amber-200 shadow-lg' 
+                    <div
+                      key={day.day}
+                      className={`bg-white rounded-2xl border overflow-hidden transition-all duration-300 ${expandedDays.includes(day.day)
+                          ? 'border-amber-200 shadow-lg'
                           : 'border-gray-100 hover:border-gray-200 hover:shadow-md'
-                      }`}
+                        }`}
                     >
                       {/* Day Header */}
                       <button
@@ -585,30 +583,26 @@ export function TourDetail() {
                       >
                         <div className="flex">
                           {/* Day Number Column */}
-                          <div className={`w-20 sm:w-24 flex-shrink-0 flex flex-col items-center justify-center py-6 transition-colors ${
-                            expandedDays.includes(day.day)
+                          <div className={`w-20 sm:w-24 flex-shrink-0 flex flex-col items-center justify-center py-6 transition-colors ${expandedDays.includes(day.day)
                               ? 'bg-gradient-to-b from-amber-500 to-orange-500'
                               : 'bg-gray-100'
-                          }`}>
-                            <span className={`text-xs font-semibold uppercase tracking-wider ${
-                              expandedDays.includes(day.day) ? 'text-amber-100' : 'text-gray-400'
-                            }`}>Day</span>
-                            <span className={`text-3xl sm:text-4xl font-bold ${
-                              expandedDays.includes(day.day) ? 'text-white' : 'text-gray-700'
-                            }`}>{String(day.day).padStart(2, '0')}</span>
+                            }`}>
+                            <span className={`text-xs font-semibold uppercase tracking-wider ${expandedDays.includes(day.day) ? 'text-amber-100' : 'text-gray-400'
+                              }`}>Day</span>
+                            <span className={`text-3xl sm:text-4xl font-bold ${expandedDays.includes(day.day) ? 'text-white' : 'text-gray-700'
+                              }`}>{String(day.day).padStart(2, '0')}</span>
                             {index < tour.itinerary.length - 1 && (
-                              <div className={`w-px h-4 mt-2 ${
-                                expandedDays.includes(day.day) ? 'bg-white/30' : 'bg-gray-300'
-                              }`}></div>
+                              <div className={`w-px h-4 mt-2 ${expandedDays.includes(day.day) ? 'bg-white/30' : 'bg-gray-300'
+                                }`}></div>
                             )}
                           </div>
-                          
+
                           {/* Day Content */}
                           <div className="flex-1 p-5 sm:p-6">
                             <div className="flex items-start justify-between gap-4">
                               <div className="flex-1">
                                 <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2">{day.title}</h3>
-                                
+
                                 {/* Quick Stats Row */}
                                 <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-sm">
                                   {day.distance && (
@@ -638,7 +632,7 @@ export function TourDetail() {
                                   )}
                                 </div>
                               </div>
-                              
+
                               {/* Expand Button & Photo Count */}
                               <div className="flex items-center gap-3">
                                 {day.images && day.images.length > 0 && (
@@ -647,11 +641,10 @@ export function TourDetail() {
                                     <span className="text-sm font-medium">{day.images.length}</span>
                                   </div>
                                 )}
-                                <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${
-                                  expandedDays.includes(day.day)
+                                <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${expandedDays.includes(day.day)
                                     ? 'bg-amber-500 text-white rotate-180'
                                     : 'bg-gray-100 text-gray-400'
-                                }`}>
+                                  }`}>
                                   <ChevronDown size={20} />
                                 </div>
                               </div>
@@ -659,7 +652,7 @@ export function TourDetail() {
                           </div>
                         </div>
                       </button>
-                      
+
                       {/* Expanded Content */}
                       {expandedDays.includes(day.day) && (
                         <div className="border-t border-gray-100">
@@ -670,7 +663,7 @@ export function TourDetail() {
                                 {day.images.map((img, idx) => (
                                   <button
                                     key={img.id}
-                                    onClick={() => openLightbox(day.images!.map(i => ({url: i.url, caption: i.caption})), idx)}
+                                    onClick={() => openLightbox(day.images!.map(i => ({ url: i.url, caption: i.caption })), idx)}
                                     className="relative flex-shrink-0 w-48 sm:w-64 aspect-[4/3] overflow-hidden group"
                                   >
                                     <img
@@ -690,18 +683,18 @@ export function TourDetail() {
                               </div>
                             </div>
                           )}
-                          
+
                           <div className="p-6 sm:p-8 space-y-6">
                             {/* Description */}
                             {day.descriptionHtml ? (
-                              <div 
+                              <div
                                 className="text-gray-600 leading-relaxed prose prose-sm max-w-none"
                                 dangerouslySetInnerHTML={{ __html: day.descriptionHtml }}
                               />
                             ) : (
                               <p className="text-gray-600 leading-relaxed">{day.description}</p>
                             )}
-                            
+
                             {/* Info Grid */}
                             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
                               {/* Riding Info Card */}
@@ -730,7 +723,7 @@ export function TourDetail() {
                                   </div>
                                 </div>
                               )}
-                              
+
                               {/* Accommodation Card */}
                               {day.accommodation && (
                                 <div className="bg-blue-50 rounded-xl p-4">
@@ -746,7 +739,7 @@ export function TourDetail() {
                                   </div>
                                 </div>
                               )}
-                              
+
                               {/* Meals Card */}
                               {day.meals && day.meals.length > 0 && (
                                 <div className="bg-green-50 rounded-xl p-4">
@@ -766,7 +759,7 @@ export function TourDetail() {
                                 </div>
                               )}
                             </div>
-                            
+
                             {/* Day Highlights */}
                             {day.highlights && day.highlights.length > 0 && (
                               <div className="bg-amber-50/50 rounded-xl p-5">
@@ -792,7 +785,7 @@ export function TourDetail() {
                     </div>
                   ))}
                 </div>
-                
+
                 {/* End of Journey Card */}
                 <div className="bg-gradient-to-r from-gray-900 to-gray-800 rounded-2xl p-6 text-white text-center">
                   <div className="w-12 h-12 bg-amber-500 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -950,12 +943,12 @@ export function TourDetail() {
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="space-y-6">
                   {['accommodation', 'bike', 'gear', 'experience'].map(category => {
                     const categoryUpgrades = tour.upgrades.filter(u => u.category === category);
                     if (categoryUpgrades.length === 0) return null;
-                    
+
                     const Icon = getCategoryIcon(category);
                     const categoryColors = {
                       accommodation: 'from-blue-500 to-indigo-500',
@@ -963,7 +956,7 @@ export function TourDetail() {
                       gear: 'from-green-500 to-teal-500',
                       experience: 'from-purple-500 to-pink-500',
                     };
-                    
+
                     return (
                       <div key={category}>
                         <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-3 capitalize">
@@ -976,11 +969,10 @@ export function TourDetail() {
                           {categoryUpgrades.map(upgrade => (
                             <label
                               key={upgrade.id}
-                              className={`flex items-center justify-between p-5 border-2 rounded-2xl cursor-pointer transition-all ${
-                                selectedUpgrades.includes(upgrade.id)
+                              className={`flex items-center justify-between p-5 border-2 rounded-2xl cursor-pointer transition-all ${selectedUpgrades.includes(upgrade.id)
                                   ? 'border-amber-500 bg-amber-50 shadow-lg'
                                   : 'border-gray-200 hover:border-amber-300 hover:shadow-md'
-                              }`}
+                                }`}
                             >
                               <div className="flex items-center gap-4">
                                 <input
@@ -1031,7 +1023,7 @@ export function TourDetail() {
                     </div>
                   </div>
                 </div>
-                
+
                 {/* Filter Buttons */}
                 <div className="flex gap-2 mb-6">
                   {[
@@ -1042,11 +1034,10 @@ export function TourDetail() {
                     <button
                       key={filter.id}
                       onClick={() => setGalleryFilter(filter.id as 'all' | 'hero' | 'itinerary')}
-                      className={`px-4 py-2 rounded-full text-sm font-medium transition ${
-                        galleryFilter === filter.id
+                      className={`px-4 py-2 rounded-full text-sm font-medium transition ${galleryFilter === filter.id
                           ? 'bg-amber-500 text-white'
                           : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                      }`}
+                        }`}
                     >
                       {filter.label}
                     </button>
@@ -1081,9 +1072,8 @@ export function TourDetail() {
                         </div>
                         <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3">
                           <p className="text-white text-xs truncate">{img.caption}</p>
-                          <span className={`text-xs px-2 py-0.5 rounded-full ${
-                            img.category === 'hero' ? 'bg-amber-500/80' : 'bg-blue-500/80'
-                          } text-white`}>
+                          <span className={`text-xs px-2 py-0.5 rounded-full ${img.category === 'hero' ? 'bg-amber-500/80' : 'bg-blue-500/80'
+                            } text-white`}>
                             {img.category === 'hero' ? 'Tour' : 'Itinerary'}
                           </span>
                         </div>
@@ -1100,8 +1090,8 @@ export function TourDetail() {
 
                 {/* Photo Count */}
                 <div className="mt-6 text-center text-gray-500 text-sm">
-                  {allGalleryImages.filter(img => galleryFilter === 'all' || img.category === galleryFilter).length} photos • 
-                  {' '}{tour.gallery.length} tour photos • 
+                  {allGalleryImages.filter(img => galleryFilter === 'all' || img.category === galleryFilter).length} photos •
+                  {' '}{tour.gallery.length} tour photos •
                   {' '}{tour.itinerary.reduce((sum, day) => sum + (day.images?.length || 0), 0)} itinerary photos
                 </div>
               </div>
@@ -1164,7 +1154,7 @@ export function TourDetail() {
                     </div>
                     <h3 className="text-lg font-semibold">Tour Pricing</h3>
                   </div>
-                  
+
                   {/* Pricing Table */}
                   <div className="bg-white/10 rounded-xl overflow-hidden">
                     <table className="w-full">
@@ -1218,8 +1208,8 @@ export function TourDetail() {
                   {tour.pricing?.deposit && (
                     <div className="mt-4 bg-amber-500/20 rounded-lg p-3 text-center">
                       <span className="text-amber-300 text-sm">
-                        Deposit: {tour.pricing.depositType === 'percentage' 
-                          ? `${tour.pricing.deposit}% to confirm` 
+                        Deposit: {tour.pricing.depositType === 'percentage'
+                          ? `${tour.pricing.deposit}% to confirm`
                           : `$${tour.pricing.deposit} to confirm`}
                       </span>
                     </div>
@@ -1249,7 +1239,7 @@ export function TourDetail() {
                     </div>
                   )}
                 </div>
-                
+
                 <div className="p-6 space-y-5">
                   {/* Departure Date */}
                   <div>
@@ -1264,8 +1254,8 @@ export function TourDetail() {
                       <option value="">Choose a date</option>
                       {tour.departureDates.map(date => (
                         <option key={date} value={date}>
-                          {new Date(date).toLocaleDateString('en-US', { 
-                            weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' 
+                          {new Date(date).toLocaleDateString('en-US', {
+                            weekday: 'short', year: 'numeric', month: 'short', day: 'numeric'
                           })}
                         </option>
                       ))}
@@ -1371,8 +1361,8 @@ export function TourDetail() {
               <div className="mt-6 bg-gradient-to-r from-amber-500 to-orange-500 rounded-2xl p-6 text-white shadow-xl">
                 <h3 className="font-bold mb-2">Next Departure</h3>
                 <p className="text-3xl font-bold">
-                  {new Date(tour.nextDeparture).toLocaleDateString('en-US', { 
-                    month: 'long', day: 'numeric', year: 'numeric' 
+                  {new Date(tour.nextDeparture).toLocaleDateString('en-US', {
+                    month: 'long', day: 'numeric', year: 'numeric'
                   })}
                 </p>
                 <p className="text-amber-100 mt-1">Limited spots available!</p>
@@ -1454,13 +1444,13 @@ export function TourDetail() {
                   <div className="bg-gray-50 p-4 rounded-xl">
                     <h4 className="font-bold text-gray-900">{tour.title}</h4>
                     <p className="text-sm text-gray-600">
-                      {new Date(selectedDate).toLocaleDateString('en-US', { 
-                        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' 
+                      {new Date(selectedDate).toLocaleDateString('en-US', {
+                        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
                       })}
                     </p>
                     <p className="text-xl font-bold text-amber-600 mt-2">Total: ${grandTotal.toLocaleString()}</p>
                   </div>
-                  
+
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-1">Full Name *</label>
                     <input

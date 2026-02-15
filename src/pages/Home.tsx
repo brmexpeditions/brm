@@ -1,107 +1,12 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Calendar, MapPin, Users, Star, ChevronRight, Shield, Award, Compass, Play, ArrowRight, Mountain, Globe, Trophy, Clock, Edit, Settings, Search, Zap, CheckCircle2 } from 'lucide-react';
+import { Calendar, MapPin, Users, Star, ChevronRight, Shield, Award, Play, ArrowRight, Mountain, Globe, Trophy, Clock, Search, Zap, CheckCircle2 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { Layout } from '../components/Layout';
 import { SEOHead, organizationStructuredData } from '../components/SEOHead';
 import { Tour, Destination } from '../types';
 import { ExternalLink } from 'lucide-react';
 
-// Inline Edit Button Component
-function EditButton({ section, label }: { section: string; label?: string }) {
-  const { isAdmin } = useApp();
-  const navigate = useNavigate();
-
-  if (!isAdmin) return null;
-
-  return (
-    <button
-      onClick={() => navigate(`/admin?tab=homepage&section=${section}`)}
-      className="inline-flex items-center gap-1 bg-blue-600 text-white px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-blue-700 transition shadow-lg z-50"
-      title={`Edit ${label || section}`}
-    >
-      <Edit size={12} />
-      Edit {label || section}
-    </button>
-  );
-}
-
-// Floating Edit Panel for Homepage
-function HomepageEditPanel() {
-  const { isAdmin } = useApp();
-  const navigate = useNavigate();
-
-  if (!isAdmin) return null;
-
-  return (
-    <div className="fixed top-24 right-4 z-50 bg-white rounded-xl shadow-2xl border border-gray-200 p-4 w-64">
-      <div className="flex items-center gap-2 mb-4 pb-3 border-b">
-        <Settings className="text-blue-600" size={18} />
-        <h3 className="font-semibold text-gray-900">Edit Homepage</h3>
-      </div>
-      <div className="space-y-2">
-        <button
-          onClick={() => navigate('/admin?tab=homepage&section=hero')}
-          className="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-50 text-sm text-gray-700 flex items-center justify-between group"
-        >
-          <span>Hero Section</span>
-          <Edit size={14} className="text-gray-400 group-hover:text-blue-600" />
-        </button>
-        <button
-          onClick={() => navigate('/admin?tab=homepage&section=stats')}
-          className="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-50 text-sm text-gray-700 flex items-center justify-between group"
-        >
-          <span>Statistics</span>
-          <Edit size={14} className="text-gray-400 group-hover:text-blue-600" />
-        </button>
-        <button
-          onClick={() => navigate('/admin?tab=homepage&section=featured')}
-          className="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-50 text-sm text-gray-700 flex items-center justify-between group"
-        >
-          <span>Featured Tours</span>
-          <Edit size={14} className="text-gray-400 group-hover:text-blue-600" />
-        </button>
-        <button
-          onClick={() => navigate('/admin?tab=homepage&section=whyChooseUs')}
-          className="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-50 text-sm text-gray-700 flex items-center justify-between group"
-        >
-          <span>Why Choose Us</span>
-          <Edit size={14} className="text-gray-400 group-hover:text-blue-600" />
-        </button>
-        <button
-          onClick={() => navigate('/admin?tab=homepage&section=testimonials')}
-          className="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-50 text-sm text-gray-700 flex items-center justify-between group"
-        >
-          <span>Testimonials</span>
-          <Edit size={14} className="text-gray-400 group-hover:text-blue-600" />
-        </button>
-        <button
-          onClick={() => navigate('/admin?tab=homepage&section=cta')}
-          className="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-50 text-sm text-gray-700 flex items-center justify-between group"
-        >
-          <span>CTA Section</span>
-          <Edit size={14} className="text-gray-400 group-hover:text-blue-600" />
-        </button>
-        <div className="pt-2 border-t mt-2">
-          <button
-            onClick={() => navigate('/admin?tab=theme')}
-            className="w-full text-left px-3 py-2 rounded-lg hover:bg-blue-50 text-sm text-blue-600 font-medium flex items-center justify-between"
-          >
-            <span>🎨 Colors & Fonts</span>
-            <ChevronRight size={14} />
-          </button>
-          <button
-            onClick={() => navigate('/admin?tab=header')}
-            className="w-full text-left px-3 py-2 rounded-lg hover:bg-blue-50 text-sm text-blue-600 font-medium flex items-center justify-between"
-          >
-            <span>📱 Header & Logo</span>
-            <ChevronRight size={14} />
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 function TourCard({ tour }: { tour: Tour }) {
   if (!tour) return null;
@@ -260,6 +165,212 @@ function TourSearch() {
   );
 }
 
+
+function HeroSection({ data }: { data: any }) {
+  return (
+    <section className="relative h-[90vh] -mt-28 flex items-center group/hero" data-editor-id="hero-section">
+      <div className="absolute inset-0">
+        <img
+          src={data.backgroundImage}
+          alt="Motorcycle adventure"
+          className="w-full h-full object-cover"
+        />
+        <div
+          className="absolute inset-0 bg-gradient-to-r from-black via-black/50 to-transparent"
+          style={{ opacity: data.overlayOpacity / 100 }}
+        />
+      </div>
+      <div className="relative max-w-7xl mx-auto px-4 pt-28">
+        <div className="max-w-2xl">
+          <span className="inline-block bg-amber-600 text-white px-4 py-1 rounded-full text-sm font-semibold mb-6">
+            Premium Motorcycle Tours Since 2015
+          </span>
+          <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight" data-editor-id="hero-title">
+            {data.title.includes('Himalayas') ? (
+              <>Ride the <span className="text-amber-500">Himalayas</span></>
+            ) : (
+              data.title
+            )}
+          </h1>
+          <div
+            className="text-xl text-gray-300 mb-8 prose prose-invert max-w-none"
+            dangerouslySetInnerHTML={{ __html: data.subtitle }}
+          />
+          <div className="flex flex-wrap gap-4 mb-12">
+            <Link
+              to={data.ctaLink}
+              className="bg-amber-600 text-white px-8 py-4 rounded-full font-bold hover:bg-amber-700 transition text-lg flex items-center gap-2 transform hover:scale-105"
+            >
+              {data.ctaText} <ChevronRight />
+            </Link>
+            <a
+              href={data.secondaryCtaLink}
+              className="glass text-white px-8 py-4 rounded-full font-bold hover:bg-white/20 transition text-lg backdrop-blur-md"
+            >
+              {data.secondaryCtaText}
+            </a>
+          </div>
+
+          <TourSearch />
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function StatsSection({ data }: { data: any }) {
+  if (!data.enabled) return null;
+  return (
+    <section className="bg-amber-600 py-12 relative overflow-hidden" data-editor-id="stats-section">
+      <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white via-transparent to-transparent" />
+      <div className="max-w-7xl mx-auto px-4 relative">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center text-white">
+          {data.items.map((stat: any, i: number) => (
+            <div key={i} className="animate-fade-in" style={{ animationDelay: `${i * 100}ms` }}>
+              <div className="text-5xl font-black mb-1 drop-shadow-lg tracking-tight">{stat.value}</div>
+              <div className="text-amber-100 font-bold uppercase tracking-widest text-xs">{stat.label}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function FeaturedToursSection({ data, displayTours }: { data: any, displayTours: Tour[] }) {
+  if (!data.enabled) return null;
+  return (
+    <section id="featured" className="py-24 bg-gray-50 border-t border-gray-100" data-editor-id="featured-section">
+      <div className="max-w-7xl mx-auto px-4">
+        <div className="text-center mb-16">
+          <span className="text-amber-600 font-bold tracking-widest text-xs uppercase">Our Top Expeditions</span>
+          <h2 className="text-4xl font-bold text-gray-900 mt-2 mb-4" data-editor-id="featured-headline">{data.title}</h2>
+          <p className="text-gray-600 max-w-2xl mx-auto text-lg leading-relaxed">
+            {data.subtitle || "Hand-picked adventures designed for maximum thrill and cultural immersion."}
+          </p>
+        </div>
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {displayTours.map(tour => (
+            <TourCard key={tour.id} tour={tour} />
+          ))}
+        </div>
+        <div className="text-center mt-16">
+          <Link
+            to="/tours"
+            className="inline-flex items-center gap-2 bg-gray-900 text-white px-10 py-5 rounded-full font-bold hover:bg-gray-800 transition shadow-xl"
+          >
+            View All Tours <ChevronRight />
+          </Link>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function DestinationsSection({ destinations }: { destinations: Destination[] }) {
+  if (destinations.length === 0) return null;
+  const featuredDestinations = destinations.filter(d => d.featured).slice(0, 4);
+  const displayDestinations = featuredDestinations.length > 0 ? featuredDestinations : destinations.slice(0, 4);
+
+  return (
+    <section className="py-20 bg-gray-900">
+      <div className="max-w-7xl mx-auto px-4">
+        <div className="flex flex-col md:flex-row md:items-end justify-between mb-12">
+          <div>
+            <span className="text-amber-500 font-semibold">EXPLORE</span>
+            <h2 className="text-4xl font-bold text-white mt-2 mb-4">Popular Destinations</h2>
+            <p className="text-gray-400 max-w-xl">
+              Discover the world's most spectacular motorcycle routes through breathtaking landscapes
+            </p>
+          </div>
+          <Link
+            to="/destinations"
+            className="mt-4 md:mt-0 inline-flex items-center gap-2 text-amber-500 font-semibold hover:text-amber-400 transition"
+          >
+            View All Destinations <ArrowRight size={18} />
+          </Link>
+        </div>
+
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {displayDestinations.map(destination => (
+            <DestinationCard key={destination.id} destination={destination} />
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function TestimonialsSection({ data }: { data: any }) {
+  if (!data.enabled) return null;
+  return (
+    <section className="py-24 bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4">
+        <div className="text-center mb-16">
+          <span className="text-amber-600 font-bold tracking-widest text-xs uppercase">Rider Reviews</span>
+          <h2 className="text-4xl font-bold text-gray-900 mt-2 mb-4">{data.title}</h2>
+        </div>
+        <div className="grid md:grid-cols-3 gap-8">
+          {data.items.map((review: any, i: number) => (
+            <div key={i} className="bg-white p-10 rounded-[2rem] shadow-sm hover:shadow-xl transition-shadow border border-gray-100 relative">
+              <div className="absolute top-8 right-8 text-gray-100">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="currentColor"><path d="M14.017 21L14.017 18C14.017 16.8954 14.9124 16 16.017 16H19.017C20.1216 16 21.017 16.8954 21.017 18V21C21.017 22.1046 20.1216 23 19.017 23H16.017C14.9124 23 14.017 22.1046 14.017 21ZM14.017 11V8C14.017 6.89543 14.9124 6 16.017 6H19.017C20.1216 6 21.017 6.89543 21.017 8V11C21.017 12.1046 20.1216 13 19.017 13H16.017C14.9124 13 14.017 12.1046 14.017 11ZM3.01705 21L3.01705 18C3.01705 16.8954 3.91248 16 5.01705 16H8.01705C9.12162 16 10.0171 16.8954 10.0171 18V21C10.0171 22.1046 9.12162 23 8.01705 23H5.01705C3.91248 23 3.01705 22.1046 3.01705 21ZM3.01705 11V8C3.01705 6.89543 3.91248 6 5.01705 6H8.01705C9.12162 6 10.0171 6.89543 10.0171 8V11C10.0171 12.1046 9.12162 13 8.01705 13H5.01705C3.91248 13 3.01705 12.1046 3.01705 11Z"></path></svg>
+              </div>
+              <div className="flex gap-1 mb-6">
+                {[...Array(review.rating)].map((_, j) => (
+                  <Star key={j} size={18} className="fill-amber-500 text-amber-500" />
+                ))}
+              </div>
+              <div
+                className="text-gray-600 mb-8 italic text-lg leading-relaxed prose prose-sm max-w-none"
+                dangerouslySetInnerHTML={{ __html: review.text }}
+              />
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 bg-gradient-to-br from-amber-500 to-orange-600 rounded-full flex items-center justify-center text-white font-bold text-xl shadow-lg ring-4 ring-white">
+                  {review.name.charAt(0)}
+                </div>
+                <div>
+                  <p className="font-bold text-gray-900 text-lg">{review.name}</p>
+                  <p className="text-sm text-amber-600 font-semibold">{review.country}</p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function MainCTASection({ data }: { data: any }) {
+  if (!data.enabled) return null;
+  return (
+    <section className="py-32 bg-mesh relative overflow-hidden text-center">
+      <div className="absolute inset-0 bg-black/40" />
+      <div className="relative max-w-4xl mx-auto px-4">
+        <h2 className="text-5xl md:text-7xl font-black text-white mb-8 tracking-tight">{data.title}</h2>
+        <p className="text-2xl text-gray-300 mb-12 max-w-2xl mx-auto font-medium">
+          {data.subtitle || "The mountains are calling. Don't wait for another year to cross this off your bucket list."}
+        </p>
+        <div className="flex flex-wrap justify-center gap-6">
+          <Link
+            to={data.ctaLink}
+            className="bg-amber-600 text-white px-12 py-5 rounded-2xl font-black text-xl hover:bg-amber-500 transition-all transform hover:scale-105 shadow-2xl shadow-amber-600/40"
+          >
+            {data.ctaText}
+          </Link>
+          <Link
+            to="/contact"
+            className="glass text-white px-12 py-5 rounded-2xl font-black text-xl hover:bg-white/10 transition-all backdrop-blur-xl border-white/20"
+          >
+            REQUEST ITINERARY
+          </Link>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function ExperienceSection() {
   const experiences = [
     {
@@ -285,12 +396,12 @@ function ExperienceSection() {
   ];
 
   return (
-    <section className="py-24 bg-mesh relative overflow-hidden">
+    <section className="py-24 bg-mesh relative overflow-hidden" data-editor-id="experience-section">
       <div className="absolute inset-0 bg-black/20" />
       <div className="relative max-w-7xl mx-auto px-4">
         <div className="text-center mb-16">
           <span className="text-amber-500 font-bold tracking-[0.2em] text-sm uppercase mb-4 block animate-fade-in">The BRM Advantage</span>
-          <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">Built for the <span className="text-amber-500">True Rider</span></h2>
+          <h2 className="text-4xl md:text-5xl font-bold text-white mb-6" data-editor-id="experience-headline">Built for the <span className="text-amber-500">True Rider</span></h2>
           <div className="w-24 h-1 bg-amber-500 mx-auto rounded-full" />
         </div>
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -659,12 +770,12 @@ function NewsletterSection() {
   };
 
   return (
-    <section className="py-24 bg-gray-900 relative overflow-hidden">
+    <section className="py-24 bg-gray-900 relative overflow-hidden" data-editor-id="newsletter-section">
       <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-amber-500 to-transparent opacity-50" />
       <div className="max-w-7xl mx-auto px-4 relative z-10">
         <div className="glass-dark rounded-[3rem] p-8 md:p-16 flex flex-col lg:flex-row items-center gap-12 border border-white/10">
           <div className="flex-1 text-center lg:text-left">
-            <h2 className="text-3xl md:text-5xl font-bold text-white mb-6">Get the <span className="text-amber-500">Himalayan Riding Guide</span></h2>
+            <h2 className="text-3xl md:text-5xl font-bold text-white mb-6" data-editor-id="newsletter-headline">Get the <span className="text-amber-500">Himalayan Riding Guide</span></h2>
             <p className="text-gray-400 text-lg mb-0">Join 5,000+ riders and get our exclusive route maps, gear checklists, and early access to tour dates.</p>
           </div>
           <div className="w-full lg:w-[450px]">
@@ -745,8 +856,7 @@ export function Home() {
   const featuredTours = tours.filter(t => t.featured && t.status === 'published');
   const allPublishedTours = tours.filter(t => t.status === 'published');
   const publishedDestinations = destinations.filter(d => d.status === 'published');
-  const featuredDestinations = publishedDestinations.filter(d => d.featured).slice(0, 4);
-  const sections = siteSettings?.homepage || {};
+
 
   // Tour of the month - first featured tour or most expensive
   const tourOfMonth = featuredTours[0] || allPublishedTours.sort((a, b) => b.price - a.price)[0];
@@ -818,6 +928,31 @@ export function Home() {
     : allPublishedTours.slice(0, maxItems);
 
 
+  const sectionOrder = siteSettings?.homepage?.sectionOrder || [
+    'hero', 'stats', 'whyus', 'destinations', 'tourOfMonth', 'featured', 'departures', 'video', 'bikes', 'testimonials', 'blog', 'newsletter', 'instagram', 'partners', 'cta'
+  ];
+
+  const renderSection = (id: string) => {
+    switch (id) {
+      case 'hero': return <HeroSection key={id} data={homepage.hero} />;
+      case 'stats': return <StatsSection key={id} data={homepage.stats} />;
+      case 'whyus': return <ExperienceSection key={id} />;
+      case 'destinations': return <DestinationsSection key={id} destinations={publishedDestinations} />;
+      case 'tourOfMonth': return tourOfMonth && <TourOfTheMonth key={id} tour={tourOfMonth} />;
+      case 'featured': return <FeaturedToursSection key={id} data={homepage.featuredSection} displayTours={displayTours} />;
+      case 'departures': return <UpcomingDepartures key={id} tours={allPublishedTours} />;
+      case 'video': return <VideoSection key={id} />;
+      case 'bikes': return <BikesSection key={id} />;
+      case 'testimonials': return <TestimonialsSection key={id} data={homepage.testimonials} />;
+      case 'blog': return <BlogSection key={id} data={homepage.blogSection} />;
+      case 'newsletter': return <NewsletterSection key={id} />;
+      case 'instagram': return <InstagramSection key={id} data={homepage.instagramSection} />;
+      case 'partners': return <Partners key={id} />;
+      case 'cta': return <MainCTASection key={id} data={homepage.ctaSection} />;
+      default: return null;
+    }
+  };
+
   return (
     <Layout>
       <SEOHead
@@ -827,227 +962,7 @@ export function Home() {
         structuredData={organizationStructuredData}
       />
 
-      {/* Floating Edit Panel for Admin */}
-      <HomepageEditPanel />
-
-      {/* Hero Section */}
-      <section className="relative h-[90vh] -mt-28 flex items-center group/hero">
-        <div className="absolute inset-0">
-          <img
-            src={homepage.hero.backgroundImage}
-            alt="Motorcycle adventure"
-            className="w-full h-full object-cover"
-          />
-          <div
-            className="absolute inset-0 bg-gradient-to-r from-black via-black/50 to-transparent"
-            style={{ opacity: homepage.hero.overlayOpacity / 100 }}
-          />
-        </div>
-        {/* Edit Button for Hero */}
-        <div className="absolute top-32 left-4 opacity-0 group-hover/hero:opacity-100 transition-opacity">
-          <EditButton section="hero" label="Hero" />
-        </div>
-        <div className="relative max-w-7xl mx-auto px-4 pt-28">
-          <div className="max-w-2xl">
-            <span className="inline-block bg-amber-600 text-white px-4 py-1 rounded-full text-sm font-semibold mb-6">
-              Premium Motorcycle Tours Since 2015
-            </span>
-            <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight">
-              {homepage.hero.title.includes('Himalayas') ? (
-                <>Ride the <span className="text-amber-500">Himalayas</span></>
-              ) : (
-                homepage.hero.title
-              )}
-            </h1>
-            <p className="text-xl text-gray-300 mb-8">
-              {homepage.hero.subtitle}
-            </p>
-            <div className="flex flex-wrap gap-4 mb-12">
-              <Link
-                to={homepage.hero.ctaLink}
-                className="bg-amber-600 text-white px-8 py-4 rounded-full font-bold hover:bg-amber-700 transition text-lg flex items-center gap-2 transform hover:scale-105"
-              >
-                {homepage.hero.ctaText} <ChevronRight />
-              </Link>
-              <a
-                href={homepage.hero.secondaryCtaLink}
-                className="glass text-white px-8 py-4 rounded-full font-bold hover:bg-white/20 transition text-lg backdrop-blur-md"
-              >
-                {homepage.hero.secondaryCtaText}
-              </a>
-            </div>
-
-            <TourSearch />
-          </div>
-        </div>
-      </section>
-
-      {/* Stats Section */}
-      {homepage.stats.enabled && (
-        <section className="bg-amber-600 py-12 relative overflow-hidden">
-          <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white via-transparent to-transparent" />
-          <div className="max-w-7xl mx-auto px-4 relative">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center text-white">
-              {homepage.stats.items.map((stat, i) => (
-                <div key={i} className="animate-fade-in" style={{ animationDelay: `${i * 100}ms` }}>
-                  <div className="text-5xl font-black mb-1 drop-shadow-lg tracking-tight">{stat.value}</div>
-                  <div className="text-amber-100 font-bold uppercase tracking-widest text-xs">{stat.label}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-
-      <ExperienceSection />
-
-      {/* Destinations Section */}
-      {publishedDestinations.length > 0 && (
-        <section className="py-20 bg-gray-900">
-          <div className="max-w-7xl mx-auto px-4">
-            <div className="flex flex-col md:flex-row md:items-end justify-between mb-12">
-              <div>
-                <span className="text-amber-500 font-semibold">EXPLORE</span>
-                <h2 className="text-4xl font-bold text-white mt-2 mb-4">Popular Destinations</h2>
-                <p className="text-gray-400 max-w-xl">
-                  Discover the world's most spectacular motorcycle routes through breathtaking landscapes
-                </p>
-              </div>
-              <Link
-                to="/destinations"
-                className="mt-4 md:mt-0 inline-flex items-center gap-2 text-amber-500 font-semibold hover:text-amber-400 transition"
-              >
-                View All Destinations <ArrowRight size={18} />
-              </Link>
-            </div>
-
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {(featuredDestinations.length > 0 ? featuredDestinations : publishedDestinations.slice(0, 4)).map(destination => (
-                <DestinationCard key={destination.id} destination={destination} />
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* Tour of the Month */}
-      {tourOfMonth && <TourOfTheMonth tour={tourOfMonth} />}
-
-      {/* Featured Tours */}
-      {homepage.featuredSection.enabled && (
-        <section id="featured" className="py-24 bg-gray-50 border-t border-gray-100">
-          <div className="max-w-7xl mx-auto px-4">
-            <div className="text-center mb-16">
-              <span className="text-amber-600 font-bold tracking-widest text-xs uppercase">Our Top Expeditions</span>
-              <h2 className="text-4xl font-bold text-gray-900 mt-2 mb-4">{homepage.featuredSection.title}</h2>
-              <p className="text-gray-600 max-w-2xl mx-auto text-lg leading-relaxed">
-                {homepage.featuredSection.subtitle || "Hand-picked adventures designed for maximum thrill and cultural immersion."}
-              </p>
-            </div>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {displayTours.map(tour => (
-                <TourCard key={tour.id} tour={tour} />
-              ))}
-            </div>
-            <div className="text-center mt-16">
-              <Link
-                to="/tours"
-                className="inline-flex items-center gap-2 bg-gray-900 text-white px-10 py-5 rounded-full font-bold hover:bg-gray-800 transition shadow-xl"
-              >
-                View All Tours <ChevronRight />
-              </Link>
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* Upcoming Departures */}
-      <UpcomingDepartures tours={allPublishedTours} />
-
-      {/* Video Section */}
-      <VideoSection />
-
-      {/* Our Fleet - Bikes Section */}
-      <BikesSection />
-
-      {/* Testimonials */}
-      {homepage.testimonials.enabled && (
-        <section className="py-24 bg-gray-50">
-          <div className="max-w-7xl mx-auto px-4">
-            <div className="text-center mb-16">
-              <span className="text-amber-600 font-bold tracking-widest text-xs uppercase">Rider Reviews</span>
-              <h2 className="text-4xl font-bold text-gray-900 mt-2 mb-4">{homepage.testimonials.title}</h2>
-            </div>
-            <div className="grid md:grid-cols-3 gap-8">
-              {homepage.testimonials.items.map((review, i) => (
-                <div key={i} className="bg-white p-10 rounded-[2rem] shadow-sm hover:shadow-xl transition-shadow border border-gray-100 relative">
-                  <div className="absolute top-8 right-8 text-gray-100">
-                    <svg width="40" height="40" viewBox="0 0 24 24" fill="currentColor"><path d="M14.017 21L14.017 18C14.017 16.8954 14.9124 16 16.017 16H19.017C20.1216 16 21.017 16.8954 21.017 18V21C21.017 22.1046 20.1216 23 19.017 23H16.017C14.9124 23 14.017 22.1046 14.017 21ZM14.017 11V8C14.017 6.89543 14.9124 6 16.017 6H19.017C20.1216 6 21.017 6.89543 21.017 8V11C21.017 12.1046 20.1216 13 19.017 13H16.017C14.9124 13 14.017 12.1046 14.017 11ZM3.01705 21L3.01705 18C3.01705 16.8954 3.91248 16 5.01705 16H8.01705C9.12162 16 10.0171 16.8954 10.0171 18V21C10.0171 22.1046 9.12162 23 8.01705 23H5.01705C3.91248 23 3.01705 22.1046 3.01705 21ZM3.01705 11V8C3.01705 6.89543 3.91248 6 5.01705 6H8.01705C9.12162 6 10.0171 6.89543 10.0171 8V11C10.0171 12.1046 9.12162 13 8.01705 13H5.01705C3.91248 13 3.01705 12.1046 3.01705 11Z"></path></svg>
-                  </div>
-                  <div className="flex gap-1 mb-6">
-                    {[...Array(review.rating)].map((_, j) => (
-                      <Star key={j} size={18} className="fill-amber-500 text-amber-500" />
-                    ))}
-                  </div>
-                  <p className="text-gray-600 mb-8 italic text-lg leading-relaxed">"{review.text}"</p>
-                  <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 bg-gradient-to-br from-amber-500 to-orange-600 rounded-full flex items-center justify-center text-white font-bold text-xl shadow-lg ring-4 ring-white">
-                      {review.name.charAt(0)}
-                    </div>
-                    <div>
-                      <p className="font-bold text-gray-900 text-lg">{review.name}</p>
-                      <p className="text-sm text-amber-600 font-semibold">{review.country}</p>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* BLOG SECTION */}
-      {homepage.blogSection?.enabled && (
-        <BlogSection data={homepage.blogSection} />
-      )}
-
-      {/* Newsletter Lead Magnet */}
-      <NewsletterSection />
-
-      {/* INSTAGRAM SECTION */}
-      {homepage.instagramSection?.enabled && (
-        <InstagramSection data={homepage.instagramSection} />
-      )}
-
-      {/* Partners */}
-      <Partners />
-
-      {/* Final CTA Section */}
-      {homepage.ctaSection.enabled && (
-        <section className="py-32 bg-mesh relative overflow-hidden text-center">
-          <div className="absolute inset-0 bg-black/40" />
-          <div className="relative max-w-4xl mx-auto px-4">
-            <h2 className="text-5xl md:text-7xl font-black text-white mb-8 tracking-tight">{homepage.ctaSection.title}</h2>
-            <p className="text-2xl text-gray-300 mb-12 max-w-2xl mx-auto font-medium">
-              {homepage.ctaSection.subtitle || "The mountains are calling. Don't wait for another year to cross this off your bucket list."}
-            </p>
-            <div className="flex flex-wrap justify-center gap-6">
-              <Link
-                to={homepage.ctaSection.ctaLink}
-                className="bg-amber-600 text-white px-12 py-5 rounded-2xl font-black text-xl hover:bg-amber-500 transition-all transform hover:scale-105 shadow-2xl shadow-amber-600/40"
-              >
-                {homepage.ctaSection.ctaText}
-              </Link>
-              <Link
-                to="/contact"
-                className="glass text-white px-12 py-5 rounded-2xl font-black text-xl hover:bg-white/10 transition-all backdrop-blur-xl border-white/20"
-              >
-                REQUEST ITINERARY
-              </Link>
-            </div>
-          </div>
-        </section>
-      )}
+      {sectionOrder.map(sectionId => renderSection(sectionId))}
     </Layout>
   );
 }

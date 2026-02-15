@@ -2,16 +2,18 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Menu, X, Phone, Mail, Instagram, Facebook, Youtube, ChevronDown, Settings, ExternalLink } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
+import { DynamicStyles } from './DynamicStyles';
+import { VisualEditor } from './VisualEditor';
 
 // Apply typography and color settings globally
 function GlobalStyles() {
   const appContext = useApp();
-  
+
   // Safety check for undefined context or settings
   if (!appContext || !appContext.siteSettings) {
     return null;
   }
-  
+
   const { siteSettings } = appContext;
   const typography = siteSettings.typography || {
     headingFont: 'Inter',
@@ -33,14 +35,14 @@ function GlobalStyles() {
   useEffect(() => {
     // Apply CSS variables to :root
     const root = document.documentElement;
-    
+
     // Typography
     root.style.setProperty('--font-heading', typography.headingFont);
     root.style.setProperty('--font-body', typography.bodyFont);
     root.style.setProperty('--font-size-base', `${typography.baseFontSize}px`);
     root.style.setProperty('--line-height', typography.lineHeight.toString());
     root.style.setProperty('--letter-spacing', `${typography.letterSpacing}px`);
-    
+
     // Colors
     root.style.setProperty('--color-primary', colors.primary);
     root.style.setProperty('--color-secondary', colors.secondary);
@@ -59,9 +61,17 @@ function GlobalStyles() {
 
     // Load Google Fonts
     const fontLink = document.getElementById('google-fonts-link') as HTMLLinkElement;
-    const fonts = [typography.headingFont, typography.bodyFont].filter((f, i, a) => a.indexOf(f) === i);
-    const fontUrl = `https://fonts.googleapis.com/css2?${fonts.map(f => `family=${f.replace(' ', '+')}:wght@400;500;600;700;800`).join('&')}&display=swap`;
-    
+
+    // Collect all unique fonts from global settings and section overrides
+    const sectionFonts = Object.values(siteSettings.homepageSections || {})
+      .map((s: any) => s.fontFamily)
+      .filter(Boolean);
+
+    const allFonts = [typography.headingFont, typography.bodyFont, ...sectionFonts]
+      .filter((f, i, a) => a.indexOf(f) === i); // Deduplicate
+
+    const fontUrl = `https://fonts.googleapis.com/css2?${allFonts.map(f => `family=${f.replace(' ', '+')}:wght@100;200;300;400;500;600;700;800;900`).join('&')}&display=swap`;
+
     if (fontLink) {
       fontLink.href = fontUrl;
     } else {
@@ -71,7 +81,7 @@ function GlobalStyles() {
       link.href = fontUrl;
       document.head.appendChild(link);
     }
-  }, [typography, colors]);
+  }, [typography, colors, siteSettings.homepageSections]);
 
   return (
     <style>{`
@@ -106,16 +116,16 @@ export function Header() {
   const [isToursOpen, setIsToursOpen] = useState(false);
   const location = useLocation();
   const appContext = useApp();
-  
+
   // Safety check
   if (!appContext) {
     return <header className="fixed top-0 left-0 right-0 z-50 bg-gray-900 h-16"></header>;
   }
-  
+
   const { tours = [], isAuthenticated = false, siteSettings, destinations = [] } = appContext;
   const publishedTours = tours.filter(t => t.status === 'published');
   const publishedDestinations = destinations.filter(d => d.status === 'published');
-  
+
   // Safe defaults
   const header = siteSettings?.header || { logoType: 'text', logoText: 'BRM EXPEDITIONS', logoTagline: 'PREMIUM MOTORCYCLE TOURS', style: 'transparent', showTopBar: false, showBookButton: true, bookButtonText: 'Book Now' };
   const contact = siteSettings?.contact || { phone: '', email: '', socialLinks: {} };
@@ -128,14 +138,14 @@ export function Header() {
   const renderMenuItem = (item: typeof mainMenu[0]) => {
     if (item.type === 'dropdown' && item.label === 'Tours') {
       return (
-        <div 
+        <div
           key={item.id}
-          className="relative group" 
-          onMouseEnter={() => setIsToursOpen(true)} 
+          className="relative group"
+          onMouseEnter={() => setIsToursOpen(true)}
           onMouseLeave={() => setIsToursOpen(false)}
         >
-          <Link 
-            to={item.url} 
+          <Link
+            to={item.url}
             className={`text-white hover:text-amber-500 transition flex items-center gap-1 ${location.pathname.includes('/tours') ? 'text-amber-500' : ''}`}
           >
             {item.label} <ChevronDown size={16} />
@@ -165,8 +175,8 @@ export function Header() {
     if (item.type === 'dropdown' && item.label === 'Destinations') {
       return (
         <div key={item.id} className="relative group">
-          <Link 
-            to={item.url} 
+          <Link
+            to={item.url}
             className={`text-white hover:text-amber-500 transition flex items-center gap-1 ${location.pathname.includes('/destinations') ? 'text-amber-500' : ''}`}
           >
             {item.label} <ChevronDown size={16} />
@@ -192,9 +202,9 @@ export function Header() {
     }
 
     return (
-      <Link 
+      <Link
         key={item.id}
-        to={item.url} 
+        to={item.url}
         target={item.target}
         className={`text-white hover:text-amber-500 transition flex items-center gap-1 ${isActive(item.url) ? 'text-amber-500' : ''}`}
       >
@@ -247,7 +257,7 @@ export function Header() {
 
           <nav className="hidden lg:flex items-center gap-8">
             {mainMenu.sort((a, b) => a.order - b.order).map(item => renderMenuItem(item))}
-            
+
             {isAuthenticated && (
               <Link to="/admin" className="flex items-center gap-1 hover:text-amber-400 transition font-semibold" style={{ color: siteSettings?.colors?.primary || '#f59e0b' }}>
                 <Settings size={16} /> Admin
@@ -276,10 +286,10 @@ export function Header() {
           <nav className="lg:hidden mt-4 pb-4 border-t border-gray-800 pt-4">
             <div className="flex flex-col gap-4">
               {mainMenu.sort((a, b) => a.order - b.order).map(item => (
-                <Link 
+                <Link
                   key={item.id}
-                  to={item.url} 
-                  onClick={() => setIsMenuOpen(false)} 
+                  to={item.url}
+                  onClick={() => setIsMenuOpen(false)}
                   className="text-white hover:text-amber-500"
                 >
                   {item.label}
@@ -308,17 +318,17 @@ export function Header() {
 
 export function Footer() {
   const appContext = useApp();
-  
+
   // Safety check
   if (!appContext) {
     return <footer className="bg-gray-900 text-gray-300 py-8"><div className="text-center">Loading...</div></footer>;
   }
-  
+
   const { tours = [], isAuthenticated = false, siteSettings, destinations = [] } = appContext;
   const navigate = useNavigate();
   const publishedTours = tours.filter(t => t.status === 'published');
   const publishedDestinations = destinations.filter(d => d.status === 'published');
-  
+
   // Safe defaults
   const footer = siteSettings?.footer || { style: 'default', copyrightText: '© 2024 BRM Expeditions', showSocialLinks: true, showNewsletter: false };
   const contact = siteSettings?.contact || { phone: '', phone2: '', email: '', socialLinks: {} };
@@ -408,7 +418,7 @@ export function Footer() {
                 </li>
               ))}
             </ul>
-            
+
             <h4 className="text-white font-semibold mt-6 mb-4">Contact Info</h4>
             <ul className="space-y-3 text-sm">
               <li className="flex items-start gap-2">
@@ -431,14 +441,14 @@ export function Footer() {
         <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-sm">{footer.copyrightText || '© 2024 BRM Expeditions. All rights reserved.'}</p>
           {isAuthenticated ? (
-            <button 
+            <button
               onClick={() => navigate('/admin')}
               className="text-xs text-gray-600 hover:text-gray-400 flex items-center gap-1"
             >
               <Settings size={12} /> Admin Panel
             </button>
           ) : (
-            <button 
+            <button
               onClick={() => navigate('/login')}
               className="text-xs text-gray-600 hover:text-gray-400"
             >
@@ -453,19 +463,37 @@ export function Footer() {
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const appContext = useApp();
-  
+  const [isEditMode, setIsEditMode] = useState(false);
+
   // Safety check
   if (!appContext) {
     return <div className="min-h-screen bg-white">{children}</div>;
   }
-  
-  const { siteSettings } = appContext;
+
+  const { siteSettings, isAdmin } = appContext;
   const bgColor = siteSettings?.colors?.background || '#ffffff';
-  
+
   return (
     <div className="min-h-screen" style={{ backgroundColor: bgColor }}>
       <GlobalStyles />
+      <DynamicStyles />
+
       <Header />
+
+      {isAdmin && (
+        <>
+          <button
+            onClick={() => setIsEditMode(!isEditMode)}
+            className={`fixed bottom-8 left-8 z-[10000] p-4 rounded-full shadow-2xl transition-all transform hover:scale-110 active:scale-95 flex items-center gap-2 font-bold ${isEditMode ? 'bg-amber-500 text-white' : 'bg-gray-900 text-white'
+              }`}
+          >
+            <Settings className={isEditMode ? 'animate-spin-slow' : ''} size={20} />
+            {isEditMode ? 'Exit Editor' : 'Visual Editor'}
+          </button>
+          <VisualEditor isOpen={isEditMode} onClose={() => setIsEditMode(false)} />
+        </>
+      )}
+
       <main className="pt-28">{children}</main>
       <Footer />
     </div>
