@@ -7,7 +7,7 @@ import {
   ExternalLink, Check, AlertCircle,
   Monitor, Smartphone, Home, Layout, Mail, Maximize2,
   MapPin, File, Star, Clock, Mountain, Camera, Bike as BikeIcon,
-  LayoutGrid, MessageSquare, Instagram, ArrowUp, ArrowDown, Sparkles
+  LayoutGrid, MessageSquare, Instagram, ArrowUp, ArrowDown, Sparkles, Wand2
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { Tour, ItineraryDay, UpgradeOption, ItineraryImage, Destination, Bike, Page, Post } from '../types';
@@ -885,6 +885,31 @@ function ThemeCustomizer() {
   const [activePreview, setActivePreview] = useState<'desktop' | 'mobile'>('desktop');
   const [colors, setColors] = useState(siteSettings.colors);
   const [typography, setTypography] = useState(siteSettings.typography);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [designPrompt, setDesignPrompt] = useState('');
+
+  const handleGenerateDesign = async () => {
+    if (!designPrompt) return;
+    setIsGenerating(true);
+    try {
+      const { generateContent } = await import('../services/aiService');
+      const response = await generateContent(designPrompt, 'design');
+      const designData = JSON.parse(response.content);
+
+      setColors(designData.colors);
+      setTypography(designData.typography);
+      updateSiteSettings({
+        ...siteSettings,
+        colors: designData.colors,
+        typography: designData.typography
+      });
+      setDesignPrompt('');
+    } catch (error) {
+      console.error('Design generation failed:', error);
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
   const handleColorChange = (key: keyof typeof colors, value: string) => {
     const newColors = { ...colors, [key]: value };
@@ -922,6 +947,47 @@ function ThemeCustomizer() {
           >
             <Smartphone size={18} className={activePreview === 'mobile' ? 'text-amber-600' : 'text-gray-500'} />
           </button>
+        </div>
+      </div>
+
+      {/* AI Design Assistant Panel */}
+      <div className="bg-gradient-to-r from-amber-500 to-orange-600 rounded-2xl p-6 text-white shadow-lg mb-8">
+        <div className="flex items-start gap-4">
+          <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
+            <Sparkles size={24} />
+          </div>
+          <div className="flex-1">
+            <h3 className="text-xl font-bold mb-2">AI Design Assistant</h3>
+            <p className="text-amber-50 text-sm mb-4 leading-relaxed max-w-2xl">
+              Describe the vibe you want for your site (e.g., "modern minimalist with dark blue accents" or "vibrant and energetic with professional typography") and let AI suggest colors and fonts.
+            </p>
+            <div className="flex gap-3">
+              <input
+                type="text"
+                value={designPrompt}
+                onChange={(e) => setDesignPrompt(e.target.value)}
+                placeholder="Describe your design goal..."
+                className="flex-1 px-4 py-2.5 bg-white/10 border border-white/20 rounded-xl text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-white/30 backdrop-blur-sm"
+              />
+              <button
+                onClick={handleGenerateDesign}
+                disabled={isGenerating || !designPrompt}
+                className="bg-white text-amber-600 px-6 py-2.5 rounded-xl font-bold hover:bg-amber-50 transition shadow-md disabled:opacity-50 flex items-center gap-2"
+              >
+                {isGenerating ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-amber-600 border-t-transparent rounded-full animate-spin" />
+                    Generating...
+                  </>
+                ) : (
+                  <>
+                    <Wand2 size={18} />
+                    Enhance Design
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 

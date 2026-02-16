@@ -8,7 +8,7 @@ export interface AIResponse {
     error?: string;
 }
 
-export const generateContent = async (prompt: string, type: 'seo' | 'writing' | 'excerpt' | 'summary'): Promise<AIResponse> => {
+export const generateContent = async (prompt: string, type: 'seo' | 'writing' | 'excerpt' | 'summary' | 'design'): Promise<AIResponse> => {
     console.log(`[AI Service] Generating ${type} for prompt: ${prompt.substring(0, 50)}...`);
 
     // Simulate network delay
@@ -16,6 +16,25 @@ export const generateContent = async (prompt: string, type: 'seo' | 'writing' | 
 
     // Placeholder responses
     switch (type) {
+        case 'design':
+            return {
+                content: JSON.stringify({
+                    colors: {
+                        primary: "#1a1a1a",
+                        secondary: "#f59e0b",
+                        accent: "#10b981",
+                        background: "#ffffff",
+                        text: "#1f2937",
+                        textLight: "#6b7280"
+                    },
+                    typography: {
+                        headingFont: "Montserrat",
+                        bodyFont: "Inter",
+                        baseFontSize: 16,
+                        lineHeight: 1.6
+                    }
+                })
+            };
         case 'seo':
             return {
                 content: JSON.stringify({
