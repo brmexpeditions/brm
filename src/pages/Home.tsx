@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Calendar, MapPin, Users, Star, ChevronRight, Shield, Award, Play, ArrowRight, Mountain, Globe, Trophy, Clock, Search, Zap, CheckCircle2 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
@@ -581,16 +581,49 @@ function UpcomingDepartures({ data, tours }: { data: any, tours: Tour[] }) {
 // 1. Add these helper components inside Home.tsx
 
 function InstagramSection({ data }: { data: any }) {
+  const [posts, setPosts] = useState(data.posts || []);
+
+  useEffect(() => {
+    if (data.feedUrl) {
+      fetch(data.feedUrl)
+        .then(res => res.json())
+        .then(feedData => {
+          // Handle both direct array and object with data property
+          const items = Array.isArray(feedData) ? feedData : (feedData.data || []);
+
+          const mappedPosts = items.map((item: any) => ({
+            id: item.id || Math.random().toString(),
+            // Handle various feed formats (Behold, RSS2JSON, etc.)
+            imageUrl: item.mediaUrl || item.media_url || item.thumbnail_url || item.imageUrl || item.url,
+            link: item.permalink || item.link || item.url,
+            caption: item.caption || item.title
+          })).filter((post: any) => post.imageUrl).slice(0, 6);
+
+          if (mappedPosts.length > 0) {
+            setPosts(mappedPosts);
+          }
+        })
+        .catch(err => {
+          console.error("Failed to fetch Instagram feed:", err);
+          // Fallback to manual posts is handled by initial state, but we can reset if needed
+          // setPosts(data.posts || []); 
+        });
+    } else {
+      setPosts(data.posts || []);
+    }
+  }, [data.feedUrl, data.posts]);
+
   if (!data?.enabled) return null;
+
   return (
     <section className="py-16 bg-white overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 text-center">
         <h2 className="text-3xl font-bold mb-2">{data.title}</h2>
         <a href={`https://instagram.com/${data.username}`} target="_blank" className="text-amber-600 font-medium hover:underline mb-8 block flex items-center justify-center gap-2">
           @{data.username} <ExternalLink size={14} />
-        </a >
+        </a>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
-          {data.posts?.map((post: any) => (
+          {posts.map((post: any) => (
             <a key={post.id} href={post.link} target="_blank" className="group relative aspect-square overflow-hidden block rounded-lg">
               <img src={post.imageUrl} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" alt="Insta" />
               <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
@@ -599,8 +632,8 @@ function InstagramSection({ data }: { data: any }) {
             </a>
           ))}
         </div>
-      </div >
-    </section >
+      </div>
+    </section>
   );
 }
 
@@ -926,11 +959,14 @@ export function Home() {
         link: `/blog/${post.slug}`
       }))
     },
-    instagramSection: siteSettings?.homepage?.instagramSection || {
+    instagramSection: {
       enabled: true,
       title: 'Follow Our Journey',
       username: 'brmexpeditions',
-      posts: []
+      posts: [],
+      ...(siteSettings?.homepage?.instagramSection || {}),
+      // Ensure feedUrl is set even if settings has empty string
+      feedUrl: (siteSettings?.homepage?.instagramSection?.feedUrl) || 'https://feeds.behold.so/uvDK79jgxcUqSe0PPV0g'
     },
     destinationsSection: { ...defaultHomepage.destinationsSection, ...(siteSettings?.homepage?.destinationsSection || {}) },
     tourOfMonthSection: { ...defaultHomepage.tourOfMonthSection, ...(siteSettings?.homepage?.tourOfMonthSection || {}) },

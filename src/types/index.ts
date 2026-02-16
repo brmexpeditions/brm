@@ -216,6 +216,7 @@ export interface HomepageSettings {
     enabled: boolean;
     title: string;
     username: string;
+    feedUrl?: string;
   };
   destinationsSection?: {
     enabled: boolean;

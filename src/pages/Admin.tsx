@@ -1812,6 +1812,15 @@ function HomepageEditor() {
                     />
                   </div>
                 </FormField>
+                <FormField label="JSON Feed URL" hint="URL from Behold.so or similar service">
+                  <input
+                    type="url"
+                    value={instagramSection.feedUrl || ''}
+                    onChange={(e) => setInstagramSection({ ...instagramSection, feedUrl: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg"
+                    placeholder="https://feeds.behold.so/..."
+                  />
+                </FormField>
               </div>
             </SectionCard>
           )}

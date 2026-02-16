@@ -93,6 +93,12 @@ export const defaultSiteSettings: SiteSettings = {
       ctaText: 'Browse Tours',
       ctaLink: '/tours',
     },
+    instagramSection: {
+      enabled: true,
+      title: 'Follow Our Journey',
+      username: 'brmexpeditions',
+      feedUrl: 'https://feeds.behold.so/uvDK79jgxcUqSe0PPV0g',
+    },
     sectionOrder: [
       'hero',
       'stats',
