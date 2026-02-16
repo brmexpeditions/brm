@@ -4,7 +4,8 @@ import {
   AlignLeft, AlignCenter, AlignRight, Quote, Heading1, Heading2, Heading3,
   X, Plus, GripVertical, ChevronUp, ChevronDown, Eye, EyeOff,
   Check, Settings, Maximize2, Minimize2, Type, Strikethrough, Code,
-  Highlighter, Undo, Redo
+  Highlighter, Undo, Redo, Sparkles, Wand2, Languages, MessageSquare,
+  RotateCcw, Copy
 } from 'lucide-react';
 
 import { useEditor, EditorContent, Extension } from '@tiptap/react';
@@ -72,6 +73,9 @@ export function RichTextEditor({ value, onChange, placeholder, minHeight = 200, 
   const [showHtml, setShowHtml] = useState(false);
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [showMediaPicker, setShowMediaPicker] = useState(false);
+  const [showAIAssistant, setShowAIAssistant] = useState(false);
+  const [isAIProcessing, setIsAIProcessing] = useState(false);
+  const [aiResponse, setAIResponse] = useState('');
 
   const editor = useEditor({
     extensions: [
@@ -142,6 +146,41 @@ export function RichTextEditor({ value, onChange, placeholder, minHeight = 200, 
     setShowMediaPicker(false);
   };
 
+  const handleAIAction = async (type: 'writing' | 'summary') => {
+    const selectedText = editor.state.doc.textBetween(
+      editor.state.selection.from,
+      editor.state.selection.to,
+      ' '
+    );
+    const contentToProcess = selectedText || editor.getText();
+
+    if (!contentToProcess) return;
+
+    setIsAIProcessing(true);
+    try {
+      const { generateContent } = await import('../services/aiService');
+      const response = await generateContent(contentToProcess, type);
+      setAIResponse(response.content);
+    } catch (error) {
+      console.error('AI Action failed:', error);
+    } finally {
+      setIsAIProcessing(false);
+    }
+  };
+
+  const applyAIResponse = () => {
+    if (!aiResponse) return;
+
+    const { from, to } = editor.state.selection;
+    if (from !== to) {
+      editor.chain().focus().insertContent(aiResponse).run();
+    } else {
+      editor.chain().focus().setContent(aiResponse).run();
+    }
+    setAIResponse('');
+    setShowAIAssistant(false);
+  };
+
   const addYoutubeVideo = () => {
     const url = window.prompt('YouTube URL:');
     if (url) {
@@ -195,6 +234,15 @@ export function RichTextEditor({ value, onChange, placeholder, minHeight = 200, 
           >
             {showHtml ? <Eye size={14} /> : <EyeOff size={14} />}
             {showHtml ? 'Preview' : 'HTML'}
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowAIAssistant(!showAIAssistant)}
+            className={`p-1.5 rounded-lg text-xs flex items-center gap-1 font-bold ${showAIAssistant ? 'bg-amber-100 text-amber-700' : 'bg-amber-500 text-white hover:bg-amber-600 shadow-sm'
+              }`}
+          >
+            <Sparkles size={14} className={isAIProcessing ? 'animate-pulse' : ''} />
+            AI Assistant
           </button>
           {!simple && (
             <button
@@ -398,19 +446,112 @@ export function RichTextEditor({ value, onChange, placeholder, minHeight = 200, 
       )}
 
       {/* Editor Content */}
-      <div className={`overflow-auto ${isFullscreen ? 'flex-1' : ''}`} style={{ minHeight: isFullscreen ? 'auto' : minHeight }}>
-        {showHtml ? (
-          <textarea
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
-            className="w-full h-full p-4 font-mono text-sm focus:outline-none resize-none bg-gray-900 text-gray-100"
-            style={{ minHeight }}
-          />
-        ) : (
-          <EditorContent
-            editor={editor}
-            className="tiptap-editor px-6 py-4 min-h-full prose prose-amber max-w-none focus:outline-none"
-          />
+      <div className="flex-1 flex overflow-hidden">
+        {/* Editor Content */}
+        <div className={`flex-1 overflow-auto ${isFullscreen ? 'h-full' : ''}`} style={{ minHeight: isFullscreen ? 'auto' : minHeight }}>
+          {showHtml ? (
+            <textarea
+              value={value}
+              onChange={(e) => onChange(e.target.value)}
+              className="w-full h-full p-4 font-mono text-sm focus:outline-none resize-none bg-gray-900 text-gray-100"
+              style={{ minHeight }}
+            />
+          ) : (
+            <EditorContent
+              editor={editor}
+              className="tiptap-editor px-6 py-4 min-h-full prose prose-amber max-w-none focus:outline-none"
+            />
+          )}
+        </div>
+
+        {/* AI Assistant Sidebar */}
+        {showAIAssistant && (
+          <div className="w-80 border-l border-gray-200 bg-white flex flex-col animate-in slide-in-from-right duration-300">
+            <div className="p-4 border-b border-gray-100 flex items-center justify-between bg-amber-50/30">
+              <h3 className="font-bold text-gray-900 flex items-center gap-2">
+                <Sparkles size={16} className="text-amber-500" />
+                AI Writing Assistant
+              </h3>
+              <button onClick={() => setShowAIAssistant(false)} className="text-gray-400 hover:text-gray-600">
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+              <div className="bg-amber-50 rounded-xl p-3 border border-amber-100">
+                <p className="text-xs text-amber-800 leading-relaxed">
+                  Select text in the editor to improve it, or use the actions below to transform the entire content.
+                </p>
+              </div>
+
+              {!aiResponse ? (
+                <div className="grid gap-2">
+                  <AIActionButton
+                    icon={Wand2}
+                    label="Improve Writing"
+                    description="Better flow, tone and clarity"
+                    onClick={() => handleAIAction('writing')}
+                  />
+                  <AIActionButton
+                    icon={Languages}
+                    label="Fix Grammar"
+                    description="Fix typos and punctuation"
+                    onClick={() => handleAIAction('writing')}
+                  />
+                  <AIActionButton
+                    icon={MessageSquare}
+                    label="Summarize Content"
+                    description="Create a concise summary"
+                    onClick={() => handleAIAction('summary')}
+                  />
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="bg-gray-50 rounded-xl p-4 border border-gray-200 space-y-3">
+                    <div className="flex items-center justify-between border-b border-gray-100 pb-2 mb-2">
+                      <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">AI Suggestion</span>
+                      <button
+                        onClick={() => setAIResponse('')}
+                        className="text-gray-400 hover:text-gray-600"
+                      >
+                        <RotateCcw size={14} />
+                      </button>
+                    </div>
+                    <div className="text-sm text-gray-700 leading-relaxed max-h-60 overflow-y-auto pr-2 custom-scrollbar">
+                      {aiResponse}
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-2">
+                    <button
+                      onClick={applyAIResponse}
+                      className="w-full bg-amber-500 text-white py-2 rounded-lg font-bold text-sm shadow-sm hover:bg-amber-600 transition flex items-center justify-center gap-2"
+                    >
+                      <Check size={16} />
+                      Apply to Editor
+                    </button>
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(aiResponse);
+                        // Add some toast notification here if available
+                      }}
+                      className="w-full bg-white border border-gray-200 text-gray-700 py-2 rounded-lg font-bold text-sm hover:bg-gray-50 transition flex items-center justify-center gap-2"
+                    >
+                      <Copy size={16} />
+                      Copy to Clipboard
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {isAIProcessing && (
+              <div className="p-4 border-t border-gray-100 bg-amber-50 flex items-center gap-3">
+                <div className="w-4 h-4 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
+                <span className="text-xs font-medium text-amber-700">AI is thinking...</span>
+              </div>
+            )}
+          </div>
         )}
       </div>
 
@@ -511,6 +652,30 @@ export function RichTextEditor({ value, onChange, placeholder, minHeight = 200, 
         }
       `}</style>
     </div>
+  );
+}
+
+function AIActionButton({ icon: Icon, label, description, onClick }: {
+  icon: any;
+  label: string;
+  description: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className="w-full p-3 text-left rounded-xl border border-gray-100 hover:border-amber-200 hover:bg-amber-50 transition group"
+    >
+      <div className="flex items-center gap-3">
+        <div className="p-2 bg-gray-50 rounded-lg group-hover:bg-amber-100 transition">
+          <Icon size={18} className="text-gray-600 group-hover:text-amber-600" />
+        </div>
+        <div>
+          <div className="text-sm font-bold text-gray-900">{label}</div>
+          <div className="text-[10px] text-gray-400">{description}</div>
+        </div>
+      </div>
+    </button>
   );
 }
 

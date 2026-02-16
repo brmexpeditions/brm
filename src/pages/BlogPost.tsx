@@ -17,8 +17,11 @@ export function BlogPost() {
     return (
         <Layout>
             <SEOHead
-                title={`${post.title} - BRM Expeditions`}
-                description={post.excerpt}
+                title={post.seo?.metaTitle || `${post.title} - BRM Expeditions`}
+                description={post.seo?.metaDescription || post.excerpt}
+                keywords={post.seo?.keywords || post.tags}
+                image={post.image}
+                type="article"
             />
 
             {/* Hero Section */}

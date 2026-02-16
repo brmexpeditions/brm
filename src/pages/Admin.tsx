@@ -3692,175 +3692,310 @@ function BlogPostEditor({ post, onSave, onCancel }: {
     });
   };
 
+  const [activeTab, setActiveTab] = useState('content');
+  const [isGenerating, setIsGenerating] = useState<string | null>(null);
+
+  const tabs = [
+    { id: 'content', label: 'Content' },
+    { id: 'settings', label: 'Settings' },
+    { id: 'seo', label: 'SEO' },
+  ];
+
+  const handleGenerateAI = async (type: 'seo' | 'excerpt') => {
+    setIsGenerating(type);
+    try {
+      const { generateContent } = await import('../services/aiService');
+      const response = await generateContent(
+        `Title: ${formData.title}\nContent: ${formData.content.substring(0, 500)}`,
+        type
+      );
+
+      if (type === 'seo') {
+        const seoData = JSON.parse(response.content);
+        setFormData(prev => ({
+          ...prev,
+          seo: {
+            ...prev.seo,
+            metaTitle: seoData.metaTitle,
+            metaDescription: seoData.metaDescription,
+            keywords: seoData.keywords
+          }
+        }));
+      } else if (type === 'excerpt') {
+        setFormData(prev => ({ ...prev, excerpt: response.content }));
+      }
+    } catch (error) {
+      console.error('AI Generation failed:', error);
+    } finally {
+      setIsGenerating(null);
+    }
+  };
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="grid md:grid-cols-2 gap-6">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Title *</label>
-          <input
-            type="text"
-            required
-            value={formData.title}
-            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-            className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-amber-500"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Slug</label>
-          <input
-            type="text"
-            value={formData.slug}
-            onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
-            placeholder={generateSlug(formData.title)}
-            className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-amber-500"
-          />
-        </div>
+    <div className="space-y-6">
+      <div className="flex border-b border-gray-100 overflow-x-auto">
+        {tabs.map(tab => (
+          <button
+            key={tab.id}
+            type="button"
+            onClick={() => setActiveTab(tab.id)}
+            className={`px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 -mb-px transition ${activeTab === tab.id ? 'border-amber-500 text-amber-600' : 'border-transparent text-gray-500 hover:text-gray-700'
+              }`}
+          >
+            {tab.label}
+          </button>
+        ))}
       </div>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">Excerpt *</label>
-        <textarea
-          required
-          value={formData.excerpt}
-          onChange={(e) => setFormData({ ...formData, excerpt: e.target.value })}
-          rows={3}
-          className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-amber-500"
-        />
-      </div>
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {activeTab === 'content' && (
+          <div className="space-y-6">
+            <div className="grid md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Title *</label>
+                <input
+                  type="text"
+                  required
+                  value={formData.title}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-amber-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Slug</label>
+                <input
+                  type="text"
+                  value={formData.slug}
+                  onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
+                  placeholder={generateSlug(formData.title)}
+                  className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-amber-500"
+                />
+              </div>
+            </div>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">Content</label>
-        <RichTextEditor
-          value={formData.content}
-          onChange={(content) => setFormData({ ...formData, content })}
-          placeholder="Write your blog post content here..."
-          minHeight={500}
-        />
-      </div>
+            <div>
+              <div className="flex justify-between items-center mb-2">
+                <label className="block text-sm font-medium text-gray-700">Excerpt *</label>
+                <button
+                  type="button"
+                  onClick={() => handleGenerateAI('excerpt')}
+                  disabled={isGenerating === 'excerpt' || !formData.title}
+                  className="text-xs flex items-center gap-1 text-amber-600 hover:text-amber-700 font-medium disabled:opacity-50"
+                >
+                  <Sparkles size={12} className={isGenerating === 'excerpt' ? 'animate-pulse' : ''} />
+                  {isGenerating === 'excerpt' ? 'Generating...' : 'Generate with AI'}
+                </button>
+              </div>
+              <textarea
+                required
+                value={formData.excerpt}
+                onChange={(e) => setFormData({ ...formData, excerpt: e.target.value })}
+                rows={3}
+                className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-amber-500"
+              />
+            </div>
 
-      <div className="grid md:grid-cols-3 gap-6">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
-          <input
-            type="text"
-            value={formData.category}
-            onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-            className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-amber-500"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Read Time</label>
-          <input
-            type="text"
-            value={formData.readTime}
-            onChange={(e) => setFormData({ ...formData, readTime: e.target.value })}
-            className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-amber-500"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Author</label>
-          <input
-            type="text"
-            value={formData.author}
-            onChange={(e) => setFormData({ ...formData, author: e.target.value })}
-            className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-amber-500"
-          />
-        </div>
-      </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Content</label>
+              <RichTextEditor
+                value={formData.content}
+                onChange={(content) => setFormData({ ...formData, content })}
+                placeholder="Write your blog post content here..."
+                minHeight={500}
+              />
+            </div>
+          </div>
+        )}
 
-      <div className="grid md:grid-cols-2 gap-6">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Featured Image URL</label>
-          <input
-            type="url"
-            value={formData.image}
-            onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-            className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-amber-500"
-          />
-          {formData.image && (
-            <img src={formData.image} alt="Preview" className="mt-2 w-full h-32 object-cover rounded-lg" />
-          )}
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Date</label>
-          <input
-            type="date"
-            value={formData.date}
-            onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-            className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-amber-500"
-          />
-        </div>
-      </div>
+        {activeTab === 'settings' && (
+          <div className="space-y-6">
+            <div className="grid md:grid-cols-3 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
+                <input
+                  type="text"
+                  value={formData.category}
+                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-amber-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Read Time</label>
+                <input
+                  type="text"
+                  value={formData.readTime}
+                  onChange={(e) => setFormData({ ...formData, readTime: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-amber-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Author</label>
+                <input
+                  type="text"
+                  value={formData.author}
+                  onChange={(e) => setFormData({ ...formData, author: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-amber-500"
+                />
+              </div>
+            </div>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">Tags</label>
-        <div className="flex gap-2 mb-2">
-          <input
-            type="text"
-            value={newTag}
-            onChange={(e) => setNewTag(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
-            placeholder="Add tag..."
-            className="flex-1 px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-amber-500"
-          />
+            <div className="grid md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Featured Image URL</label>
+                <input
+                  type="url"
+                  value={formData.image}
+                  onChange={(e) => setFormData({ ...formData, image: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-amber-500"
+                />
+                {formData.image && (
+                  <img src={formData.image} alt="Preview" className="mt-2 w-full h-32 object-cover rounded-lg" />
+                )}
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Date</label>
+                <input
+                  type="date"
+                  value={formData.date}
+                  onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-amber-500"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Tags</label>
+              <div className="flex gap-2 mb-2">
+                <input
+                  type="text"
+                  value={newTag}
+                  onChange={(e) => setNewTag(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
+                  placeholder="Add tag..."
+                  className="flex-1 px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-amber-500"
+                />
+                <button
+                  type="button"
+                  onClick={addTag}
+                  className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
+                >
+                  Add
+                </button>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {formData.tags.map((tag, i) => (
+                  <span key={i} className="px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-sm flex items-center gap-2">
+                    {tag}
+                    <button type="button" onClick={() => removeTag(i)} className="hover:text-amber-900">
+                      <X size={14} />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex items-center gap-6">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={formData.featured}
+                  onChange={(e) => setFormData({ ...formData, featured: e.target.checked })}
+                  className="w-4 h-4 text-amber-600 border-gray-300 rounded focus:ring-amber-500"
+                />
+                <span className="text-sm text-gray-700">Featured Post</span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={formData.status === 'published'}
+                  onChange={(e) => setFormData({ ...formData, status: e.target.checked ? 'published' : 'draft' })}
+                  className="w-4 h-4 text-amber-600 border-gray-300 rounded focus:ring-amber-500"
+                />
+                <span className="text-sm text-gray-700">Publish</span>
+              </label>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'seo' && (
+          <div className="space-y-6 max-w-2xl">
+            <div className="flex justify-between items-center bg-amber-50 p-4 rounded-xl border border-amber-100">
+              <div>
+                <h4 className="font-semibold text-amber-900 flex items-center gap-2">
+                  <Sparkles size={16} />
+                  AI SEO Assistant
+                </h4>
+                <p className="text-xs text-amber-700 mt-1">Let AI generate optimized meta tags for this post</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => handleGenerateAI('seo')}
+                disabled={isGenerating === 'seo' || !formData.title}
+                className="bg-white text-amber-600 px-4 py-2 rounded-lg text-sm font-bold shadow-sm hover:shadow-md transition disabled:opacity-50"
+              >
+                {isGenerating === 'seo' ? 'Generating...' : 'Generate SEO'}
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <FormField label="SEO Title" hint="50-60 characters recommended">
+                <input
+                  type="text"
+                  value={formData.seo?.metaTitle || ''}
+                  onChange={(e) => setFormData({ ...formData, seo: { ...formData.seo, metaTitle: e.target.value } })}
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-amber-500"
+                />
+              </FormField>
+
+              <FormField label="Meta Description" hint="150-160 characters recommended">
+                <textarea
+                  value={formData.seo?.metaDescription || ''}
+                  onChange={(e) => setFormData({ ...formData, seo: { ...formData.seo, metaDescription: e.target.value } })}
+                  rows={3}
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-amber-500"
+                />
+              </FormField>
+
+              <FormField label="Keywords (comma separated)">
+                <input
+                  type="text"
+                  value={formData.seo?.keywords?.join(', ') || ''}
+                  onChange={(e) => setFormData({ ...formData, seo: { ...formData.seo, keywords: e.target.value.split(',').map(k => k.trim()) } })}
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-amber-500"
+                />
+              </FormField>
+
+              {/* Preview */}
+              <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                <p className="text-xs text-gray-500 mb-2 uppercase tracking-wider font-bold">Search Preview</p>
+                <p className="text-[#1a0dab] text-xl hover:underline cursor-pointer font-medium mb-1 line-clamp-1">
+                  {formData.seo?.metaTitle || `${formData.title} - BRM Expeditions`}
+                </p>
+                <p className="text-[#006621] text-sm mb-1">www.brmexpeditions.com/blog/{formData.slug || 'post-slug'}</p>
+                <p className="text-[#545454] text-sm line-clamp-2">{formData.seo?.metaDescription || formData.excerpt}</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div className="flex items-center gap-3 pt-6 border-t border-gray-100">
+          <button
+            type="submit"
+            className="flex items-center gap-2 bg-amber-500 text-white px-6 py-2.5 rounded-lg font-medium hover:bg-amber-600 transition shadow-sm"
+          >
+            <Save size={18} />
+            Save Post
+          </button>
           <button
             type="button"
-            onClick={addTag}
-            className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
+            onClick={onCancel}
+            className="px-6 py-2.5 border border-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition"
           >
-            Add
+            Cancel
           </button>
         </div>
-        <div className="flex flex-wrap gap-2">
-          {formData.tags.map((tag, i) => (
-            <span key={i} className="px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-sm flex items-center gap-2">
-              {tag}
-              <button type="button" onClick={() => removeTag(i)} className="hover:text-amber-900">
-                <X size={14} />
-              </button>
-            </span>
-          ))}
-        </div>
-      </div>
-
-      <div className="flex items-center gap-6">
-        <label className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            checked={formData.featured}
-            onChange={(e) => setFormData({ ...formData, featured: e.target.checked })}
-            className="w-4 h-4 text-amber-600 border-gray-300 rounded focus:ring-amber-500"
-          />
-          <span className="text-sm text-gray-700">Featured Post</span>
-        </label>
-        <label className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            checked={formData.status === 'published'}
-            onChange={(e) => setFormData({ ...formData, status: e.target.checked ? 'published' : 'draft' })}
-            className="w-4 h-4 text-amber-600 border-gray-300 rounded focus:ring-amber-500"
-          />
-          <span className="text-sm text-gray-700">Publish</span>
-        </label>
-      </div>
-
-      <div className="flex items-center gap-3 pt-4 border-t border-gray-100">
-        <button
-          type="submit"
-          className="flex items-center gap-2 bg-amber-500 text-white px-6 py-2.5 rounded-lg font-medium hover:bg-amber-600 transition"
-        >
-          <Save size={18} />
-          Save Post
-        </button>
-        <button
-          type="button"
-          onClick={onCancel}
-          className="px-6 py-2.5 border border-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition"
-        >
-          Cancel
-        </button>
-      </div>
-    </form>
+      </form>
+    </div>
   );
 }
 
