@@ -130,6 +130,7 @@ export function Header() {
   const header = siteSettings?.header || { logoType: 'text', logoText: 'BRM EXPEDITIONS', logoTagline: 'PREMIUM MOTORCYCLE TOURS', style: 'transparent', showTopBar: false, showBookButton: true, bookButtonText: 'Book Now' };
   const contact = siteSettings?.contact || { phone: '', email: '', socialLinks: {} };
   const menus = siteSettings?.menus || [];
+  const general = siteSettings?.general || { logo: '' };
   // Colors accessed directly from siteSettings where needed
   const mainMenu = menus?.find(m => m.location === 'header')?.items || [];
 
@@ -239,8 +240,8 @@ export function Header() {
       <div className="max-w-7xl mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           <Link to="/" className="flex items-center gap-3">
-            {(header.logoType === 'image' || header.logoType === 'both') && header.logoImage && (
-              <img src={header.logoImage} alt={header.logoText} className="h-12 w-auto" />
+            {(header.logoType === 'image' || header.logoType === 'both') && (header.logoImage || general.logo) && (
+              <img src={header.logoImage || general.logo} alt={header.logoText} className="h-12 w-auto" />
             )}
             {(header.logoType === 'text' || header.logoType === 'both' || !header.logoImage) && (
               <>

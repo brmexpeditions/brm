@@ -2106,7 +2106,9 @@ function HeaderFooterEditor() {
   const [activeTab, setActiveTab] = useState('header');
 
   useEffect(() => {
-    updateSiteSettings({ header, footer });
+    // Sync logo between header and general for consistency
+    const updatedGeneral = { ...siteSettings.general, logo: header.logoImage };
+    updateSiteSettings({ header, footer, general: updatedGeneral });
   }, [header, footer]);
 
   return (
@@ -6711,7 +6713,9 @@ function BrandAssetsEditor() {
   const colors = siteSettings?.colors || {};
 
   const saveBrand = () => {
-    updateSiteSettings({ general, colors });
+    // Sync logo between general and header for consistency
+    const updatedHeader = { ...siteSettings.header, logoImage: general.logo };
+    updateSiteSettings({ general, colors, header: updatedHeader });
   };
 
   return (
