@@ -13,6 +13,8 @@ import { useApp } from '../context/AppContext';
 import { Tour, ItineraryDay, UpgradeOption, ItineraryImage, Destination, Bike, Page, Post } from '../types';
 import { defaultSiteSettings } from '../data/siteSettings';
 import { RichTextEditor, HighlightsEditor } from '../components/SmartEditors';
+import { testConnection, isSupabaseConfigured } from '../lib/supabase';
+
 
 // Sidebar Component - Cleaner Design
 function Sidebar({ activeTab, setActiveTab, isOpen, setIsOpen }: {
@@ -6304,59 +6306,17 @@ function DatabaseStatus() {
   const checkDatabase = async () => {
     setStatus(prev => ({ ...prev, checking: true }));
 
-    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-    const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-
-    const urlSet = !!supabaseUrl && supabaseUrl !== 'your-supabase-url';
-    const keySet = !!supabaseKey && supabaseKey !== 'your-supabase-anon-key';
-
-    if (!urlSet || !keySet) {
-      setStatus({
-        checking: false,
-        connected: false,
-        error: 'Environment variables not configured',
-        details: {
-          urlSet,
-          keySet,
-          tables: []
-        }
-      });
-      return;
-    }
-
     try {
-      const { createClient } = await import('@supabase/supabase-js');
-      const supabase = createClient(supabaseUrl, supabaseKey);
-
-      const tableNames = ['tours', 'destinations', 'bikes', 'bookings', 'pages', 'posts', 'site_settings', 'media'];
-      const tableResults: { name: string; count: number; status: 'ok' | 'error' | 'checking' }[] = [];
-
-      for (const tableName of tableNames) {
-        try {
-          const { error, count } = await supabase
-            .from(tableName)
-            .select('*', { count: 'exact', head: true });
-
-          if (error) {
-            tableResults.push({ name: tableName, count: 0, status: 'error' });
-          } else {
-            tableResults.push({ name: tableName, count: count || 0, status: 'ok' });
-          }
-        } catch {
-          tableResults.push({ name: tableName, count: 0, status: 'error' });
-        }
-      }
-
-      const allTablesOk = tableResults.every(t => t.status === 'ok');
+      const result = await testConnection();
 
       setStatus({
         checking: false,
-        connected: allTablesOk,
-        error: allTablesOk ? null : 'Some tables are missing or inaccessible',
+        connected: result.connected,
+        error: result.connected ? null : 'Supabase connection failed or tables missing',
         details: {
-          urlSet,
-          keySet,
-          tables: tableResults
+          urlSet: isSupabaseConfigured,
+          keySet: isSupabaseConfigured,
+          tables: result.tables as any
         }
       });
     } catch (err) {
@@ -6365,8 +6325,8 @@ function DatabaseStatus() {
         connected: false,
         error: err instanceof Error ? err.message : 'Unknown error',
         details: {
-          urlSet,
-          keySet,
+          urlSet: isSupabaseConfigured,
+          keySet: isSupabaseConfigured,
           tables: []
         }
       });

@@ -4,6 +4,8 @@ import { defaultTours } from '../data/tours';
 import { defaultDestinations } from '../data/destinations';
 import { defaultBikes } from '../data/bikes';
 import { defaultSiteSettings } from '../data/siteSettings';
+import { supabase } from '../lib/supabase';
+
 
 interface MediaItem {
   id: string;
@@ -82,9 +84,6 @@ const safeLocalStorage = {
   }
 };
 
-// Supabase configuration
-const SUPABASE_URL = 'https://khidecfioxjgwspwcwer.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtoaWRlY2Zpb3hqZ3dzcHdjd2VyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAxMDU3NzUsImV4cCI6MjA4NTY4MTc3NX0.2qnrst53yk4g2AKeYBUpi4vVbXqi77F835PnT67SUYo';
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // Initialize state from localStorage (instant, no async)
@@ -148,8 +147,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setLoading(true);
 
     try {
-      const { createClient } = await import('@supabase/supabase-js');
-      const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+      if (!supabase) {
+        console.log('⚠️ Supabase client not available');
+        setLoading(false);
+        return;
+      }
 
       // Test connection
       const { error: testError } = await supabase.from('tours').select('id').limit(1);

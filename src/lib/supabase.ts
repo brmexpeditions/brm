@@ -8,13 +8,23 @@ const SUPABASE_URL = 'https://khidecfioxjgwspwcwer.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtoaWRlY2Zpb3hqZ3dzcHdjd2VyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAxMDU3NzUsImV4cCI6MjA4NTY4MTc3NX0.2qnrst53yk4g2AKeYBUpi4vVbXqi77F835PnT67SUYo';
 
 // Create client (safe - won't throw)
-let supabase: SupabaseClient | null = null;
+export let supabase: SupabaseClient | null = null;
 
 try {
   supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   console.log('✅ Supabase client initialized');
 } catch {
   console.log('⚠️ Supabase not available, using localStorage only');
+}
+
+// Helpers for other modules
+export const isSupabaseConfigured = !!SUPABASE_URL && !!SUPABASE_ANON_KEY;
+
+export function assertSupabase(): SupabaseClient {
+  if (!supabase) {
+    throw new Error('Supabase client not initialized. Check your configuration.');
+  }
+  return supabase;
 }
 
 // Helper: Clean value for database (convert empty strings to null)
