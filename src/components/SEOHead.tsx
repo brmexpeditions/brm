@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { Helmet } from 'react-helmet-async';
 
 interface SEOProps {
   title: string;
@@ -10,80 +10,45 @@ interface SEOProps {
   structuredData?: object;
 }
 
-export function SEOHead({ 
-  title, 
-  description, 
-  keywords = [], 
+export function SEOHead({
+  title,
+  description,
+  keywords = [],
   image = 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1200&h=630&fit=crop',
   url = window.location.href,
   type = 'website',
   structuredData
 }: SEOProps) {
-  useEffect(() => {
-    // Update document title
-    document.title = title;
-    
-    // Update or create meta tags
-    const updateMeta = (name: string, content: string, isProperty = false) => {
-      const attr = isProperty ? 'property' : 'name';
-      let meta = document.querySelector(`meta[${attr}="${name}"]`) as HTMLMetaElement;
-      if (!meta) {
-        meta = document.createElement('meta');
-        meta.setAttribute(attr, name);
-        document.head.appendChild(meta);
-      }
-      meta.content = content;
-    };
+  return (
+    <Helmet>
+      {/* Standard Meta Tags */}
+      <title>{title}</title>
+      <meta name="description" content={description} />
+      {keywords.length > 0 && <meta name="keywords" content={keywords.join(', ')} />}
+      <link rel="canonical" href={url} />
 
-    // Standard meta tags
-    updateMeta('description', description);
-    if (keywords.length > 0) {
-      updateMeta('keywords', keywords.join(', '));
-    }
-    
-    // Open Graph tags
-    updateMeta('og:title', title, true);
-    updateMeta('og:description', description, true);
-    updateMeta('og:image', image, true);
-    updateMeta('og:url', url, true);
-    updateMeta('og:type', type, true);
-    updateMeta('og:site_name', 'BRM Expeditions', true);
-    
-    // Twitter Card tags
-    updateMeta('twitter:card', 'summary_large_image');
-    updateMeta('twitter:title', title);
-    updateMeta('twitter:description', description);
-    updateMeta('twitter:image', image);
-    
-    // Canonical URL
-    let canonical = document.querySelector('link[rel="canonical"]') as HTMLLinkElement;
-    if (!canonical) {
-      canonical = document.createElement('link');
-      canonical.rel = 'canonical';
-      document.head.appendChild(canonical);
-    }
-    canonical.href = url;
-    
-    // Structured Data (JSON-LD)
-    const existingScript = document.querySelector('script[data-seo="structured-data"]');
-    if (existingScript) {
-      existingScript.remove();
-    }
-    
-    if (structuredData) {
-      const script = document.createElement('script');
-      script.type = 'application/ld+json';
-      script.setAttribute('data-seo', 'structured-data');
-      script.textContent = JSON.stringify(structuredData);
-      document.head.appendChild(script);
-    }
-    
-    return () => {
-      // Cleanup is handled by the next SEOHead mount
-    };
-  }, [title, description, keywords, image, url, type, structuredData]);
-  
-  return null;
+      {/* Open Graph Meta Tags */}
+      <meta property="og:title" content={title} />
+      <meta property="og:description" content={description} />
+      <meta property="og:image" content={image} />
+      <meta property="og:url" content={url} />
+      <meta property="og:type" content={type} />
+      <meta property="og:site_name" content="BRM Expeditions" />
+
+      {/* Twitter Card Meta Tags */}
+      <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:title" content={title} />
+      <meta name="twitter:description" content={description} />
+      <meta name="twitter:image" content={image} />
+
+      {/* Structured Data */}
+      {structuredData && (
+        <script type="application/ld+json">
+          {JSON.stringify(structuredData)}
+        </script>
+      )}
+    </Helmet>
+  );
 }
 
 // Helper to generate tour structured data
