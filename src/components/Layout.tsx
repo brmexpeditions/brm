@@ -243,16 +243,16 @@ export function Header() {
             {(header.logoType === 'image' || header.logoType === 'both') && (header.logoImage || general.logo) && (
               <img src={header.logoImage || general.logo} alt={header.logoText} className="h-12 w-auto" />
             )}
-            {(header.logoType === 'text' || header.logoType === 'both' || !header.logoImage) && (
-              <>
-                <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ backgroundColor: siteSettings?.colors?.primary || '#f59e0b' }}>
-                  <span className="text-white font-bold text-lg">BRM</span>
-                </div>
-                <div className="hidden sm:block">
-                  <h1 className="text-white font-bold text-xl">{header.logoText || 'BRM EXPEDITIONS'}</h1>
-                  <p className="text-xs tracking-widest" style={{ color: siteSettings?.colors?.primary || '#f59e0b' }}>{header.logoTagline || 'PREMIUM MOTORCYCLE TOURS'}</p>
-                </div>
-              </>
+            {(header.logoType === 'text' || (header.logoType === 'both' && !(header.logoImage || general.logo))) && (
+              <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ backgroundColor: siteSettings?.colors?.primary || '#f59e0b' }}>
+                <span className="text-white font-bold text-lg">BRM</span>
+              </div>
+            )}
+            {(header.logoType === 'text' || header.logoType === 'both') && (
+              <div className="hidden sm:block">
+                <h1 className="text-white font-bold text-xl">{header.logoText || 'BRM EXPEDITIONS'}</h1>
+                <p className="text-xs tracking-widest" style={{ color: siteSettings?.colors?.primary || '#f59e0b' }}>{header.logoTagline || 'PREMIUM MOTORCYCLE TOURS'}</p>
+              </div>
             )}
           </Link>
 
@@ -343,15 +343,21 @@ export function Footer() {
       <div className="max-w-7xl mx-auto px-4 py-16">
         <div className="grid md:grid-cols-4 gap-8">
           <div>
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ backgroundColor: colors.primary }}>
-                <span className="text-white font-bold text-lg">BRM</span>
-              </div>
-              <div>
-                <h3 className="text-white font-bold text-xl">{general.siteName || 'BRM EXPEDITIONS'}</h3>
-                <p className="text-xs tracking-widest" style={{ color: colors.primary }}>{general.siteTagline || 'PREMIUM MOTORCYCLE TOURS'}</p>
-              </div>
-            </div>
+            <Link to="/" className="flex items-center gap-3 mb-4">
+              {((siteSettings?.header?.logoType === 'image' || siteSettings?.header?.logoType === 'both') && (siteSettings?.header?.logoImage || siteSettings?.general?.logo)) ? (
+                <img src={siteSettings?.header?.logoImage || siteSettings?.general?.logo} alt={siteSettings?.header?.logoText || 'BRM Expeditions'} className="h-12 w-auto" />
+              ) : (
+                <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ backgroundColor: colors.primary }}>
+                  <span className="text-white font-bold text-lg">BRM</span>
+                </div>
+              )}
+              {(siteSettings?.header?.logoType !== 'image') && (
+                <div>
+                  <h3 className="text-white font-bold text-xl">{general.siteName || 'BRM EXPEDITIONS'}</h3>
+                  <p className="text-xs tracking-widest" style={{ color: colors.primary }}>{general.siteTagline || 'PREMIUM MOTORCYCLE TOURS'}</p>
+                </div>
+              )}
+            </Link>
             <p className="text-sm mb-4">
               Experience the thrill of motorcycle adventures through India's most spectacular landscapes with our expertly guided tours.
             </p>
