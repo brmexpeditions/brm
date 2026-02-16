@@ -14,15 +14,15 @@ function BikeDetailModal({ bike, onClose }: { bike: Bike, onClose: () => void })
 
   return (
     <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 backdrop-blur-sm" onClick={onClose}>
-      <div 
+      <div
         className="bg-white rounded-2xl w-full max-w-5xl h-[85vh] overflow-hidden flex flex-col md:flex-row shadow-2xl animate-fade-in-up"
         onClick={e => e.stopPropagation()}
       >
         {/* Left Side: Image */}
         <div className="w-full md:w-1/2 bg-gray-50 relative flex items-center justify-center p-8 border-r border-gray-100">
-          <img 
-            src={bike.image} 
-            alt={bike.name} 
+          <img
+            src={bike.image}
+            alt={bike.name}
             className="w-full h-full object-contain mix-blend-multiply"
           />
           <div className="absolute top-6 left-6">
@@ -30,7 +30,7 @@ function BikeDetailModal({ bike, onClose }: { bike: Bike, onClose: () => void })
               {bike.brand}
             </span>
           </div>
-          <button 
+          <button
             onClick={onClose}
             className="absolute top-4 right-4 p-2 bg-white/50 text-gray-900 rounded-full hover:bg-white md:hidden z-10"
           >
@@ -58,7 +58,7 @@ function BikeDetailModal({ bike, onClose }: { bike: Bike, onClose: () => void })
               </div>
               <h2 className="text-2xl font-bold text-gray-900 leading-tight">{bike.name}</h2>
             </div>
-            <button 
+            <button
               onClick={onClose}
               className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 p-2 rounded-full transition-colors -mr-2 -mt-2"
             >
@@ -150,8 +150,8 @@ function BikeDetailModal({ bike, onClose }: { bike: Bike, onClose: () => void })
                 <span className="text-gray-500 text-sm font-medium">/ day</span>
               </div>
             </div>
-            <Link 
-              to="/contact" 
+            <Link
+              to="/contact"
               className="bg-gray-900 text-white px-8 py-3 rounded-xl font-bold hover:bg-gray-800 transition flex items-center gap-2 shadow-lg shadow-gray-200"
             >
               Book Now <ArrowRight size={18} />
@@ -171,31 +171,31 @@ export function Bikes() {
   const [selectedBike, setSelectedBike] = useState<Bike | null>(null);
 
   // Removed Filter State and Logic
-  
+
   return (
     <Layout>
-      <SEOHead 
+      <SEOHead
         title="Our Motorcycle Fleet | Nepal Bike Tours"
         description="Choose from our premium fleet of Royal Enfield, KTM, and BMW motorcycles for your Himalayan adventure."
       />
-      
+
       {/* Hero Section */}
-      <section className="relative py-24 bg-gray-900 overflow-hidden">
+      <section className="relative h-[90vh] -mt-28 flex items-center bg-gray-900 overflow-hidden">
         <div className="absolute inset-0 opacity-40">
-          <img 
-            src="https://images.unsplash.com/photo-1558981403-c5f9899a28bc?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80" 
-            alt="Motorcycle fleet" 
+          <img
+            src="https://images.unsplash.com/photo-1558981403-c5f9899a28bc?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80"
+            alt="Motorcycle fleet"
             className="w-full h-full object-cover"
           />
         </div>
         <div className="absolute inset-0 bg-gradient-to-b from-gray-900/0 via-gray-900/60 to-gray-900" />
-        
+
         <div className="relative max-w-7xl mx-auto px-4 text-center">
           <h1 className="text-5xl md:text-6xl font-bold text-white mb-6 tracking-tight">Our Motorcycles</h1>
           <p className="text-xl text-gray-300 max-w-2xl mx-auto mb-10">
             Meticulously maintained fleet of premium adventure bikes, ready to tackle the toughest Himalayan terrain.
           </p>
-          
+
           {/* Stats */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-3xl mx-auto">
             <div className="bg-white/10 backdrop-blur-md rounded-xl p-4 border border-white/10">
@@ -245,9 +245,9 @@ export function Bikes() {
               </ul>
             </div>
             <div className="relative h-64 md:h-full min-h-[300px] rounded-2xl overflow-hidden group">
-              <img 
-                src="https://images.unsplash.com/photo-1558981285-6f0c94958bb6?ixlib=rb-1.2.1&auto=format&fit=crop&w=1000&q=80" 
-                alt="Mechanic working" 
+              <img
+                src="https://images.unsplash.com/photo-1558981285-6f0c94958bb6?ixlib=rb-1.2.1&auto=format&fit=crop&w=1000&q=80"
+                alt="Mechanic working"
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-6">
@@ -259,15 +259,15 @@ export function Bikes() {
           {/* Bikes Grid */}
           <div className="space-y-8">
             {bikes.map((bike, index) => (
-              <div 
-                key={bike.id} 
+              <div
+                key={bike.id}
                 className={`bg-white rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 flex flex-col ${index % 2 === 0 ? 'lg:flex-row' : 'lg:flex-row-reverse'}`}
               >
                 {/* Image Side - Fixed Cropping Here */}
                 <div className="w-full lg:w-3/5 relative h-64 lg:h-96 group overflow-hidden bg-gray-50 flex items-center justify-center p-6">
-                  <img 
-                    src={bike.image} 
-                    alt={bike.name} 
+                  <img
+                    src={bike.image}
+                    alt={bike.name}
                     className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-700 mix-blend-multiply"
                   />
                   <div className="absolute top-4 left-4 flex gap-2">
@@ -347,7 +347,7 @@ export function Bikes() {
                         <span className="text-gray-400 text-sm font-medium">/ day</span>
                       </div>
                     </div>
-                    <button 
+                    <button
                       onClick={() => setSelectedBike(bike)}
                       className="bg-gray-900 text-white px-6 py-3 rounded-xl font-bold hover:bg-gray-800 transition flex items-center gap-2 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
                     >
@@ -377,8 +377,8 @@ export function Bikes() {
                 </thead>
                 <tbody className="divide-y divide-gray-100">
                   {bikes.map((bike, index) => (
-                    <tr 
-                      key={bike.id} 
+                    <tr
+                      key={bike.id}
                       className={`hover:bg-amber-50/50 transition cursor-pointer ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50/30'}`}
                       onClick={() => setSelectedBike(bike)}
                     >

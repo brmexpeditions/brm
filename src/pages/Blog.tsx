@@ -19,7 +19,7 @@ export function Blog() {
       />
 
       {/* Hero Section */}
-      <section className="relative py-24 bg-gray-900 -mt-28 pt-48">
+      <section className="relative h-[90vh] -mt-28 flex items-center bg-gray-900">
         <div className="absolute inset-0 overflow-hidden">
           <img
             src="https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=1920&h=800&fit=crop"

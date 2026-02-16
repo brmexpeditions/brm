@@ -155,7 +155,7 @@ export function TourDetail() {
       />
 
       {/* Hero Section */}
-      <section className="relative h-[75vh] -mt-28">
+      <section className="relative h-[90vh] -mt-28">
         <div className="absolute inset-0">
           <img src={tour.heroImage} alt={tour.title} className="w-full h-full object-cover" />
           <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
@@ -173,9 +173,9 @@ export function TourDetail() {
 
             <div className="flex gap-2 mb-4">
               <span className={`px-3 py-1 rounded-full text-sm font-semibold ${tour.difficulty === 'Expert' ? 'bg-red-500' :
-                  tour.difficulty === 'Challenging' ? 'bg-orange-500' :
-                    tour.difficulty === 'Moderate' ? 'bg-yellow-500' :
-                      'bg-green-500'
+                tour.difficulty === 'Challenging' ? 'bg-orange-500' :
+                  tour.difficulty === 'Moderate' ? 'bg-yellow-500' :
+                    'bg-green-500'
                 } text-white`}>
                 {tour.difficulty}
               </span>
@@ -269,8 +269,8 @@ export function TourDetail() {
                   key={tab.id}
                   onClick={() => handleTabChange(tab.id)}
                   className={`group relative flex items-center gap-2 px-6 py-4 font-medium whitespace-nowrap transition-all duration-200 border-b-2 -mb-[2px] ${isActive
-                      ? 'text-gray-900 border-gray-900'
-                      : 'text-gray-500 border-transparent hover:text-gray-700 hover:border-gray-300'
+                    ? 'text-gray-900 border-gray-900'
+                    : 'text-gray-500 border-transparent hover:text-gray-700 hover:border-gray-300'
                     }`}
                 >
                   <Icon size={18} className={`transition-colors ${isActive ? 'text-gray-900' : 'text-gray-400 group-hover:text-gray-600'}`} />
@@ -572,8 +572,8 @@ export function TourDetail() {
                     <div
                       key={day.day}
                       className={`bg-white rounded-2xl border overflow-hidden transition-all duration-300 ${expandedDays.includes(day.day)
-                          ? 'border-amber-200 shadow-lg'
-                          : 'border-gray-100 hover:border-gray-200 hover:shadow-md'
+                        ? 'border-amber-200 shadow-lg'
+                        : 'border-gray-100 hover:border-gray-200 hover:shadow-md'
                         }`}
                     >
                       {/* Day Header */}
@@ -584,8 +584,8 @@ export function TourDetail() {
                         <div className="flex">
                           {/* Day Number Column */}
                           <div className={`w-20 sm:w-24 flex-shrink-0 flex flex-col items-center justify-center py-6 transition-colors ${expandedDays.includes(day.day)
-                              ? 'bg-gradient-to-b from-amber-500 to-orange-500'
-                              : 'bg-gray-100'
+                            ? 'bg-gradient-to-b from-amber-500 to-orange-500'
+                            : 'bg-gray-100'
                             }`}>
                             <span className={`text-xs font-semibold uppercase tracking-wider ${expandedDays.includes(day.day) ? 'text-amber-100' : 'text-gray-400'
                               }`}>Day</span>
@@ -642,8 +642,8 @@ export function TourDetail() {
                                   </div>
                                 )}
                                 <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${expandedDays.includes(day.day)
-                                    ? 'bg-amber-500 text-white rotate-180'
-                                    : 'bg-gray-100 text-gray-400'
+                                  ? 'bg-amber-500 text-white rotate-180'
+                                  : 'bg-gray-100 text-gray-400'
                                   }`}>
                                   <ChevronDown size={20} />
                                 </div>
@@ -970,8 +970,8 @@ export function TourDetail() {
                             <label
                               key={upgrade.id}
                               className={`flex items-center justify-between p-5 border-2 rounded-2xl cursor-pointer transition-all ${selectedUpgrades.includes(upgrade.id)
-                                  ? 'border-amber-500 bg-amber-50 shadow-lg'
-                                  : 'border-gray-200 hover:border-amber-300 hover:shadow-md'
+                                ? 'border-amber-500 bg-amber-50 shadow-lg'
+                                : 'border-gray-200 hover:border-amber-300 hover:shadow-md'
                                 }`}
                             >
                               <div className="flex items-center gap-4">
@@ -1035,8 +1035,8 @@ export function TourDetail() {
                       key={filter.id}
                       onClick={() => setGalleryFilter(filter.id as 'all' | 'hero' | 'itinerary')}
                       className={`px-4 py-2 rounded-full text-sm font-medium transition ${galleryFilter === filter.id
-                          ? 'bg-amber-500 text-white'
-                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                        ? 'bg-amber-500 text-white'
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                         }`}
                     >
                       {filter.label}

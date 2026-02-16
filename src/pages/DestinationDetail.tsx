@@ -51,7 +51,7 @@ export function DestinationDetail() {
       />
 
       {/* Hero Section - Full Height with Parallax Effect */}
-      <section className="relative h-screen -mt-28 overflow-hidden">
+      <section className="relative h-[90vh] -mt-28 overflow-hidden">
         <div className="absolute inset-0">
           <img
             src={destination.heroImage}
@@ -80,9 +80,9 @@ export function DestinationDetail() {
                 {destination.country}
               </span>
               <span className={`px-3 py-1 rounded-full text-sm font-semibold ${destination.difficulty === 'Expert' ? 'bg-red-500' :
-                  destination.difficulty === 'Challenging' ? 'bg-orange-500' :
-                    destination.difficulty === 'Moderate' ? 'bg-yellow-500' :
-                      'bg-green-500'
+                destination.difficulty === 'Challenging' ? 'bg-orange-500' :
+                  destination.difficulty === 'Moderate' ? 'bg-yellow-500' :
+                    'bg-green-500'
                 } text-white`}>
                 {destination.difficulty}
               </span>
@@ -213,9 +213,9 @@ export function DestinationDetail() {
                     <div>
                       <p className="text-gray-400 text-sm">Difficulty</p>
                       <p className={`font-semibold ${destination.difficulty === 'Expert' ? 'text-red-400' :
-                          destination.difficulty === 'Challenging' ? 'text-orange-400' :
-                            destination.difficulty === 'Moderate' ? 'text-yellow-400' :
-                              'text-green-400'
+                        destination.difficulty === 'Challenging' ? 'text-orange-400' :
+                          destination.difficulty === 'Moderate' ? 'text-yellow-400' :
+                            'text-green-400'
                         }`}>
                         {destination.difficulty}
                       </p>
@@ -324,9 +324,9 @@ export function DestinationDetail() {
                     <div className="flex items-center justify-between mb-4">
                       <span className="text-gray-500 text-sm">{tour.duration}</span>
                       <span className={`px-2 py-1 rounded text-xs font-semibold ${tour.difficulty === 'Expert' ? 'bg-red-100 text-red-700' :
-                          tour.difficulty === 'Challenging' ? 'bg-orange-100 text-orange-700' :
-                            tour.difficulty === 'Moderate' ? 'bg-yellow-100 text-yellow-700' :
-                              'bg-green-100 text-green-700'
+                        tour.difficulty === 'Challenging' ? 'bg-orange-100 text-orange-700' :
+                          tour.difficulty === 'Moderate' ? 'bg-yellow-100 text-yellow-700' :
+                            'bg-green-100 text-green-700'
                         }`}>
                         {tour.difficulty}
                       </span>

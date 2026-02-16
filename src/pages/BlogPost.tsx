@@ -22,7 +22,7 @@ export function BlogPost() {
             />
 
             {/* Hero Section */}
-            <div className="relative h-[60vh] min-h-[400px]">
+            <div className="relative h-[90vh] min-h-[400px]">
                 <img
                     src={post.image}
                     alt={post.title}

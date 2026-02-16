@@ -8,7 +8,7 @@ import { SEOHead } from '../components/SEOHead';
 export function Tours() {
   const { tours } = useApp();
   const publishedTours = tours.filter(t => t.status === 'published');
-  
+
   const [filters, setFilters] = useState({
     difficulty: '',
     duration: '',
@@ -45,7 +45,7 @@ export function Tours() {
         keywords={['motorcycle tours', 'India tours', 'Ladakh tour', 'Rajasthan tour', 'adventure tours']}
       />
       {/* Hero */}
-      <section className="relative h-[40vh] -mt-28 flex items-center">
+      <section className="relative h-[90vh] -mt-28 flex items-center">
         <div className="absolute inset-0">
           <img
             src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1920&h=600&fit=crop"
@@ -149,12 +149,11 @@ export function Tours() {
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                     <div className="absolute top-4 left-4 flex gap-2">
-                      <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                        tour.difficulty === 'Expert' ? 'bg-red-500' :
-                        tour.difficulty === 'Challenging' ? 'bg-orange-500' :
-                        tour.difficulty === 'Moderate' ? 'bg-yellow-500' :
-                        'bg-green-500'
-                      } text-white`}>
+                      <span className={`px-3 py-1 rounded-full text-xs font-semibold ${tour.difficulty === 'Expert' ? 'bg-red-500' :
+                          tour.difficulty === 'Challenging' ? 'bg-orange-500' :
+                            tour.difficulty === 'Moderate' ? 'bg-yellow-500' :
+                              'bg-green-500'
+                        } text-white`}>
                         {tour.difficulty}
                       </span>
                       {tour.featured && (

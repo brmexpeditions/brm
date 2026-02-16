@@ -27,7 +27,7 @@ export function Contact() {
         keywords={['contact BRM Expeditions', 'motorcycle tour inquiry', 'book motorcycle tour']}
       />
       {/* Hero */}
-      <section className="relative h-[40vh] -mt-28 flex items-center">
+      <section className="relative h-[90vh] -mt-28 flex items-center">
         <div className="absolute inset-0">
           <img
             src="https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=1920&h=600&fit=crop"

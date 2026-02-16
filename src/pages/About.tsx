@@ -15,30 +15,30 @@ export function About() {
   ];
 
   const team = [
-    { 
-      name: 'Raj Sharma', 
-      role: 'Founder & Lead Guide', 
+    {
+      name: 'Raj Sharma',
+      role: 'Founder & Lead Guide',
       image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop',
       bio: 'With over 15 years of riding experience across 20+ countries, Raj founded BRM to share his passion for motorcycle adventures.',
       social: { instagram: '#', facebook: '#' }
     },
-    { 
-      name: 'Vikram Singh', 
-      role: 'Senior Tour Leader', 
+    {
+      name: 'Vikram Singh',
+      role: 'Senior Tour Leader',
       image: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop',
       bio: 'A certified motorcycle instructor with extensive knowledge of Himalayan routes and local cultures.',
       social: { instagram: '#', facebook: '#' }
     },
-    { 
-      name: 'Priya Patel', 
-      role: 'Operations Manager', 
+    {
+      name: 'Priya Patel',
+      role: 'Operations Manager',
       image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&h=400&fit=crop',
       bio: 'Priya ensures every tour runs smoothly, from logistics to customer satisfaction.',
       social: { instagram: '#', facebook: '#' }
     },
-    { 
-      name: 'Amit Kumar', 
-      role: 'Head Mechanic', 
+    {
+      name: 'Amit Kumar',
+      role: 'Head Mechanic',
       image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&h=400&fit=crop',
       bio: 'Expert mechanic specializing in Royal Enfield and adventure bikes with 12 years of experience.',
       social: { instagram: '#', facebook: '#' }
@@ -89,7 +89,7 @@ export function About() {
       />
 
       {/* Hero Section - Split Design */}
-      <section className="relative min-h-[80vh] -mt-28 flex items-center overflow-hidden bg-gray-900">
+      <section className="relative h-[90vh] -mt-28 flex items-center overflow-hidden bg-gray-900">
         <div className="absolute inset-0">
           <img
             src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1920&h=1080&fit=crop"
@@ -98,7 +98,7 @@ export function About() {
           />
           <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-gray-900/90 to-amber-900/30" />
         </div>
-        
+
         <div className="relative max-w-7xl mx-auto px-4 pt-28 w-full">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             {/* Left Content */}
@@ -119,7 +119,7 @@ export function About() {
                   to="/tours"
                   className="group inline-flex items-center gap-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white px-8 py-4 rounded-full font-semibold hover:shadow-lg hover:shadow-amber-500/30 transition-all"
                 >
-                  Explore Tours 
+                  Explore Tours
                   <ChevronRight size={20} className="group-hover:translate-x-1 transition-transform" />
                 </Link>
                 <button
@@ -137,8 +137,8 @@ export function About() {
             {/* Right Stats Cards */}
             <div className="hidden lg:grid grid-cols-2 gap-4">
               {stats.map((stat, i) => (
-                <div 
-                  key={i} 
+                <div
+                  key={i}
                   className={`bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6 hover:bg-white/10 transition ${i === 0 ? 'translate-y-8' : i === 3 ? 'translate-y-8' : ''}`}
                 >
                   <div className="text-4xl font-bold text-white mb-1">{stat.value}</div>
@@ -191,11 +191,11 @@ export function About() {
             {/* Right - Content */}
             <div className="lg:col-span-7">
               <span className="inline-block bg-amber-100 text-amber-700 px-4 py-1.5 rounded-full text-sm font-semibold mb-6">Our Story</span>
-              
+
               <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-8 leading-tight">
                 Born from a Passion for<br />Riding & Adventure
               </h2>
-              
+
               <div className="prose prose-lg text-gray-600 mb-8">
                 <p className="leading-relaxed">
                   BRM Expeditions was founded in 2015 by a group of passionate motorcyclists who shared a common dream – to help riders from around the world experience the magic of India's incredible landscapes.
@@ -261,7 +261,7 @@ export function About() {
               <div className="absolute -top-10 -right-10 text-[150px] opacity-5 group-hover:opacity-10 transition-opacity">
                 🎯
               </div>
-              
+
               <div className="relative">
                 <div className="flex items-center gap-4 mb-6">
                   <div className="w-14 h-14 bg-gradient-to-br from-amber-400 to-orange-500 rounded-xl flex items-center justify-center shadow-lg">
@@ -272,7 +272,7 @@ export function About() {
                 <p className="text-gray-600 text-lg leading-relaxed">
                   To provide world-class motorcycle touring experiences that are safe, authentic, and unforgettable. We aim to create journeys that go beyond ordinary travel, connecting riders with incredible landscapes, cultures, and fellow adventurers.
                 </p>
-                
+
                 {/* Key Points */}
                 <div className="mt-6 pt-6 border-t border-gray-100 flex flex-wrap gap-2">
                   {['Safety First', 'Authentic', 'Unforgettable'].map((point, i) => (
@@ -290,7 +290,7 @@ export function About() {
               <div className="absolute -top-10 -right-10 text-[150px] opacity-5 group-hover:opacity-10 transition-opacity">
                 👁️
               </div>
-              
+
               <div className="relative">
                 <div className="flex items-center gap-4 mb-6">
                   <div className="w-14 h-14 bg-gradient-to-br from-amber-400 to-orange-500 rounded-xl flex items-center justify-center shadow-lg">
@@ -301,7 +301,7 @@ export function About() {
                 <p className="text-gray-300 text-lg leading-relaxed">
                   To be the most trusted and recommended motorcycle tour operator in Asia, known for exceptional service, sustainable tourism practices, and creating life-changing adventures for riders from around the world.
                 </p>
-                
+
                 {/* Key Points */}
                 <div className="mt-6 pt-6 border-t border-gray-700 flex flex-wrap gap-2">
                   {['Trusted', 'Sustainable', 'Life-changing'].map((point, i) => (
@@ -421,18 +421,18 @@ export function About() {
                 desc: 'Premium experiences at competitive prices with transparent pricing. No hidden costs or last-minute surprises.'
               }
             ].map((item, i) => (
-              <div 
-                key={i} 
+              <div
+                key={i}
                 className={`group relative bg-white rounded-2xl p-8 border-2 border-gray-100 ${item.borderHover} shadow-sm hover:shadow-xl transition-all duration-300`}
               >
                 {/* Colored Top Border on Hover */}
                 <div className={`absolute top-0 left-6 right-6 h-1 ${item.bgIcon} rounded-b-full opacity-0 group-hover:opacity-100 transition-all duration-300`}></div>
-                
+
                 {/* Icon Container */}
                 <div className={`w-16 h-16 ${item.bgIcon} rounded-2xl flex items-center justify-center text-white mb-6 shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-all duration-300`}>
                   {item.icon}
                 </div>
-                
+
                 {/* Content */}
                 <h3 className={`text-xl font-bold text-gray-900 mb-3 ${item.textHover} transition-colors`}>
                   {item.title}
@@ -440,7 +440,7 @@ export function About() {
                 <p className="text-gray-500 leading-relaxed mb-6">
                   {item.desc}
                 </p>
-                
+
                 {/* Learn More Link */}
                 <div className="pt-4 border-t border-gray-100">
                   <button className={`inline-flex items-center gap-2 text-sm font-semibold text-gray-400 ${item.textHover} transition-colors`}>
@@ -549,22 +549,22 @@ export function About() {
                   />
                   {/* Overlay */}
                   <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/20 to-transparent opacity-80"></div>
-                  
+
                   {/* Content */}
                   <div className="absolute bottom-0 left-0 right-0 p-6">
                     <div className="flex gap-2 mb-3 opacity-0 group-hover:opacity-100 transition-opacity translate-y-4 group-hover:translate-y-0 duration-300">
                       <a href={member.social.instagram} className="w-8 h-8 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-amber-500 transition">
-                        <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+                        <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" /></svg>
                       </a>
                       <a href={member.social.facebook} className="w-8 h-8 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-amber-500 transition">
-                        <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M9 8h-3v4h3v12h5v-12h3.642l.358-4h-4v-1.667c0-.955.192-1.333 1.115-1.333h2.885v-5h-3.808c-3.596 0-5.192 1.583-5.192 4.615v3.385z"/></svg>
+                        <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M9 8h-3v4h3v12h5v-12h3.642l.358-4h-4v-1.667c0-.955.192-1.333 1.115-1.333h2.885v-5h-3.808c-3.596 0-5.192 1.583-5.192 4.615v3.385z" /></svg>
                       </a>
                     </div>
                     <h3 className="text-xl font-bold text-white">{member.name}</h3>
                     <p className="text-amber-400 text-sm font-medium">{member.role}</p>
                   </div>
                 </div>
-                
+
                 {/* Bio Card */}
                 <div className="mt-4 p-4 bg-gray-50 rounded-xl border border-gray-100">
                   <p className="text-gray-600 text-sm leading-relaxed">{member.bio}</p>
@@ -581,7 +581,7 @@ export function About() {
         <div className="absolute inset-0 opacity-5">
           <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
             <pattern id="diag" width="10" height="10" patternUnits="userSpaceOnUse">
-              <path d="M 0 10 L 10 0" stroke="white" strokeWidth="0.5" fill="none"/>
+              <path d="M 0 10 L 10 0" stroke="white" strokeWidth="0.5" fill="none" />
             </pattern>
             <rect width="100" height="100" fill="url(#diag)" />
           </svg>
@@ -612,8 +612,8 @@ export function About() {
 
           <div className="grid md:grid-cols-3 gap-6">
             {testimonials.map((testimonial, i) => (
-              <div 
-                key={i} 
+              <div
+                key={i}
                 className="group bg-gray-800/50 backdrop-blur-sm rounded-2xl p-8 border border-gray-700/50 hover:border-amber-500/50 transition-all duration-300 hover:-translate-y-1"
               >
                 {/* Stars */}
@@ -685,7 +685,7 @@ export function About() {
           <div className="relative bg-gray-900 rounded-3xl overflow-hidden">
             {/* Background Image */}
             <div className="absolute inset-0">
-              <img 
+              <img
                 src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1920&h=600&fit=crop"
                 alt=""
                 className="w-full h-full object-cover opacity-30"
@@ -760,7 +760,7 @@ export function About() {
 
       {/* Video Modal */}
       {showVideo && (
-        <div 
+        <div
           className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4"
           onClick={() => setShowVideo(false)}
         >

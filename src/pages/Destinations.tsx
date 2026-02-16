@@ -19,15 +19,14 @@ export function Destinations() {
       />
 
       {/* Hero Section - Full Width Mosaic */}
-      <section className="relative h-[70vh] -mt-28 overflow-hidden">
+      <section className="relative h-[90vh] -mt-28 overflow-hidden">
         <div className="absolute inset-0 grid grid-cols-4 grid-rows-2">
           {featuredDestinations.slice(0, 4).map((dest, i) => (
             <Link
               key={dest.id}
               to={`/destinations/${dest.slug}`}
-              className={`relative group overflow-hidden ${
-                i === 0 ? 'col-span-2 row-span-2' : ''
-              }`}
+              className={`relative group overflow-hidden ${i === 0 ? 'col-span-2 row-span-2' : ''
+                }`}
             >
               <img
                 src={dest.heroImage}
@@ -82,7 +81,7 @@ export function Destinations() {
                   className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
-                
+
                 {/* Content */}
                 <div className="absolute inset-0 p-8 flex flex-col justify-end">
                   <div className="mb-4">
@@ -93,10 +92,10 @@ export function Destinations() {
                       {dest.country}
                     </span>
                   </div>
-                  
+
                   <h3 className="text-4xl font-bold text-white mb-2">{dest.name}</h3>
                   <p className="text-xl text-amber-400 font-medium mb-4">{dest.tagline}</p>
-                  
+
                   <div className="flex flex-wrap gap-4 mb-6">
                     <div className="flex items-center gap-2 text-white/80 text-sm">
                       <Calendar size={16} className="text-amber-400" />
@@ -107,9 +106,9 @@ export function Destinations() {
                       {dest.difficulty}
                     </div>
                   </div>
-                  
+
                   <p className="text-gray-300 line-clamp-2 mb-6">{dest.description.substring(0, 150)}...</p>
-                  
+
                   <div className="flex items-center gap-2 text-amber-400 font-semibold group-hover:gap-4 transition-all">
                     Explore {dest.name} <ChevronRight size={20} />
                   </div>
@@ -132,22 +131,21 @@ export function Destinations() {
                   className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
-                
+
                 <div className="absolute inset-0 p-5 flex flex-col justify-end">
                   <span className="text-amber-400 text-xs font-semibold">{dest.country}</span>
                   <h3 className="text-xl font-bold text-white mb-1">{dest.name}</h3>
                   <p className="text-gray-400 text-sm mb-3">{dest.tagline}</p>
-                  
+
                   <div className="flex items-center gap-3 text-white/70 text-xs">
                     <span className="flex items-center gap-1">
                       <Calendar size={12} /> {dest.bestTimeToVisit.split(' ')[0]}
                     </span>
-                    <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                      dest.difficulty === 'Expert' ? 'bg-red-500/80' :
-                      dest.difficulty === 'Challenging' ? 'bg-orange-500/80' :
-                      dest.difficulty === 'Moderate' ? 'bg-yellow-500/80' :
-                      'bg-green-500/80'
-                    } text-white`}>
+                    <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${dest.difficulty === 'Expert' ? 'bg-red-500/80' :
+                        dest.difficulty === 'Challenging' ? 'bg-orange-500/80' :
+                          dest.difficulty === 'Moderate' ? 'bg-yellow-500/80' :
+                            'bg-green-500/80'
+                      } text-white`}>
                       {dest.difficulty}
                     </span>
                   </div>
@@ -184,7 +182,7 @@ export function Destinations() {
             <span className="text-amber-600 font-semibold">RIDE THE MAP</span>
             <h2 className="text-4xl font-bold text-gray-900 mt-2">Destinations Across Asia</h2>
           </div>
-          
+
           <div className="relative bg-gray-200 rounded-3xl overflow-hidden h-[500px]">
             <img
               src="https://images.unsplash.com/photo-1524661135-423995f22d0b?w=1400&h=600&fit=crop"
