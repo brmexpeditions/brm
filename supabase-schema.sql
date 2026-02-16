@@ -273,7 +273,7 @@ CREATE INDEX idx_media_type ON media(type);
 -- SITE SETTINGS TABLE
 -- =============================================
 CREATE TABLE IF NOT EXISTS site_settings (
-  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  id TEXT PRIMARY KEY DEFAULT 'main',
   
   -- The entire settings JSON
   settings JSONB NOT NULL DEFAULT '{}',
