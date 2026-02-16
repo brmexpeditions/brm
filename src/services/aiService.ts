@@ -17,23 +17,55 @@ export const generateContent = async (prompt: string, type: 'seo' | 'writing' | 
     // Placeholder responses
     switch (type) {
         case 'design':
+            const lowerPrompt = prompt.toLowerCase();
+            let design = {
+                colors: {
+                    primary: "#f59e0b",
+                    secondary: "#1f2937",
+                    accent: "#ea580c",
+                    background: "#f9fafb",
+                    text: "#111827",
+                    textLight: "#6b7280"
+                },
+                typography: {
+                    headingFont: "Inter",
+                    bodyFont: "Inter",
+                    baseFontSize: 16,
+                    lineHeight: 1.6
+                }
+            };
+
+            if (lowerPrompt.includes('dark') || lowerPrompt.includes('night')) {
+                design.colors.primary = "#f59e0b";
+                design.colors.secondary = "#111827";
+                design.colors.background = "#0f172a";
+                design.colors.text = "#f8fafc";
+                design.colors.textLight = "#94a3b8";
+            } else if (lowerPrompt.includes('nature') || lowerPrompt.includes('forest') || lowerPrompt.includes('green')) {
+                design.colors.primary = "#059669";
+                design.colors.secondary = "#064e3b";
+                design.colors.accent = "#10b981";
+                design.typography.headingFont = "Playfair Display";
+            } else if (lowerPrompt.includes('luxury') || lowerPrompt.includes('gold') || lowerPrompt.includes('premium')) {
+                design.colors.primary = "#b45309";
+                design.colors.secondary = "#1a1a1a";
+                design.colors.background = "#ffffff";
+                design.colors.accent = "#d97706";
+                design.typography.headingFont = "Cinzel";
+            } else if (lowerPrompt.includes('sport') || lowerPrompt.includes('fast') || lowerPrompt.includes('red')) {
+                design.colors.primary = "#dc2626";
+                design.colors.secondary = "#111827";
+                design.colors.accent = "#ef4444";
+                design.typography.headingFont = "Orbitron";
+            } else if (lowerPrompt.includes('vintage') || lowerPrompt.includes('retro') || lowerPrompt.includes('classic')) {
+                design.colors.primary = "#7c2d12";
+                design.colors.secondary = "#431407";
+                design.colors.background = "#fff7ed";
+                design.typography.headingFont = "Lora";
+            }
+
             return {
-                content: JSON.stringify({
-                    colors: {
-                        primary: "#1a1a1a",
-                        secondary: "#f59e0b",
-                        accent: "#10b981",
-                        background: "#ffffff",
-                        text: "#1f2937",
-                        textLight: "#6b7280"
-                    },
-                    typography: {
-                        headingFont: "Montserrat",
-                        bodyFont: "Inter",
-                        baseFontSize: 16,
-                        lineHeight: 1.6
-                    }
-                })
+                content: JSON.stringify(design)
             };
         case 'seo':
             return {

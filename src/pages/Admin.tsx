@@ -924,7 +924,8 @@ function ThemeCustomizer() {
   };
 
   const fonts = [
-    'Inter', 'Roboto', 'Open Sans', 'Lato', 'Montserrat', 'Poppins', 'Raleway', 'Playfair Display', 'Oswald'
+    'Inter', 'Roboto', 'Open Sans', 'Lato', 'Montserrat', 'Poppins', 'Raleway', 'Playfair Display', 'Oswald',
+    'Cinzel', 'Orbitron', 'Lora', 'Josefin Sans'
   ];
 
   return (

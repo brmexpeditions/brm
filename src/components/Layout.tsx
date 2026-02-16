@@ -85,26 +85,46 @@ function GlobalStyles() {
 
   return (
     <style>{`
+      :root {
+        --color-primary: ${colors.primary};
+        --color-secondary: ${colors.secondary};
+        --color-accent: ${colors.accent};
+        --color-background: ${colors.background};
+        --color-text: ${colors.text};
+        --color-text-light: ${colors.textLight};
+      }
+
       h1, h2, h3, h4, h5, h6 {
         font-family: ${typography.headingFont}, system-ui, sans-serif;
       }
+
+      /* Map common Tailwind classes to theme variables */
+      .text-amber-500, .text-amber-600 { color: var(--color-primary) !important; }
+      .bg-amber-500, .bg-amber-600 { background-color: var(--color-primary) !important; }
+      .border-amber-500, .border-amber-600 { border-color: var(--color-primary) !important; }
+      .fill-amber-500, .fill-amber-600 { fill: var(--color-primary) !important; }
+      
+      /* Secondary mappings */
+      .bg-gray-900 { background-color: var(--color-secondary) !important; }
+      .text-gray-900 { color: var(--color-secondary) !important; }
+      
       .btn-primary {
-        background-color: ${colors.primary};
+        background-color: var(--color-primary);
       }
       .btn-primary:hover {
-        background-color: ${colors.accent};
+        background-color: var(--color-accent);
       }
       .text-primary {
-        color: ${colors.primary};
+        color: var(--color-primary);
       }
       .bg-primary {
-        background-color: ${colors.primary};
+        background-color: var(--color-primary);
       }
       .border-primary {
-        border-color: ${colors.primary};
+        border-color: var(--color-primary);
       }
       ::selection {
-        background-color: ${colors.primary};
+        background-color: var(--color-primary);
         color: white;
       }
     `}</style>
