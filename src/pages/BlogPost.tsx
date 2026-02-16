@@ -72,50 +72,17 @@ export function BlogPost() {
                             {post.excerpt}
                         </p>
 
-                        {/* Placeholder Content for now since we only have mock excerpts */}
-                        <p className="mb-6">
-                            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore
-                            et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut
-                            aliquip ex ea commodo consequat.
-                        </p>
-                        <h2 className="text-2xl font-bold text-gray-900 mt-12 mb-6">The Journey Begins</h2>
-                        <p className="mb-6">
-                            Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
-                            Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-                        </p>
-                        <p className="mb-6">
-                            Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium,
-                            totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae
-                            dicta sunt explicabo.
-                        </p>
 
-                        <figure className="my-12">
-                            <img
-                                src="https://images.unsplash.com/photo-1558981806-ec527fa84f3d?w=1200&h=600&fit=crop"
-                                alt="Motorcycle on the road"
-                                className="w-full rounded-xl shadow-lg"
+                        {post.content ? (
+                            <div
+                                className="blog-content"
+                                dangerouslySetInnerHTML={{ __html: post.content }}
                             />
-                            <figcaption className="text-center text-sm text-gray-500 mt-4">
-                                Riding through the majestic landscapes
-                            </figcaption>
-                        </figure>
-
-                        <h2 className="text-2xl font-bold text-gray-900 mt-12 mb-6">Key Takeaways</h2>
-                        <ul className="space-y-4 mb-8 list-none pl-0">
-                            {[1, 2, 3].map((item) => (
-                                <li key={item} className="flex gap-3">
-                                    <div className="w-6 h-6 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-                                        <div className="w-2 h-2 rounded-full bg-amber-500" />
-                                    </div>
-                                    <span>Important detailed point regarding {post.title.toLowerCase()} that every rider should know.</span>
-                                </li>
-                            ))}
-                        </ul>
-
-                        <p>
-                            Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur
-                            magni dolores eos qui ratione voluptatem sequi nesciunt.
-                        </p>
+                        ) : (
+                            <div className="text-center py-10 text-gray-500 italic">
+                                No content available for this post.
+                            </div>
+                        )}
                     </div>
 
                     {/* Share & Tags */}
